@@ -20,9 +20,9 @@ describe('RtcPeerConnectionManagerV2', () => {
 
     beforeEach(() => {
         // Mock UUID function
-        const uuid = require('uuid/v4');
+        const uuid = require('uuid').v4;
         if (typeof uuid !== 'function') {
-            require('uuid/v4').mockImplementation = () => 'mock-uuid-' + Math.random().toString(36).substr(2, 9);
+            require('uuid').v4.mockImplementation = () => 'mock-uuid-' + Math.random().toString(36).substr(2, 9);
         }
 
         mockLogger = {
@@ -611,9 +611,9 @@ describe('RtcPeerConnectionManagerV2', () => {
             pcm._peerConnectionToken = 'test-token';
             pcm._signalingChannelManager!.clearCallSessionCallbacks = sinon.spy();
             const error = new Error('Session failed');
-            
+
             pcm.handleSharedMediaSessionFailed(error);
-            
+
             expect(pcm._callSessions!.size).to.equal(0);
             expect(pcm._sharedMediaSession).to.be.null;
             expect(pcm._peerConnectionId).to.be.null;
@@ -1569,6 +1569,45 @@ describe('RtcPeerConnectionManagerV2', () => {
             expect((pcm as any)._isPersistentConnectionOnPageLoadEnabled).to.be.false;
         });
 
+        describe('login popup gate on _setupPageLoadPersistentConnection', () => {
+            const LOGIN_POPUP_WINDOW_NAME = 'connect::loginPopup';
+            let originalWindowName: string;
+
+            // GlobalMocker.save() already hands every test a fresh window object, so
+            // window.name cannot leak. Restore it explicitly anyway so these tests do
+            // not silently depend on that harness detail.
+            beforeEach(() => {
+                originalWindowName = (globalThis.window as any).name;
+            });
+
+            afterEach(() => {
+                (globalThis.window as any).name = originalWindowName;
+            });
+
+            it('should skip page-load PC setup when window.name marks this as the login popup', async () => {
+                (globalThis.window as any).name = LOGIN_POPUP_WINDOW_NAME;
+                const pcm = new RtcPeerConnectionManagerV2(config);
+                const whenConnectedStub = sinon.stub(pcm._strategy as any, 'whenConnected').resolves();
+
+                await (pcm as any)._setupPageLoadPersistentConnection();
+
+                expect(whenConnectedStub).to.not.have.been.called;
+                expect(pcm._sharedMediaSession).to.be.null;
+            });
+
+            it('should set up the page-load PC when window.name is not the login popup', async () => {
+                (globalThis.window as any).name = '';
+                const pcm = new RtcPeerConnectionManagerV2(config);
+                const whenConnectedStub = sinon.stub(pcm._strategy as any, 'whenConnected').resolves();
+                // Abort right after the gate so the test does not build a real PC.
+                (pcm as any)._closed = true;
+
+                await (pcm as any)._setupPageLoadPersistentConnection();
+
+                expect(whenConnectedStub).to.have.been.calledOnce;
+            });
+        });
+
         describe('handleFACUpdate', () => {
             it('should call _setupPageLoadPersistentConnection on false→true transition when all conditions met', () => {
                 const pcm = new RtcPeerConnectionManagerV2(config);
@@ -2089,25 +2128,6 @@ describe('RtcPeerConnectionManagerV2', () => {
             expect(closeSpy).to.have.been.calledWith({ id: 'new-pc' });
         });
 
-        it('should abandon setup when close() runs while awaiting whenConnected()', async () => {
-            const pcm = new RtcPeerConnectionManagerV2(config);
-            const closeSpy = sinon.stub(pcm._strategy as any, 'close');
-            const requestStub = sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves({ id: 'new-pc' });
-
-            let resolveWhenConnected: any;
-            const pending = new Promise(function (r) { resolveWhenConnected = r; });
-            sinon.stub(pcm._strategy as any, 'whenConnected').returns(pending);
-
-            const setupPromise = (pcm as any)._setupPageLoadPersistentConnection();
-            (pcm as any)._closed = true;
-            resolveWhenConnected();
-            await setupPromise;
-
-            expect(requestStub).to.not.have.been.called;
-            expect(closeSpy).to.not.have.been.called;
-            expect(pcm._sharedMediaSession).to.be.null;
-        });
-
         it('should close speculative PC when close() runs during ICE fetch', async () => {
             const pcm = new RtcPeerConnectionManagerV2(config);
             const closeSpy = sinon.stub(pcm._strategy as any, 'close');
@@ -2144,6 +2164,95 @@ describe('RtcPeerConnectionManagerV2', () => {
             expect(closeSpy).to.not.have.been.calledWith(callPc);
             expect(pcm._pc).to.equal(callPc);
             expect(pcm._sharedMediaSession).to.equal(callSms);
+        });
+
+        it('logs when it starts setting up the page-load persistent connection', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            // Bail immediately after the START log so we only assert the entry log.
+            (pcm as any)._closed = true;
+
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Setting up page-load persistent connection/));
+        });
+
+        it('logs completion after the page-load persistent connection is set up', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            const fakePc = { id: 'page-load-pc' };
+            sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves(fakePc);
+            const initStub = sinon.stub(pcm as any, '_initializeSharedMediaSession').callsFake(function () {
+                (pcm as any)._sharedMediaSession = { connect: sinon.stub() };
+            });
+
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            expect(initStub).to.have.been.calledOnce;
+            expect((pcm as any)._sharedMediaSession.connect).to.have.been.calledWith(fakePc);
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Setting up page-load persistent connection/));
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Page-load persistent connection setup complete/));
+        });
+
+        it('awaits strategy.whenConnected() before creating a peer connection', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            const whenConnectedStub = sinon.stub(pcm._strategy as any, 'whenConnected').resolves();
+            const getPcStub = sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves({ id: 'pc' });
+            sinon.stub(pcm as any, '_initializeSharedMediaSession').callsFake(function () {
+                (pcm as any)._sharedMediaSession = { connect: sinon.stub() };
+            });
+
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            expect(whenConnectedStub).to.have.been.calledOnce;
+            // The proxy-readiness gate must be awaited BEFORE we try to build a peer connection —
+            // this is the ordering that prevents the DCV "undefined proxy" crash.
+            expect(whenConnectedStub).to.have.been.calledBefore(getPcStub);
+            // Logs the wait start and the elapsed time once the strategy connects.
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Setting up page-load persistent connection: waiting for strategy to be connected/));
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Page-load PC setup: strategy connected after \d+ms/));
+        });
+
+        it('does not create a peer connection when the strategy never connects (rejects)', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            sinon.stub(pcm._strategy as any, 'whenConnected').rejects(new Error('VDI did not connect within 10000ms'));
+            const getPcStub = sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves({ id: 'pc' });
+
+            // Rejection is handled internally by the try/catch; the important guarantee is that we
+            // never reach _createRtcPeerConnection with an unready proxy.
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            expect(getPcStub).to.not.have.been.called;
+            expect(mockLogger.error).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Failed to setup page-load persistent connection/));
+        });
+
+        it('abandons setup without fetching a PC when close() runs while awaiting whenConnected()', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            // Strategy takes a while to connect (VDI handshake); the manager is closed during the wait.
+            sinon.stub(pcm._strategy as any, 'whenConnected').callsFake(function () {
+                (pcm as any)._closed = true;
+                return Promise.resolve();
+            });
+            const getPcStub = sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves({ id: 'pc' });
+
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            // The post-wait guard must skip the ICE credential round-trip entirely.
+            expect(getPcStub).to.not.have.been.called;
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Skipping page-load PC setup \(closed or SharedMediaSession appeared during strategy wait\)/));
+        });
+
+        it('abandons setup without fetching a PC when a SharedMediaSession appears while awaiting whenConnected()', async () => {
+            const pcm = new RtcPeerConnectionManagerV2(config);
+            // A call starts (createSession sets _sharedMediaSession) during the strategy wait.
+            sinon.stub(pcm._strategy as any, 'whenConnected').callsFake(function () {
+                (pcm as any)._sharedMediaSession = { connect: sinon.stub() };
+                return Promise.resolve();
+            });
+            const getPcStub = sinon.stub(pcm as any, '_getIdleOrCreatePeerConnection').resolves({ id: 'pc' });
+
+            await (pcm as any)._setupPageLoadPersistentConnection();
+
+            expect(getPcStub).to.not.have.been.called;
+            expect(mockLogger.info).to.have.been.calledWith(sinon.match.any, sinon.match.any, sinon.match(/Skipping page-load PC setup \(closed or SharedMediaSession appeared during strategy wait\)/));
         });
     });
 

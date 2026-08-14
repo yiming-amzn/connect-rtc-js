@@ -1,11 +1,11 @@
-const uuid = require("uuid/v4");
+const uuid = require("uuid").v4;
 import StandardStrategy from "./strategies/StandardStrategy";
 import CCPInitiationStrategyInterface from "./strategies/CCPInitiationStrategyInterface";
 import SharedMediaSession from './shared_media_session';
 import CallSession from './call_session';
 import SignalingChannelManager from './signaling_channel_manager';
 import { IllegalParameters } from "./exceptions";
-import { getUserAgentData, isFirefoxBrowser, isFunction, wrapLogger } from "./utils";
+import { getUserAgentData, isFirefoxBrowser, isFunction, isLoginPopupWindow, wrapLogger } from "./utils";
 import {
     DEFAULT_ICE_CANDIDATE_POOL_SIZE,
     RTC_PEER_CONNECTION_CONFIG,
@@ -646,15 +646,22 @@ export default class RtcPeerConnectionManagerV2 {
      * @private
      */
     async _setupPageLoadPersistentConnection() {
+        if (isLoginPopupWindow()) {
+            this._logger.info("Skipping page-load persistent connection setup: this context is the CCP login popup").sendInternalLogToServer();
+            return;
+        }
+
         let ownedPc: any = null;
         try {
+            this._logger.info("Setting up page-load persistent connection: waiting for strategy to be connected").sendInternalLogToServer();
+            const whenConnectedStartedAt = Date.now();
             await (this._strategy as any).whenConnected();
+            this._logger.info(`Page-load PC setup: strategy connected after ${Date.now() - whenConnectedStartedAt}ms`).sendInternalLogToServer();
 
             if (this._closed || this._sharedMediaSession) {
-                this._logger.info("Skipping page-load PC setup (closed or SharedMediaSession exists)").sendInternalLogToServer();
+                this._logger.info("Skipping page-load PC setup (closed or SharedMediaSession appeared during strategy wait)").sendInternalLogToServer();
                 return;
             }
-            this._logger.info("Strategy is connected, proceeding with page-load persistent connection setup").sendInternalLogToServer();
 
             const pc = await this._getIdleOrCreatePeerConnection();
 
@@ -670,6 +677,7 @@ export default class RtcPeerConnectionManagerV2 {
             // iceServers for session reporting, so pass empty.
             this._initializeSharedMediaSession({ contactToken: null, iceServers: [] });
             this._sharedMediaSession.connect(this._pc);
+            this._logger.info("Page-load persistent connection setup complete").sendInternalLogToServer();
         } catch (error) {
             this._logger.error("Failed to setup page-load persistent connection").withException(error).sendInternalLogToServer();
             if (ownedPc) {

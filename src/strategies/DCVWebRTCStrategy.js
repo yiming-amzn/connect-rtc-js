@@ -30,9 +30,10 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
             if (result.success) {
                 this.proxy = result.proxy;
                 this.proxy.overrideWebRTC();
-                console.log('DCVStrategy initialized (V2), version:', this.proxy.getVersion());
+                this._logger.info(`DCVStrategy: initialized (V2), version: ${this.proxy.getVersion()}`).sendInternalLogToServer();
                 this._setupReconnectionHandling();
                 this._isV2 = true;
+                this._recordConnectionStatusChange('connected');
                 this._connectedResolve();
             } else {
                 const err = new Error('DCV WebRTC redirection feature is NOT supported!');
@@ -47,7 +48,8 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
             if (result.success) {
                 this.proxy = window.DCVWebRTCRedirProxy;
                 this.proxy.overrideWebRTC();
-                console.log('DCVStrategy initialized (V1)');
+                this._logger.info('DCVStrategy: initialized (V1)').sendInternalLogToServer();
+                this._recordConnectionStatusChange('connected');
                 this._connectedResolve();
             } else {
                 const err = new Error('DCV WebRTC redirection feature is NOT supported!');
@@ -62,12 +64,13 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
 
         this.proxy.addStatusChangeEventListener((event) => {
             if (event.status === 'unavailable') {
-                console.error('DCV redirection unavailable. Last heartbeat:',
-                    Date.now() - event.lastHeartbeat, 'ms ago');
+                this._recordConnectionStatusChange('disconnected');
+                this._logger.error(`DCVStrategy: DCV redirection unavailable. Last heartbeat: ${Date.now() - event.lastHeartbeat}ms ago`).sendInternalLogToServer();
                 this._resetConnectedPromise();
                 this._handleRedirectionLost();
             } else if (event.status === 'available') {
-                console.info('DCV redirection restored');
+                this._recordConnectionStatusChange('connected');
+                this._logger.info('DCVStrategy: DCV redirection restored').sendInternalLogToServer();
                 this._handleRedirectionRestored();
                 this._connectedResolve();
             }
@@ -81,7 +84,7 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
             try {
                 this._onConnectionNeedingCleanupHandler();
             } catch (e) {
-                console.error('Error during connection cleanup:', e);
+                this._logger.error(`DCVStrategy: Error during connection cleanup: ${e}`).sendInternalLogToServer();
             }
         }
     }
@@ -92,6 +95,9 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
     }
 
     isChromeBrowser() {
+        if (!this.proxy || !this.proxy.clientInfo || !this.proxy.clientInfo.browserDetails) {
+            return false;
+        }
         return this.proxy.clientInfo.browserDetails.browser === CHROME;
     }
 
@@ -218,8 +224,8 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
 
     _ontrack(self, evt) {
         if (evt.streams.length > 1) {
-            console.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
-                evt.streams.map(stream => stream.id).join(','));
+            this._logger.warn('DCVStrategy: Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
+                evt.streams.map(stream => stream.id).join(',')).sendInternalLogToServer();
         }
         let stream = evt.streams[0];
         self._remoteAudioElement = this.createMediaElement(stream);
@@ -233,7 +239,7 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
             autoplay: true,
         };
         let element = stream.createMediaElement(props);
-        console.log("Creating proxied media element.");
+        this._logger.info("DCVStrategy: Creating proxied media element.").sendInternalLogToServer();
         return element;
     }
 
@@ -252,10 +258,11 @@ export default class DCVWebRTCStrategy extends CCPInitiationStrategyInterface {
      * Rejects if it does not complete within DCV_READY_TIMEOUT_MS.
      */
     whenConnected() {
+        this._logger.info(`${this.getStrategyName()}: whenConnected called; connection ${this._connectionStatusSummary()}`).sendInternalLogToServer();
         return Promise.race([
             this._connectedPromise,
             new Promise((_, reject) => setTimeout(
-                () => reject(new Error(`${this.getStrategyName()} did not connect within ${DCV_READY_TIMEOUT_MS}ms`)),
+                () => reject(new Error(`${this.getStrategyName()} did not connect within ${DCV_READY_TIMEOUT_MS}ms; connection ${this._connectionStatusSummary()}`)),
                 DCV_READY_TIMEOUT_MS
             ))
         ]);

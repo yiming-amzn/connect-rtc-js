@@ -6,7 +6,6 @@ import CCPInitiationStrategyInterface from "./CCPInitiationStrategyInterface";
 import { FailedState } from "../rtc_session";
 import { RTC_ERRORS } from "../rtc_const";
 import {CITRIX_413, CITRIX_SDK_310, CITRIX_SDK_413, CITRIX_VDI_STRATEGY, ONE_SEC_IN_MILLIS, CITRIX} from "../config/constants";
-import { wrapLogger } from "../utils";
 
 const CITRIX_READY_TIMEOUT_MS = 10000;
 
@@ -29,11 +28,7 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
      *                              Defaults to "CITRIX" which uses the 3.1 SDK.
      */
     constructor(vdiPlatform = CITRIX, useRealCitrix = true) {
-        super();
-
-        this._logger = global.connect && global.connect.getLog
-            ? wrapLogger(global.connect.getLog(), 'CitrixVDI', 'CitrixVDIStrategy')
-            : null;
+        super(); // sets this._logger to the CCP server logger (getLog(), no-op fallback in tests)
 
         this._loadedSdkVersion = null;
 
@@ -47,23 +42,17 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
                 if (vdiPlatform === CITRIX_413) {
                     require("@citrix/ucsdk_4.1/CitrixWebRTC");
                     require("@citrix/ucsdk_4.1/CitrixBootstrap");
-                    console.log("CitrixVDIStrategy initializing with SDK version: citrix 4.1");
                     this._loadedSDKVersion = CITRIX_SDK_413;
-                    if (this._logger && this._logger.info) {
-                        this._logger.info(`Initializing CitrixVDIStrategy with SDK version 4.1 (${CITRIX_SDK_413})`).sendInternalLogToServer();
-                    }
+                    this._logger.info(`CitrixVDIStrategy: Initializing with SDK version 4.1 (${CITRIX_SDK_413})`).sendInternalLogToServer();
                 } else {
                     require("@citrix/ucsdk/CitrixWebRTC");
-                    console.log("CitrixVDIStrategy initializing with SDK version: citrix 3.1");
                     this._loadedSDKVersion = CITRIX_SDK_310;
-                    if (this._logger && this._logger.info) {
-                        this._logger.info(`Initializing CitrixVDIStrategy with SDK version 3.1 (${CITRIX_SDK_310})`).sendInternalLogToServer();
-                    }
+                    this._logger.info(`CitrixVDIStrategy: Initializing with SDK version 3.1 (${CITRIX_SDK_310})`).sendInternalLogToServer();
                 }
             } catch (error) {
                 require("@citrix/ucsdk/CitrixWebRTC");
                 this._loadedSDKVersion = CITRIX_SDK_310;
-                console.error("Fallback to citrix 3.1 SDK due to error : ", error);
+                this._logger.error(`CitrixVDIStrategy: Fallback to citrix 3.1 SDK due to error: ${error}`).sendInternalLogToServer();
             }
         }
 
@@ -99,7 +88,7 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
      * @param {number} timeoutMs - Timeout in milliseconds
      * @returns {Promise} Promise that resolves with redirection state or rejects on timeout
      */
-    async getRedirectionStateWithTimeout(timeoutMs = ONE_SEC_IN_MILLIS) {
+    async getRedirectionStateWithTimeout(timeoutMs = 10 * ONE_SEC_IN_MILLIS) {
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
                 const timeoutError = new TimeoutError(`getRedirectionState timed out after ${timeoutMs}ms`);
@@ -120,53 +109,53 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
     }
 
     async initializeCitrix() {
-        console.log("CitrixVDIStrategy: Starting initialization process with SDK :", this._loadedSDKVersion);
+        this._logger.info(`CitrixVDIStrategy: [init] START (SDK: ${this._loadedSDKVersion})`).sendInternalLogToServer();
         if(this._loadedSDKVersion === CITRIX_SDK_413) {
+            let redirectionCheckStartedAt = null;
             try {
                 if (window.CitrixBootstrap && typeof window.CitrixBootstrap.getRedirectionState === 'function') {
-                    console.log("CitrixVDIStrategy: Bootstrap available, initializing...");
                     // Initialize Bootstrap - it will handle automatic session reconnection
                     window.CitrixBootstrap.initBootstrap("AmazonConnect");
                     window.CitrixBootstrap.initLog(global.connect.getLog(), true);
-                    console.log("CitrixVDIStrategy: Bootstrap initialized, checking redirection state...");
 
-                    const redirectionState = await this.getRedirectionStateWithTimeout(ONE_SEC_IN_MILLIS);
-                    console.log("Bootstrap redirection state:", redirectionState);
+                    redirectionCheckStartedAt = Date.now();
+                    this._logger.info("CitrixVDIStrategy: [bootstrap redirection-state check] START").sendInternalLogToServer();
+                    const redirectionState = await this.getRedirectionStateWithTimeout(10 * ONE_SEC_IN_MILLIS);
+                    this._logger.info(`CitrixVDIStrategy: [bootstrap redirection-state check] SUCCEEDED after ${Date.now() - redirectionCheckStartedAt}ms (redirectionState: ${redirectionState})`).sendInternalLogToServer();
 
                     // RedirectionState -2 denotes unsupported VDA for bootstrap
                     if (redirectionState !== -2) {
-                        console.log("Initializing citrix bootstrap");
+                        this._bootstrapEnabled = true;
+                        this._logger.info("CitrixVDIStrategy: [init] using bootstrap path (VDA supports bootstrap)").sendInternalLogToServer();
                         this.initCitrixWebRTC();
                         this.initLog();
+                        this._logger.info("CitrixVDIStrategy: [init] DONE (bootstrap path)").sendInternalLogToServer();
                         return;
                     }
-                    // If we reach here, either Bootstrap isn't available or getRedirectionState returned unsupported state
-                    console.log("Citrix VDA incompatible for bootstrap, falling back to standard initialization");
-                    if (this._logger && this._logger.info) {
-                        this._logger.info("Citrix VDA incompatible for bootstrap, falling back to standard initialization").sendInternalLogToServer();
-                    }
+                    // redirectionState === -2: VDA does not support bootstrap
+                    this._logger.info("CitrixVDIStrategy: [init] VDA incompatible with bootstrap (redirectionState -2), falling back to standard initialization").sendInternalLogToServer();
+                } else {
+                    this._logger.info("CitrixVDIStrategy: [init] Bootstrap SDK unavailable, falling back to standard initialization").sendInternalLogToServer();
                 }
-                console.log("Initializing Citrix SDK without bootstrap support");
                 this.initializeWithoutBootstrap();
+                this._logger.info("CitrixVDIStrategy: [init] DONE (standard fallback path)").sendInternalLogToServer();
 
             } catch (error) {
+                const elapsed = redirectionCheckStartedAt !== null ? `${Date.now() - redirectionCheckStartedAt}ms` : "n/a";
                 if (error instanceof TimeoutError || error.isTimeout) {
-                    console.log("Bootstrap redirection state check timed out, falling back to standard initialization");
-                    if (this._logger && this._logger.info) {
-                        this._logger.info("Bootstrap redirection state check timed out, falling back to standard initialization").sendInternalLogToServer();
-                    }
+                    this._logger.info(`CitrixVDIStrategy: [bootstrap redirection-state check] TIMED OUT after ${elapsed}, falling back to standard initialization`).sendInternalLogToServer();
                 } else {
-                    console.error("Error during citrix bootstrap initialization, falling back to standard initialization:", error);
+                    this._logger.error(`CitrixVDIStrategy: [bootstrap redirection-state check] FAILED after ${elapsed}, falling back to standard initialization: ${error}`).sendInternalLogToServer();
                 }
-                console.log("Initializing without bootstrap support");
                 this.initializeWithoutBootstrap();
+                this._logger.info("CitrixVDIStrategy: [init] DONE (standard fallback path after bootstrap error)").sendInternalLogToServer();
             }
         }
         else {
-            console.log("Initializing default Citrix 3.1 SDK");
+            this._logger.info("CitrixVDIStrategy: [init] using default Citrix 3.1 SDK (no bootstrap)").sendInternalLogToServer();
             this.initializeWithoutBootstrap();
+            this._logger.info("CitrixVDIStrategy: [init] DONE (Citrix 3.1 path)").sendInternalLogToServer();
         }
-        console.log("CitrixVDIStrategy: Initialization process completed");
     }
 
     initializeWithoutBootstrap() {
@@ -185,26 +174,26 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
     initCitrixWebRTC() {
         window.CitrixWebRTC.setVMEventCallback((event) => {
             if (event.event === 'vdiClientConnected') {
-                console.log("vdiClientConnected Event received");
+                this._recordConnectionStatusChange('connected');
+                this._logger.info("CitrixVDIStrategy: vdiClientConnected event received").sendInternalLogToServer();
                 if (!window.CitrixWebRTC.isFeatureOn("webrtc1.0")) {
                     const errorMsg = 'Citrix WebRTC redirection feature is NOT supported!';
-                    if (this._logger && this._logger.error) {
-                        this._logger.error(errorMsg).sendInternalLogToServer();
-                    }
+                    this._logger.error(`CitrixVDIStrategy: ${errorMsg}`).sendInternalLogToServer();
                     this._connectedReject(new Error(errorMsg));
                     throw new Error(errorMsg);
                 }
-                console.log("CitrixVDIStrategy initialized");
+                this._logger.info("CitrixVDIStrategy: initialized").sendInternalLogToServer();
                 this.version = event.version;
                 this._connectedResolve();
             } else if (event.event === 'vdiClientDisconnected') {
-                console.log("vdiClientDisconnected Event received");
+                this._recordConnectionStatusChange('disconnected');
+                this._logger.info(`CitrixVDIStrategy: vdiClientDisconnected event received. reason: ${event.reason}, msg: ${event.msg}`).sendInternalLogToServer();
                 this._resetConnectedPromise();
                 try {
                     this._onConnectionNeedingCleanupHandler(this);
-                    console.log("VDI disconnection event triggered");
+                    this._logger.info("CitrixVDIStrategy: VDI disconnection event triggered for cleanup").sendInternalLogToServer();
                 } catch (error) {
-                    console.error("Error triggering VDI disconnection event for cleanup:", error);
+                    this._logger.error(`CitrixVDIStrategy: Error triggering VDI disconnection event for cleanup: ${error}`).sendInternalLogToServer();
                 }
 
             }
@@ -224,12 +213,12 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
      * @param {Function} handler - The handler function to be called when connection needs cleanup
      */
     onConnectionNeedingCleanup(handler) {
-        console.log("CitrixVDIStrategy: Setting VDI disconnection handler");
+        this._logger.info("CitrixVDIStrategy: Setting VDI disconnection handler").sendInternalLogToServer();
         if (typeof handler === 'function') {
             this._onConnectionNeedingCleanupHandler = handler;
-            console.log("CitrixVDIStrategy: Handler set successfully");
+            this._logger.info("CitrixVDIStrategy: Handler set successfully").sendInternalLogToServer();
         } else {
-            console.error("CitrixVDIStrategy: Invalid handler provided");
+            this._logger.error("CitrixVDIStrategy: Invalid handler provided").sendInternalLogToServer();
         }
     }
 
@@ -345,7 +334,7 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
     _ontrack(self, evt) {
         window.CitrixWebRTC.mapAudioElement(self._remoteAudioElement);
         if (evt.streams.length > 1) {
-            self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
+            self._logger.warn('CitrixVDIStrategy: Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
                 evt.streams.map(stream => stream.id).join(','));
         }
         if (evt.track.kind === 'video' && self._remoteVideoElement) {
@@ -359,14 +348,28 @@ export default class CitrixVDIStrategy extends CCPInitiationStrategyInterface {
     }
 
     /**
+     * Overrides the base summary to add Citrix-specific context: the loaded SDK version,
+     * the VDI client version, and whether the bootstrap reconnection path is enabled.
+     * (_recordConnectionStatusChange is inherited from CCPInitiationStrategyInterface.)
+     */
+    _connectionStatusSummary() {
+        const context = `SDK: ${this._loadedSDKVersion || 'unknown'}, clientVersion: ${this.getVdiClientVersion() || 'unknown'}, bootstrapEnabled: ${!!this._bootstrapEnabled}`;
+        if (!this._connectionStatusChangedAt) {
+            return `status ${this._connectionStatus} (no change observed yet); ${context}`;
+        }
+        return `last ${this._connectionStatus} at ${this._connectionStatusChangedAt} UTC; ${context}`;
+    }
+
+    /**
      * Resolves when the Citrix VDI client is connected and ready for WebRTC operations.
      * Rejects if the client does not connect within CITRIX_READY_TIMEOUT_MS.
      */
     whenConnected() {
+        this._logger.info(`CitrixVDIStrategy: whenConnected called; VDI connection ${this._connectionStatusSummary()}`).sendInternalLogToServer();
         return Promise.race([
             this._connectedPromise,
             new Promise((_, reject) => setTimeout(
-                () => reject(new Error(`${this.getStrategyName()} did not connect within ${CITRIX_READY_TIMEOUT_MS}ms`)),
+                () => reject(new Error(`${this.getStrategyName()} did not connect within ${CITRIX_READY_TIMEOUT_MS}ms; VDI connection ${this._connectionStatusSummary()}`)),
                 CITRIX_READY_TIMEOUT_MS
             ))
         ]);

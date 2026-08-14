@@ -36,4 +36,19 @@ describe('SessionReport', () => {
             expect(report.vdiClientVersion).to.equal('1.2.3');
         });
     });
+
+    describe('vdiDisconnectedFailure', () => {
+        it('should default to null', () => {
+            const report = new SessionReport();
+            expect(report.vdiDisconnectedFailure).to.be.null;
+        });
+
+        it('should round-trip a boolean', () => {
+            const report = new SessionReport();
+            report.vdiDisconnectedFailure = true;
+            expect(report.vdiDisconnectedFailure).to.be.true;
+            report.vdiDisconnectedFailure = false;
+            expect(report.vdiDisconnectedFailure).to.be.false;
+        });
+    });
 });

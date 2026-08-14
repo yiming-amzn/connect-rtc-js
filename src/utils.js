@@ -8,6 +8,7 @@ import { IllegalParameters } from './exceptions';
 import { getKind, parseRtpMap, parseRtpParameters, splitLines, splitSections, writeFmtp } from 'sdp';
 import { UserAgentData } from "./user_agent_data";
 import { BROWSER_LIST, FIREFOX } from "./rtc_const";
+import { LOGIN_POPUP_WINDOW_NAME, UNDEFINED } from "./config/constants";
 import { UAParser } from 'ua-parser-js';
 
 /**
@@ -318,6 +319,21 @@ export function isFirefoxBrowser(userAgentData) {
         return userAgentData.browserBrand.toUpperCase() === FIREFOX.toUpperCase();
     } else {
         return navigator.userAgent.indexOf(FIREFOX) !== -1;
+    }
+}
+
+/**
+ * True when this context is the CCP login popup, which Streams opens as
+ * window.open(loginUrl, connect.MasterTopics.LOGIN_POPUP, ...) — so window.name is
+ * LOGIN_POPUP_WINDOW_NAME. The popup exists only to complete authentication and is
+ * then closed, so it must not claim per-agent media resources.
+ */
+export function isLoginPopupWindow() {
+    try {
+        return typeof window !== UNDEFINED && window.name === LOGIN_POPUP_WINDOW_NAME;
+    } catch (e) {
+        // Cross-origin or non-browser context: treat as "not the login popup".
+        return false;
     }
 }
 

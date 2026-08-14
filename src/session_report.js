@@ -39,6 +39,7 @@ export class SessionReport {
         this._handshakingFailure = null;
         this._gumOtherFailure = null;
         this._gumTimeoutFailure = null;
+        this._vdiDisconnectedFailure = null;
         this._createOfferFailure = null;
         this._setLocalDescriptionFailure = null;
         this._userBusyFailure = null;
@@ -245,6 +246,12 @@ export class SessionReport {
      */
     get gumOtherFailure() {
         return this._gumOtherFailure;
+    }
+    /**
+     * RTC Session failed because the VDI client was not connected (audio redirection unavailable).
+     */
+    get vdiDisconnectedFailure() {
+        return this._vdiDisconnectedFailure;
     }
     /**
      * RTC Session failed in create Offer state.
@@ -473,6 +480,9 @@ export class SessionReport {
     }
     set gumOtherFailure(value) {
         this._gumOtherFailure = value;
+    }
+    set vdiDisconnectedFailure(value) {
+        this._vdiDisconnectedFailure = value;
     }
     set createOfferFailure(value) {
         this._createOfferFailure = value;

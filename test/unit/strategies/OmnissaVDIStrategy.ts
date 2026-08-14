@@ -38,10 +38,10 @@ describe('OmnissaVDIStrategy', () => {
 
         // Simulate events
         eventHandler.call(instance, { event: 'vdiClientConnected' });
-        sinon.assert.calledWith((console.log as sinon.SinonStub), 'Got event from WebRTCRedirSDK: vdiClientConnected');
+        sinon.assert.calledWith(global.connect.getLog().info as sinon.SinonStub, 'OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientConnected');
 
         eventHandler.call(instance, { event: 'vdiClientDisconnected' });
-        sinon.assert.calledWith((console.log as sinon.SinonStub), 'Got event from WebRTCRedirSDK: vdiClientDisconnected');
+        sinon.assert.calledWith(global.connect.getLog().info as sinon.SinonStub, 'OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientDisconnected');
 
     });
 
@@ -63,7 +63,7 @@ describe('OmnissaVDIStrategy', () => {
         const eventHandler = global.window.HorizonWebRtcRedirectionAPI.initSDK.getCall(0).args[2];
         eventHandler({ event: 'unknownEvent' });
 
-        sinon.assert.calledWith((console.log as sinon.SinonStub), 'Got an unknown event from WebRTCRedirSDK: {"event":"unknownEvent"}');
+        sinon.assert.calledWith(global.connect.getLog().info as sinon.SinonStub, 'OmnissaVDI: Got an unknown event from WebRTCRedirSDK: {"event":"unknownEvent"}');
 
     });
 

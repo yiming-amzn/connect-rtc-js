@@ -226,6 +226,85 @@ describe('SharedMediaSession', () => {
         });
     });
 
+    describe('_ensureStrategyConnected', () => {
+        it('resolves when the strategy is connected (non-VDI resolves immediately)', async () => {
+            const session = new SharedMediaSession(config);
+            // StandardStrategy.whenConnected() resolves immediately.
+            await (session as any)._ensureStrategyConnected();
+            expect((session as any)._sessionReport.vdiDisconnectedFailure).to.be.null;
+        });
+
+        it('rejects with VDI_DISCONNECTED and records the flag when the strategy is not connected', async () => {
+            const session = new SharedMediaSession(config);
+            mockStrategy.whenConnected = sinon.stub().rejects(new Error('client not connected'));
+
+            let thrown: any;
+            try {
+                await (session as any)._ensureStrategyConnected();
+                expect.fail('Should have thrown');
+            } catch (e) {
+                thrown = e;
+            }
+
+            expect(thrown).to.equal(RTC_ERRORS.VDI_DISCONNECTED);
+            expect((session as any)._sessionReport.vdiDisconnectedFailure).to.be.true;
+        });
+
+        it('is reusable by any connection-gated operation (does not touch GUM state)', async () => {
+            const session = new SharedMediaSession(config);
+            mockStrategy.whenConnected = sinon.stub().rejects(new Error('client not connected'));
+
+            try { await (session as any)._ensureStrategyConnected(); } catch (e) { /* expected */ }
+
+            // The helper is operation-agnostic: it must not touch GUM flags/timing.
+            expect((session as any)._sessionReport.gumOtherFailure).to.be.null;
+            expect((session as any)._sessionReport.gumTimeoutFailure).to.be.null;
+            expect((session as any)._sessionReport.gumTimeMillis).to.be.null;
+        });
+    });
+
+    describe('GrabLocalMediaState — ensure-connected before GUM', () => {
+        it('ensures the strategy is connected BEFORE requesting media (_doGUM)', async () => {
+            const session = new SharedMediaSession(config);
+            session._isUserProvidedStream = false;
+            const callOrder: string[] = [];
+            mockStrategy.whenConnected = sinon.stub().callsFake(() => { callOrder.push('whenConnected'); return Promise.resolve(); });
+            sinon.stub(session as any, '_doGUM').callsFake(() => {
+                callOrder.push('doGUM');
+                return Promise.resolve({ getAudioTracks: () => [{ getSettings: () => ({ deviceId: 'd' }) }] });
+            });
+            (session as any)._replaceStreamCallback = (_s: any, stream: any) => stream;
+
+            const state = new GrabLocalMediaState(session);
+            (session as any)._state = state;
+            state.onEnter();
+            for (let i = 0; i < 20; i++) { await Promise.resolve(); }
+
+            expect(callOrder).to.deep.equal(['whenConnected', 'doGUM']);
+        });
+
+        it('fails the session with VDI_DISCONNECTED when the strategy is not connected (no GUM)', async () => {
+            const session = new SharedMediaSession(config);
+            session._isUserProvidedStream = false;
+            mockStrategy.whenConnected = sinon.stub().rejects(new Error('client not connected'));
+            const doGUM = sinon.stub(session as any, '_doGUM').resolves({ getAudioTracks: () => [] });
+
+            const state = new GrabLocalMediaState(session);
+            (session as any)._state = state;
+            const transitSpy = sinon.spy(state, 'transit');
+            state.onEnter();
+            for (let i = 0; i < 20; i++) { await Promise.resolve(); }
+
+            expect(doGUM).to.not.have.been.called;
+            // Session transitions to FailedState carrying the VDI_DISCONNECTED reason.
+            const failed = transitSpy.getCalls().find(c => c.args[0] && (c.args[0] as any).name === 'FailedState');
+            expect(failed, 'should transit to FailedState').to.exist;
+            expect((failed!.args[0] as any)._failureReason).to.equal(RTC_ERRORS.VDI_DISCONNECTED);
+            expect((session as any)._sessionReport.vdiDisconnectedFailure).to.be.true;
+        });
+
+    });
+
     describe('GUM Operations', () => {
         // it('should set audio track onended handler for VDI environments', async () => {
         //     const session = new SharedMediaSession(config);
@@ -307,6 +386,24 @@ describe('SharedMediaSession', () => {
             expect(thrown).to.equal(RTC_ERRORS.GUM_OTHER_FAILURE);
             expect((session as any)._sessionReport.gumOtherFailure).to.be.true;
             expect((session as any)._sessionReport.gumTimeoutFailure).to.be.false;
+        });
+
+        it('should not touch vdiDisconnectedFailure on a GUM failure (independent concerns)', async () => {
+            // _doGUM only handles getUserMedia. A GUM failure classifies as GUM_OTHER_FAILURE
+            // and leaves vdiDisconnectedFailure at its default (null) -- VDI-disconnect is a
+            // separate precondition handled by _ensureStrategyConnected, not by _doGUM.
+            const session = new SharedMediaSession(config);
+            mockStrategy._gUM = sinon.stub().rejects(new Error('some other gUM error'));
+
+            let thrown: any;
+            try {
+                await (session as any)._doGUM('device-id');
+                expect.fail('Should have thrown');
+            } catch (e) { thrown = e; }
+
+            expect(thrown).to.equal(RTC_ERRORS.GUM_OTHER_FAILURE);
+            expect((session as any)._sessionReport.gumOtherFailure).to.be.true;
+            expect((session as any)._sessionReport.vdiDisconnectedFailure).to.be.null;
         });
     });
 
@@ -1028,6 +1125,17 @@ describe('SharedMediaSession', () => {
             expect(mockState.hangup).to.have.been.calledWith(false);
         });
 
+        it('should not throw when _state is undefined (connect never completed)', () => {
+            const session = new SharedMediaSession(config);
+            (session as any)._state = undefined;
+
+            expect(() => session.hangup()).to.not.throw();
+            expect(mockLogger.warn).to.have.been.calledWith(
+                sinon.match.any, sinon.match.any,
+                sinon.match(/hangup called but session has no state/)
+            );
+        });
+
         it('should throw UnsupportedOperation for accept', () => {
             const session = new SharedMediaSession(config);
             
@@ -1180,7 +1288,7 @@ describe('SharedMediaSession', () => {
                 expect(transitSpy.firstCall.args[0]).to.be.instanceOf(CreateOfferState);
             });
 
-            it('should handle getUserMedia success with audio tracks', () => {
+            it('should handle getUserMedia success with audio tracks', async () => {
                 const session = new SharedMediaSession(config);
                 session._isUserProvidedStream = false;
                 const mockTrack = {
@@ -1191,23 +1299,23 @@ describe('SharedMediaSession', () => {
                 };
                 
                 session._replaceStreamCallback = () => undefined;
-                
+
                 // Create a state instance that we can control
                 const state = new GrabLocalMediaState(session);
+                (session as any)._state = state;
                 const transitSpy = sinon.spy(state, 'transit');
-                
+
                 // Mock _doGUM to simulate successful resolution
                 const doGUMPromise = Promise.resolve(mockStream);
                 sinon.stub(session, '_doGUM').returns(doGUMPromise);
-                
+
                 state.onEnter();
-                
-                // The async operation will be triggered but we can't wait for it in this test pattern
-                // Just verify the doGUM was called
+                // _doGUM now runs after _ensureStrategyConnected() resolves (a microtask later).
+                for (let i = 0; i < 20; i++) { await Promise.resolve(); }
                 expect((session as any)._doGUM).to.have.been.called;
             });
 
-            it('should handle replacement stream callback', () => {
+            it('should handle replacement stream callback', async () => {
                 const session = new SharedMediaSession(config);
                 session._isUserProvidedStream = false;
                 const mockTrack = {
@@ -1216,17 +1324,18 @@ describe('SharedMediaSession', () => {
                 const mockStream = {
                     getAudioTracks: () => [mockTrack]
                 };
-                
+
                 session._replaceStreamCallback = () => mockStream;
-                
+
                 const state = new GrabLocalMediaState(session);
+                (session as any)._state = state;
                 const transitSpy = sinon.spy(state, 'transit');
-                
+
                 const doGUMPromise = Promise.resolve(mockStream);
                 sinon.stub(session, '_doGUM').returns(doGUMPromise);
-                
+
                 state.onEnter();
-                
+                for (let i = 0; i < 20; i++) { await Promise.resolve(); }
                 expect((session as any)._doGUM).to.have.been.called;
             });
         });

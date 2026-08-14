@@ -160,11 +160,13 @@ describe('AzureVDIStrategy', () => {
             expect((strategy as any)._logger).to.not.be.null;
         });
 
-        it('sets logger to null when global.connect is unavailable', () => {
+        it('falls back to a no-op logger when global.connect is unavailable', () => {
             setupValidEnv();
             (global as any).connect = undefined;
             const strategy = new AzureVDIStrategy();
-            expect((strategy as any)._logger).to.be.null;
+            // Base class provides a no-op logger (not null) so log calls never throw.
+            expect((strategy as any)._logger).to.not.be.null;
+            expect(() => (strategy as any)._logger.info('x').sendInternalLogToServer()).to.not.throw();
         });
     });
 

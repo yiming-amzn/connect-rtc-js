@@ -108,8 +108,9 @@ export class GrabLocalMediaState extends SharedMediaSessionState {
             self.transit(new CreateOfferState(self._sharedMediaSession));
         } else {
 
-            // Use the device requested from the constructor.
-            self._sharedMediaSession._doGUM()
+            self._sharedMediaSession._logger.info('[GrabLocalMediaState] Ensuring strategy is connected before acquiring local media').sendInternalLogToServer();
+            self._sharedMediaSession._ensureStrategyConnected()
+                .then(() => self._sharedMediaSession._doGUM())
                 .then((stream) => {
                     const audioTracks = stream.getAudioTracks();
                     if (audioTracks.length > 0) {
@@ -796,7 +797,7 @@ export default class SharedMediaSession {
         );
 
         try {
-            // Acquire new media stream with GUM timeout
+            await this._ensureStrategyConnected();
             logger.info("[setMicrophoneDevice] Acquiring new media stream...").sendInternalLogToServer();
             var newStream = await this._doGUM(newAudioDeviceId);
             var newTrack = newStream.getAudioTracks()[0];
@@ -1195,6 +1196,21 @@ export default class SharedMediaSession {
         return deviceId;
     }
 
+    /**
+     * Ensure the strategy is connected before an operation that needs the audio-redirection
+     * channel. Rejects with RTC_ERRORS.VDI_DISCONNECTED (and records vdiDisconnectedFailure)
+     * when a VDI client is not connected; non-VDI strategies resolve immediately.
+     */
+    async _ensureStrategyConnected() {
+        try {
+            await this._strategy.whenConnected();
+        } catch (e) {
+            this._sessionReport.vdiDisconnectedFailure = true;
+            this._logger.error(`Strategy is not connected (VDI client unavailable): ${e && e.message}`).sendInternalLogToServer();
+            throw RTC_ERRORS.VDI_DISCONNECTED;
+        }
+    }
+
     _doGUM(newDeviceId) {
         var self = this;
         const logger = this._logger;
@@ -1297,6 +1313,10 @@ export default class SharedMediaSession {
     }
 
     hangup(serverInitiated = false) {
+        if (!this._state) {
+            this._logger.warn('hangup called but session has no state (connect() was never completed)').sendInternalLogToServer();
+            return;
+        }
         this._state.hangup(serverInitiated);
     }
 

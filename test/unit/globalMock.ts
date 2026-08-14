@@ -50,6 +50,9 @@ export interface MockDocument {
 
 export interface MockWindow {
     readonly navigator: MockNavigator;
+    // A real browser always exposes window.name as a string ('' when unset), so the
+    // mock models it as one. isLoginPopupWindow() reads it.
+    name: string;
     readonly CitrixWebRTC: MockCitrixWebRTC;
     readonly getCitrixWebrtcRedir: sinon.SinonStub;
     readonly CitrixBootstrap: StubbedType<MockCitrixBootstrap>;
@@ -133,6 +136,7 @@ export class GlobalMocker implements MockGlobal {
                 mediaDevices: stubInterface<MediaDevices>(sinon),
                 permissions: stubInterface<Permissions>(sinon)
             },
+            name: '',
             document: mockDocument,
             parent: {
                 parent: {

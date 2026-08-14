@@ -1,6 +1,6 @@
 import StandardStrategy from "./StandardStrategy";
 import { AZURE_VDI_STRATEGY } from "../config/constants";
-import { wrapLogger, isChromeBrowser, isEdgeBrowser } from "../utils";
+import { isChromeBrowser, isEdgeBrowser } from "../utils";
 
 interface AzureMetadata {
     azureMmrHostVersion: string | null;
@@ -36,12 +36,10 @@ export default class AzureVDIStrategy extends StandardStrategy {
         this._onConnectionNeedingCleanupHandler = () => {};
 
         // Azure validates redirection is active at construction; start already-connected.
+        // (this._logger is set by CCPInitiationStrategyInterface; getLog() directly, not wrapLogger.)
         this._connectedPromise = Promise.resolve();
         this._connectedResolve = null;
-
-        this._logger = global.connect && global.connect.getLog
-            ? wrapLogger(global.connect.getLog(), 'softphone', '[AzureVDIStrategy] %s')
-            : null;
+        this._recordConnectionStatusChange('connected');
 
         this._metadata = this._collectMetadata();
         this._mmrClientVersion = this._sanitize((navigator.mediaDevices as any).mmrClientVersion);
@@ -49,10 +47,11 @@ export default class AzureVDIStrategy extends StandardStrategy {
     }
 
     whenConnected(): Promise<void> {
+        this._logger.info(`${this.getStrategyName()}: whenConnected called; connection ${this._connectionStatusSummary()}`).sendInternalLogToServer();
         return Promise.race([
             this._connectedPromise,
             new Promise<void>((_, reject) => setTimeout(
-                () => reject(new Error(`${this.getStrategyName()} did not connect within ${AzureVDIStrategy.AZURE_READY_TIMEOUT_MS}ms`)),
+                () => reject(new Error(`${this.getStrategyName()} did not connect within ${AzureVDIStrategy.AZURE_READY_TIMEOUT_MS}ms; connection ${this._connectionStatusSummary()}`)),
                 AzureVDIStrategy.AZURE_READY_TIMEOUT_MS
             ))
         ]);
@@ -72,8 +71,7 @@ export default class AzureVDIStrategy extends StandardStrategy {
 
     // Strips characters not in the allowlist (alphanumeric, '.', '-', '_', '(', ')', space).
     // Accepts strings and numbers; rejects objects, booleans, null, undefined.
-    // Without filtering, curly braces in GUIDs like "{52416FB9-BA17}" cause a JSON parsing
-    // error in the telemetry service's event publisher.
+    // Without filtering, curly braces in GUIDs like "{52416FB9-BA17}" cause a JSON parsing error.
     // e.g. "{52416FB9-BA17}" -> "52416FB9-BA17", "1.0.2601<script>" -> "1.0.2601script"
     private _sanitize(value: unknown): string | null {
         if (typeof value !== 'string' && typeof value !== 'number') return null;
@@ -111,15 +109,13 @@ export default class AzureVDIStrategy extends StandardStrategy {
     private _handleRdpStateChange(event: RdpStateChangeEvent): void {
         const state = event.detail && event.detail.state;
         if (state === 'disconnected') {
-            if (this._logger) {
-                this._logger.warn('AzureVDIStrategy: RDP client disconnected').sendInternalLogToServer();
-            }
+            this._recordConnectionStatusChange('disconnected');
+            this._logger.warn('AzureVDIStrategy: RDP client disconnected').sendInternalLogToServer();
             this._resetConnectedPromise();
             this._onConnectionNeedingCleanupHandler(this);
         } else if (state === 'connected') {
-            if (this._logger) {
-                this._logger.info('AzureVDIStrategy: RDP client reconnected').sendInternalLogToServer();
-            }
+            this._recordConnectionStatusChange('connected');
+            this._logger.info('AzureVDIStrategy: RDP client reconnected').sendInternalLogToServer();
             this._metadata = this._collectMetadata();
             this._mmrClientVersion = this._sanitize((navigator.mediaDevices as any).mmrClientVersion);
             if (this._connectedResolve) {

@@ -49,6 +49,11 @@ export default class VirtualWssConnectionManager {
 
     close() {
         this._logger.info("closing virtual connection");
-        this._unSubscribe();
+        if (this._unSubscribe) {
+            this._unSubscribe();
+            this._unSubscribe = null;
+        } else {
+            this._logger.info("virtual connection already closed, skipping unsubscribe");
+        }
     }
 }
