@@ -23,7 +23,11 @@ module.exports = function (grunt) {
                         debug: true
                     },
                     plugin: ['tsify'],
-                    transform: [["babelify", { "presets": ["env"] }]],
+                    transform: [["babelify", {
+                        "presets": ["@babel/preset-env"],
+                        "global": true,
+                        "ignore": [/node_modules\/(?!uuid\/)/]
+                    }]],
                 }
             },
             connectRtcGlobalObject: {
@@ -33,7 +37,11 @@ module.exports = function (grunt) {
                 dest: './out/connect-rtc.js',
                 options: {
                     plugin: ['tsify'],
-                    transform: [["babelify", { "presets": ["env"] }]],
+                    transform: [["babelify", {
+                        "presets": ["@babel/preset-env"],
+                        "global": true,
+                        "ignore": [/node_modules\/(?!uuid\/)/]
+                    }]],
                 }
             }
         },

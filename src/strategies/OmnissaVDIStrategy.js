@@ -10,6 +10,7 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
         super();
 
         const self = this;
+        const logger = this._logger; // captured for the window.* closures below
         self.topWindowName = "UNKNOWN";
         self.hasRequestedTitle = false;
 
@@ -29,11 +30,11 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
             return new Promise((resolve, reject) => {
                 window.HorizonWebRTCExtension.getHorizonClientID()
                     .then((clientID) => {
-                        console.log("getHorizonClientID resolved with:", clientID);
+                        logger.info(`OmnissaVDI: getHorizonClientID resolved with: ${clientID}`).sendInternalLogToServer();
                         resolve(clientID);
                     })
                     .catch((error) => {
-                        console.error(`Failed to get client ID: ${error}`);
+                        logger.error(`OmnissaVDI: Failed to get client ID: ${error}`).sendInternalLogToServer();
                         reject(`Failed to get client ID: ${error}`);
                     });
             });
@@ -43,11 +44,11 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
             return new Promise((resolve, reject) => {
                 window.HorizonWebRTCExtension.getHorizonWSSPort()
                     .then((wssPort) => {
-                        console.log("getHorizonWSSPort resolved with:", wssPort);
+                        logger.info(`OmnissaVDI: getHorizonWSSPort resolved with: ${wssPort}`).sendInternalLogToServer();
                         resolve(wssPort);
                     })
                     .catch((error) => {
-                        console.error(`Failed to get WSS port: ${error}`);
+                        logger.error(`OmnissaVDI: Failed to get WSS port: ${error}`).sendInternalLogToServer();
                         reject(`Failed to get WSS port: ${error}`);
                     });
             });
@@ -87,18 +88,20 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
 
     vmEventHandler(event) {
         let eventType = event.event;
-        console.log("Horizon WebRTCRedirSDK Event:", JSON.stringify(event));
+        this._logger.info(`OmnissaVDI: Horizon WebRTCRedirSDK Event: ${JSON.stringify(event)}`).sendInternalLogToServer();
         switch (eventType) {
             case "vdiClientConnected":
-                console.log("Got event from WebRTCRedirSDK: vdiClientConnected")
+                this._recordConnectionStatusChange('connected');
+                this._logger.info("OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientConnected").sendInternalLogToServer();
                 this._connectedResolve();
                 break;
             case "vdiClientDisconnected":
-                console.log("Got event from WebRTCRedirSDK: vdiClientDisconnected")
+                this._recordConnectionStatusChange('disconnected');
+                this._logger.info("OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientDisconnected").sendInternalLogToServer();
                 this._resetConnectedPromise();
                 break;
             default:
-                console.log("Got an unknown event from WebRTCRedirSDK: " + JSON.stringify(event));
+                this._logger.info(`OmnissaVDI: Got an unknown event from WebRTCRedirSDK: ${JSON.stringify(event)}`).sendInternalLogToServer();
         }
     }
 
@@ -254,8 +257,8 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
         let stream = evt.streams[0];
         let audioTrack = stream.getAudioTracks()[0];
 
-        console.log("Audio Track:", audioTrack);
-        console.log("Checking value of stream: ", JSON.stringify(stream, null, 2));
+        this._logger.info(`OmnissaVDI: Audio Track: ${audioTrack}`).sendInternalLogToServer();
+        this._logger.info(`OmnissaVDI: Checking value of stream: ${JSON.stringify(stream, null, 2)}`).sendInternalLogToServer();
 
         // Set up remote audio element
         if (stream.track[0].kind === 'audio' && self._remoteAudioElement) {
@@ -270,7 +273,7 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
                 self._remoteAudioElement = remoteAudio;
                 self._remoteAudioStream = stream;
             } catch (e) {
-                console.error("Failed to set srcObject on _remoteAudioElement:", e);
+                this._logger.error(`OmnissaVDI: Failed to set srcObject on _remoteAudioElement: ${e}`).sendInternalLogToServer();
                 return;  // Return after error since we can't proceed
             }
         }
@@ -284,10 +287,11 @@ export default class OmnissaVDIStrategy extends CCPInitiationStrategyInterface {
      * Rejects if the client does not connect within OMNISSA_READY_TIMEOUT_MS.
      */
     whenConnected() {
+        this._logger.info(`${this.getStrategyName()}: whenConnected called; connection ${this._connectionStatusSummary()}`).sendInternalLogToServer();
         return Promise.race([
             this._connectedPromise,
             new Promise((_, reject) => setTimeout(
-                () => reject(new Error(`${this.getStrategyName()} did not connect within ${OMNISSA_READY_TIMEOUT_MS}ms`)),
+                () => reject(new Error(`${this.getStrategyName()} did not connect within ${OMNISSA_READY_TIMEOUT_MS}ms; connection ${this._connectionStatusSummary()}`)),
                 OMNISSA_READY_TIMEOUT_MS
             ))
         ]);

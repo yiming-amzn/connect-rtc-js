@@ -717,6 +717,31 @@ describe('CallSession', () => {
             expect(callSession._sessionReport.sessionStartTime).to.be.instanceOf(Date);
         });
 
+        it('should preserve the strategy-set vdiClientVersion and not source it from the shared media session report (LILY-SOFTPHONE-810)', () => {
+            // vdiClientVersion is set on the call session report by the VDI strategy in
+            // _collectAgentSetupMetrics. The shared media session report does not carry it.
+            callSession._sessionReport.vdiClientVersion = '1.0.2601.09002';
+
+            callSession.onSharedMediaSessionEvent('sessionSetupLatencyMetricReady', {
+                gumTimeMillis: 100,
+                vdiClientVersion: '9.9.9'
+            });
+
+            // Not overwritten by eventData, and the handler still copied its real fields.
+            expect(callSession._sessionReport.vdiClientVersion).to.equal('1.0.2601.09002');
+            expect(callSession._sessionReport.gumTimeMillis).to.equal(100);
+        });
+
+        it('should not source vdiClientVersion from the shared media session report', () => {
+            // The handler does not copy vdiClientVersion from eventData, so the call session
+            // report keeps its own value (here the SessionReport default of null).
+            callSession.onSharedMediaSessionEvent('sessionSetupLatencyMetricReady', {
+                vdiClientVersion: '9.9.9'
+            });
+
+            expect(callSession._sessionReport.vdiClientVersion).to.be.null;
+        });
+
         it('should handle unknown event', () => {
             expect(() => callSession.onSharedMediaSessionEvent('unknownEvent', null)).to.not.throw();
         });

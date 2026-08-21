@@ -10,6 +10,22 @@ describe('DCVWebRTCStrategy', () => {
     let mockProxy: any;
     let mockMediaDevicesProxy: any;
     let statusChangeListener: any;
+    let mockLogger: any;
+
+    // CCP logger stub: each level returns a chainable object with sendInternalLogToServer().
+    function makeMockLogger() {
+        const chain = () => ({ sendInternalLogToServer: sandbox.stub() });
+        return {
+            log: sandbox.stub().returns(chain()),
+            info: sandbox.stub().returns(chain()),
+            warn: sandbox.stub().returns(chain()),
+            error: sandbox.stub().returns(chain()),
+        };
+    }
+    function mockConnectWithLogger() {
+        mockLogger = makeMockLogger();
+        global.connect = { getLog: sandbox.stub().returns(mockLogger) };
+    }
 
     function createMockProxy() {
         statusChangeListener = null;
@@ -53,14 +69,14 @@ describe('DCVWebRTCStrategy', () => {
                 }),
             };
             (window as any) = {};
-            global.connect = { getLog: sandbox.stub() };
+            mockConnectWithLogger();
         });
 
         it('should initialize with V2 API and use result.proxy', () => {
             const instance = new DCVWebRTCStrategy();
             chai.expect((globalThis as any).DCVWebRTCPeerConnectionProxyV2.setInitCallback).to.have.been.calledOnce;
             chai.expect(mockProxy.overrideWebRTC).to.have.been.calledOnce;
-            sinon.assert.calledWith((console.log as sinon.SinonStub), 'DCVStrategy initialized (V2), version:', '2.0.0');
+            sinon.assert.calledWith(mockLogger.info as sinon.SinonStub, 'DCVStrategy: initialized (V2), version: 2.0.0');
         });
 
         it('should configure heartbeat on init', () => {
@@ -176,7 +192,7 @@ describe('DCVWebRTCStrategy', () => {
             chai.expect(() => {
                 statusChangeListener({ status: 'unavailable', lastHeartbeat: Date.now() - 6000 });
             }).to.not.throw();
-            sinon.assert.calledWith((console.error as sinon.SinonStub), 'Error during connection cleanup:', sinon.match.instanceOf(Error));
+            sinon.assert.calledWith(mockLogger.error as sinon.SinonStub, sinon.match(/^DCVStrategy: Error during connection cleanup: Error: stale proxy/));
         });
 
         it('should ignore unknown status events', () => {
@@ -215,14 +231,14 @@ describe('DCVWebRTCStrategy', () => {
                 },
                 DCVWebRTCRedirProxy: mockProxy,
             };
-            global.connect = { getLog: sandbox.stub() };
+            mockConnectWithLogger();
         });
 
         it('should fall back to V1 API when V2 is not available', () => {
             const instance = new DCVWebRTCStrategy();
             chai.expect((window as any).DCVWebRTCPeerConnectionProxy.setInitCallback).to.have.been.calledOnce;
             chai.expect(mockProxy.overrideWebRTC).to.have.been.calledOnce;
-            sinon.assert.calledWith((console.log as sinon.SinonStub), 'DCVStrategy initialized (V1)');
+            sinon.assert.calledWith(mockLogger.info as sinon.SinonStub, 'DCVStrategy: initialized (V1)');
         });
 
         it('should not call reconnection APIs on V1', () => {
@@ -276,7 +292,7 @@ describe('DCVWebRTCStrategy', () => {
                 DCVWebRTCPeerConnectionProxy: { setInitCallback: v1Stub },
                 DCVWebRTCRedirProxy: mockProxy,
             };
-            global.connect = { getLog: sandbox.stub() };
+            mockConnectWithLogger();
 
             const instance = new DCVWebRTCStrategy();
             chai.expect(v2Stub).to.have.been.calledOnce;
@@ -288,7 +304,7 @@ describe('DCVWebRTCStrategy', () => {
         it('should throw if neither V2 nor V1 is available', () => {
             delete (globalThis as any).DCVWebRTCPeerConnectionProxyV2;
             (window as any) = {};
-            global.connect = { getLog: sandbox.stub() };
+            mockConnectWithLogger();
             chai.expect(() => new DCVWebRTCStrategy()).to.throw(
                 'DCV WebRTC redirection feature is NOT supported!'
             );
@@ -298,7 +314,7 @@ describe('DCVWebRTCStrategy', () => {
     describe('whenConnected', () => {
         beforeEach(() => {
             createMockProxy();
-            global.connect = { getLog: sandbox.stub() };
+            mockConnectWithLogger();
         });
 
         it('resolves once init callback fires successfully (V2)', async () => {
@@ -369,6 +385,45 @@ describe('DCVWebRTCStrategy', () => {
             await Promise.resolve(); await Promise.resolve();
             chai.expect(rejection).to.be.instanceOf(Error);
             chai.expect(rejection.message).to.include('NOT supported');
+        });
+    });
+
+    describe('isChromeBrowser', () => {
+        function makeInstance() {
+            createMockProxy();
+            (globalThis as any).DCVWebRTCPeerConnectionProxyV2 = {
+                setInitCallback: sandbox.stub().callsFake((cb) => {
+                    cb({ success: true, proxy: mockProxy });
+                }),
+            };
+            (window as any) = {};
+            mockConnectWithLogger();
+            return new DCVWebRTCStrategy();
+        }
+
+        it('returns true when proxy reports a chrome browser', () => {
+            const instance = makeInstance();
+            chai.expect(instance.isChromeBrowser()).to.be.true;
+        });
+
+        it('returns false for a non-chrome browser', () => {
+            const instance = makeInstance();
+            mockProxy.clientInfo.browserDetails.browser = 'firefox';
+            chai.expect(instance.isChromeBrowser()).to.be.false;
+        });
+
+        it('returns false (no throw) when clientInfo is missing', () => {
+            const instance = makeInstance();
+            mockProxy.clientInfo = undefined;
+            chai.expect(() => instance.isChromeBrowser()).to.not.throw();
+            chai.expect(instance.isChromeBrowser()).to.be.false;
+        });
+
+        it('returns false (no throw) when browserDetails is missing', () => {
+            const instance = makeInstance();
+            mockProxy.clientInfo = { platform: 'windows' };
+            chai.expect(() => instance.isChromeBrowser()).to.not.throw();
+            chai.expect(instance.isChromeBrowser()).to.be.false;
         });
     });
 });

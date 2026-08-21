@@ -5434,222 +5434,831 @@ if (typeof module === 'object') {
 })(typeof window === 'object' ? window : this);
 
 },{}],9:[function(require,module,exports){
-var v1 = require('./v1');
-var v4 = require('./v4');
+"use strict";
 
-var uuid = v4;
-uuid.v1 = v1;
-uuid.v4 = v4;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.version = exports.validate = exports.v7 = exports.v6ToV1 = exports.v6 = exports.v5 = exports.v4 = exports.v3 = exports.v1ToV6 = exports.v1 = exports.stringify = exports.parse = exports.NIL = exports.MAX = void 0;
+var max_js_1 = require("./max.js");
+Object.defineProperty(exports, "MAX", {
+  enumerable: true,
+  get: function get() {
+    return max_js_1["default"];
+  }
+});
+var nil_js_1 = require("./nil.js");
+Object.defineProperty(exports, "NIL", {
+  enumerable: true,
+  get: function get() {
+    return nil_js_1["default"];
+  }
+});
+var parse_js_1 = require("./parse.js");
+Object.defineProperty(exports, "parse", {
+  enumerable: true,
+  get: function get() {
+    return parse_js_1["default"];
+  }
+});
+var stringify_js_1 = require("./stringify.js");
+Object.defineProperty(exports, "stringify", {
+  enumerable: true,
+  get: function get() {
+    return stringify_js_1["default"];
+  }
+});
+var v1_js_1 = require("./v1.js");
+Object.defineProperty(exports, "v1", {
+  enumerable: true,
+  get: function get() {
+    return v1_js_1["default"];
+  }
+});
+var v1ToV6_js_1 = require("./v1ToV6.js");
+Object.defineProperty(exports, "v1ToV6", {
+  enumerable: true,
+  get: function get() {
+    return v1ToV6_js_1["default"];
+  }
+});
+var v3_js_1 = require("./v3.js");
+Object.defineProperty(exports, "v3", {
+  enumerable: true,
+  get: function get() {
+    return v3_js_1["default"];
+  }
+});
+var v4_js_1 = require("./v4.js");
+Object.defineProperty(exports, "v4", {
+  enumerable: true,
+  get: function get() {
+    return v4_js_1["default"];
+  }
+});
+var v5_js_1 = require("./v5.js");
+Object.defineProperty(exports, "v5", {
+  enumerable: true,
+  get: function get() {
+    return v5_js_1["default"];
+  }
+});
+var v6_js_1 = require("./v6.js");
+Object.defineProperty(exports, "v6", {
+  enumerable: true,
+  get: function get() {
+    return v6_js_1["default"];
+  }
+});
+var v6ToV1_js_1 = require("./v6ToV1.js");
+Object.defineProperty(exports, "v6ToV1", {
+  enumerable: true,
+  get: function get() {
+    return v6ToV1_js_1["default"];
+  }
+});
+var v7_js_1 = require("./v7.js");
+Object.defineProperty(exports, "v7", {
+  enumerable: true,
+  get: function get() {
+    return v7_js_1["default"];
+  }
+});
+var validate_js_1 = require("./validate.js");
+Object.defineProperty(exports, "validate", {
+  enumerable: true,
+  get: function get() {
+    return validate_js_1["default"];
+  }
+});
+var version_js_1 = require("./version.js");
+Object.defineProperty(exports, "version", {
+  enumerable: true,
+  get: function get() {
+    return version_js_1["default"];
+  }
+});
 
-module.exports = uuid;
+},{"./max.js":10,"./nil.js":13,"./parse.js":14,"./stringify.js":18,"./v1.js":19,"./v1ToV6.js":20,"./v3.js":21,"./v4.js":23,"./v5.js":24,"./v6.js":25,"./v6ToV1.js":26,"./v7.js":27,"./validate.js":28,"./version.js":29}],10:[function(require,module,exports){
+"use strict";
 
-},{"./v1":12,"./v4":13}],10:[function(require,module,exports){
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-for (var i = 0; i < 256; ++i) {
-  byteToHex[i] = (i + 0x100).toString(16).substr(1);
-}
-
-function bytesToUuid(buf, offset) {
-  var i = offset || 0;
-  var bth = byteToHex;
-  // join used to fix memory issue caused by concatenation: https://bugs.chromium.org/p/v8/issues/detail?id=3175#c4
-  return ([
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]], '-',
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]],
-    bth[buf[i++]], bth[buf[i++]]
-  ]).join('');
-}
-
-module.exports = bytesToUuid;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = 'ffffffff-ffff-ffff-ffff-ffffffffffff';
 
 },{}],11:[function(require,module,exports){
-// Unique ID creation requires a high quality random # generator.  In the
-// browser this is a little complicated due to unknown quality of Math.random()
-// and inconsistent support for the `crypto` API.  We do the best we can via
-// feature-detection
+"use strict";
 
-// getRandomValues needs to be invoked in a context where "this" is a Crypto
-// implementation. Also, find the complete implementation of crypto on IE11.
-var getRandomValues = (typeof(crypto) != 'undefined' && crypto.getRandomValues && crypto.getRandomValues.bind(crypto)) ||
-                      (typeof(msCrypto) != 'undefined' && typeof window.msCrypto.getRandomValues == 'function' && msCrypto.getRandomValues.bind(msCrypto));
-
-if (getRandomValues) {
-  // WHATWG crypto RNG - http://wiki.whatwg.org/wiki/Crypto
-  var rnds8 = new Uint8Array(16); // eslint-disable-line no-undef
-
-  module.exports = function whatwgRNG() {
-    getRandomValues(rnds8);
-    return rnds8;
-  };
-} else {
-  // Math.random()-based (RNG)
-  //
-  // If all else fails, use Math.random().  It's fast, but is of unspecified
-  // quality.
-  var rnds = new Array(16);
-
-  module.exports = function mathRNG() {
-    for (var i = 0, r; i < 16; i++) {
-      if ((i & 0x03) === 0) r = Math.random() * 0x100000000;
-      rnds[i] = r >>> ((i & 0x03) << 3) & 0xff;
-    }
-
-    return rnds;
-  };
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function md5(bytes) {
+  var words = uint8ToUint32(bytes);
+  var md5Bytes = wordsToMd5(words, bytes.length * 8);
+  return uint32ToUint8(md5Bytes);
 }
+function uint32ToUint8(input) {
+  var bytes = new Uint8Array(input.length * 4);
+  for (var i = 0; i < input.length * 4; i++) {
+    bytes[i] = input[i >> 2] >>> i % 4 * 8 & 0xff;
+  }
+  return bytes;
+}
+function getOutputLength(inputLength8) {
+  return (inputLength8 + 64 >>> 9 << 4) + 14 + 1;
+}
+function wordsToMd5(x, len) {
+  var xpad = new Uint32Array(getOutputLength(len)).fill(0);
+  xpad.set(x);
+  xpad[len >> 5] |= 0x80 << len % 32;
+  xpad[xpad.length - 1] = len;
+  x = xpad;
+  var a = 1732584193;
+  var b = -271733879;
+  var c = -1732584194;
+  var d = 271733878;
+  for (var i = 0; i < x.length; i += 16) {
+    var olda = a;
+    var oldb = b;
+    var oldc = c;
+    var oldd = d;
+    a = md5ff(a, b, c, d, x[i], 7, -680876936);
+    d = md5ff(d, a, b, c, x[i + 1], 12, -389564586);
+    c = md5ff(c, d, a, b, x[i + 2], 17, 606105819);
+    b = md5ff(b, c, d, a, x[i + 3], 22, -1044525330);
+    a = md5ff(a, b, c, d, x[i + 4], 7, -176418897);
+    d = md5ff(d, a, b, c, x[i + 5], 12, 1200080426);
+    c = md5ff(c, d, a, b, x[i + 6], 17, -1473231341);
+    b = md5ff(b, c, d, a, x[i + 7], 22, -45705983);
+    a = md5ff(a, b, c, d, x[i + 8], 7, 1770035416);
+    d = md5ff(d, a, b, c, x[i + 9], 12, -1958414417);
+    c = md5ff(c, d, a, b, x[i + 10], 17, -42063);
+    b = md5ff(b, c, d, a, x[i + 11], 22, -1990404162);
+    a = md5ff(a, b, c, d, x[i + 12], 7, 1804603682);
+    d = md5ff(d, a, b, c, x[i + 13], 12, -40341101);
+    c = md5ff(c, d, a, b, x[i + 14], 17, -1502002290);
+    b = md5ff(b, c, d, a, x[i + 15], 22, 1236535329);
+    a = md5gg(a, b, c, d, x[i + 1], 5, -165796510);
+    d = md5gg(d, a, b, c, x[i + 6], 9, -1069501632);
+    c = md5gg(c, d, a, b, x[i + 11], 14, 643717713);
+    b = md5gg(b, c, d, a, x[i], 20, -373897302);
+    a = md5gg(a, b, c, d, x[i + 5], 5, -701558691);
+    d = md5gg(d, a, b, c, x[i + 10], 9, 38016083);
+    c = md5gg(c, d, a, b, x[i + 15], 14, -660478335);
+    b = md5gg(b, c, d, a, x[i + 4], 20, -405537848);
+    a = md5gg(a, b, c, d, x[i + 9], 5, 568446438);
+    d = md5gg(d, a, b, c, x[i + 14], 9, -1019803690);
+    c = md5gg(c, d, a, b, x[i + 3], 14, -187363961);
+    b = md5gg(b, c, d, a, x[i + 8], 20, 1163531501);
+    a = md5gg(a, b, c, d, x[i + 13], 5, -1444681467);
+    d = md5gg(d, a, b, c, x[i + 2], 9, -51403784);
+    c = md5gg(c, d, a, b, x[i + 7], 14, 1735328473);
+    b = md5gg(b, c, d, a, x[i + 12], 20, -1926607734);
+    a = md5hh(a, b, c, d, x[i + 5], 4, -378558);
+    d = md5hh(d, a, b, c, x[i + 8], 11, -2022574463);
+    c = md5hh(c, d, a, b, x[i + 11], 16, 1839030562);
+    b = md5hh(b, c, d, a, x[i + 14], 23, -35309556);
+    a = md5hh(a, b, c, d, x[i + 1], 4, -1530992060);
+    d = md5hh(d, a, b, c, x[i + 4], 11, 1272893353);
+    c = md5hh(c, d, a, b, x[i + 7], 16, -155497632);
+    b = md5hh(b, c, d, a, x[i + 10], 23, -1094730640);
+    a = md5hh(a, b, c, d, x[i + 13], 4, 681279174);
+    d = md5hh(d, a, b, c, x[i], 11, -358537222);
+    c = md5hh(c, d, a, b, x[i + 3], 16, -722521979);
+    b = md5hh(b, c, d, a, x[i + 6], 23, 76029189);
+    a = md5hh(a, b, c, d, x[i + 9], 4, -640364487);
+    d = md5hh(d, a, b, c, x[i + 12], 11, -421815835);
+    c = md5hh(c, d, a, b, x[i + 15], 16, 530742520);
+    b = md5hh(b, c, d, a, x[i + 2], 23, -995338651);
+    a = md5ii(a, b, c, d, x[i], 6, -198630844);
+    d = md5ii(d, a, b, c, x[i + 7], 10, 1126891415);
+    c = md5ii(c, d, a, b, x[i + 14], 15, -1416354905);
+    b = md5ii(b, c, d, a, x[i + 5], 21, -57434055);
+    a = md5ii(a, b, c, d, x[i + 12], 6, 1700485571);
+    d = md5ii(d, a, b, c, x[i + 3], 10, -1894986606);
+    c = md5ii(c, d, a, b, x[i + 10], 15, -1051523);
+    b = md5ii(b, c, d, a, x[i + 1], 21, -2054922799);
+    a = md5ii(a, b, c, d, x[i + 8], 6, 1873313359);
+    d = md5ii(d, a, b, c, x[i + 15], 10, -30611744);
+    c = md5ii(c, d, a, b, x[i + 6], 15, -1560198380);
+    b = md5ii(b, c, d, a, x[i + 13], 21, 1309151649);
+    a = md5ii(a, b, c, d, x[i + 4], 6, -145523070);
+    d = md5ii(d, a, b, c, x[i + 11], 10, -1120210379);
+    c = md5ii(c, d, a, b, x[i + 2], 15, 718787259);
+    b = md5ii(b, c, d, a, x[i + 9], 21, -343485551);
+    a = safeAdd(a, olda);
+    b = safeAdd(b, oldb);
+    c = safeAdd(c, oldc);
+    d = safeAdd(d, oldd);
+  }
+  return Uint32Array.of(a, b, c, d);
+}
+function uint8ToUint32(input) {
+  if (input.length === 0) {
+    return new Uint32Array();
+  }
+  var output = new Uint32Array(getOutputLength(input.length * 8)).fill(0);
+  for (var i = 0; i < input.length; i++) {
+    output[i >> 2] |= (input[i] & 0xff) << i % 4 * 8;
+  }
+  return output;
+}
+function safeAdd(x, y) {
+  var lsw = (x & 0xffff) + (y & 0xffff);
+  var msw = (x >> 16) + (y >> 16) + (lsw >> 16);
+  return msw << 16 | lsw & 0xffff;
+}
+function bitRotateLeft(num, cnt) {
+  return num << cnt | num >>> 32 - cnt;
+}
+function md5cmn(q, a, b, x, s, t) {
+  return safeAdd(bitRotateLeft(safeAdd(safeAdd(a, q), safeAdd(x, t)), s), b);
+}
+function md5ff(a, b, c, d, x, s, t) {
+  return md5cmn(b & c | ~b & d, a, b, x, s, t);
+}
+function md5gg(a, b, c, d, x, s, t) {
+  return md5cmn(b & d | c & ~d, a, b, x, s, t);
+}
+function md5hh(a, b, c, d, x, s, t) {
+  return md5cmn(b ^ c ^ d, a, b, x, s, t);
+}
+function md5ii(a, b, c, d, x, s, t) {
+  return md5cmn(c ^ (b | ~d), a, b, x, s, t);
+}
+exports["default"] = md5;
 
 },{}],12:[function(require,module,exports){
-var rng = require('./lib/rng');
-var bytesToUuid = require('./lib/bytesToUuid');
+"use strict";
 
-// **`v1()` - Generate time-based UUID**
-//
-// Inspired by https://github.com/LiosK/UUID.js
-// and http://docs.python.org/library/uuid.html
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var randomUUID = typeof crypto !== 'undefined' && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+exports["default"] = {
+  randomUUID: randomUUID
+};
 
-var _nodeId;
-var _clockseq;
+},{}],13:[function(require,module,exports){
+"use strict";
 
-// Previous uuid creation time
-var _lastMSecs = 0;
-var _lastNSecs = 0;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = '00000000-0000-0000-0000-000000000000';
 
-// See https://github.com/uuidjs/uuid for API details
+},{}],14:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var validate_js_1 = require("./validate.js");
+function parse(uuid) {
+  if (!(0, validate_js_1["default"])(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+  var v;
+  return Uint8Array.of((v = parseInt(uuid.slice(0, 8), 16)) >>> 24, v >>> 16 & 0xff, v >>> 8 & 0xff, v & 0xff, (v = parseInt(uuid.slice(9, 13), 16)) >>> 8, v & 0xff, (v = parseInt(uuid.slice(14, 18), 16)) >>> 8, v & 0xff, (v = parseInt(uuid.slice(19, 23), 16)) >>> 8, v & 0xff, (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff, v / 0x100000000 & 0xff, v >>> 24 & 0xff, v >>> 16 & 0xff, v >>> 8 & 0xff, v & 0xff);
+}
+exports["default"] = parse;
+
+},{"./validate.js":28}],15:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/i;
+
+},{}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var getRandomValues;
+var rnds8 = new Uint8Array(16);
+function rng() {
+  if (!getRandomValues) {
+    if (typeof crypto === 'undefined' || !crypto.getRandomValues) {
+      throw new Error('crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported');
+    }
+    getRandomValues = crypto.getRandomValues.bind(crypto);
+  }
+  return getRandomValues(rnds8);
+}
+exports["default"] = rng;
+
+},{}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function f(s, x, y, z) {
+  switch (s) {
+    case 0:
+      return x & y ^ ~x & z;
+    case 1:
+      return x ^ y ^ z;
+    case 2:
+      return x & y ^ x & z ^ y & z;
+    case 3:
+      return x ^ y ^ z;
+  }
+}
+function ROTL(x, n) {
+  return x << n | x >>> 32 - n;
+}
+function sha1(bytes) {
+  var K = [0x5a827999, 0x6ed9eba1, 0x8f1bbcdc, 0xca62c1d6];
+  var H = [0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0];
+  var newBytes = new Uint8Array(bytes.length + 1);
+  newBytes.set(bytes);
+  newBytes[bytes.length] = 0x80;
+  bytes = newBytes;
+  var l = bytes.length / 4 + 2;
+  var N = Math.ceil(l / 16);
+  var M = new Array(N);
+  for (var i = 0; i < N; ++i) {
+    var arr = new Uint32Array(16);
+    for (var j = 0; j < 16; ++j) {
+      arr[j] = bytes[i * 64 + j * 4] << 24 | bytes[i * 64 + j * 4 + 1] << 16 | bytes[i * 64 + j * 4 + 2] << 8 | bytes[i * 64 + j * 4 + 3];
+    }
+    M[i] = arr;
+  }
+  M[N - 1][14] = (bytes.length - 1) * 8 / Math.pow(2, 32);
+  M[N - 1][14] = Math.floor(M[N - 1][14]);
+  M[N - 1][15] = (bytes.length - 1) * 8 & 0xffffffff;
+  for (var _i = 0; _i < N; ++_i) {
+    var W = new Uint32Array(80);
+    for (var t = 0; t < 16; ++t) {
+      W[t] = M[_i][t];
+    }
+    for (var _t = 16; _t < 80; ++_t) {
+      W[_t] = ROTL(W[_t - 3] ^ W[_t - 8] ^ W[_t - 14] ^ W[_t - 16], 1);
+    }
+    var a = H[0];
+    var b = H[1];
+    var c = H[2];
+    var d = H[3];
+    var e = H[4];
+    for (var _t2 = 0; _t2 < 80; ++_t2) {
+      var s = Math.floor(_t2 / 20);
+      var T = ROTL(a, 5) + f(s, b, c, d) + e + K[s] + W[_t2] >>> 0;
+      e = d;
+      d = c;
+      c = ROTL(b, 30) >>> 0;
+      b = a;
+      a = T;
+    }
+    H[0] = H[0] + a >>> 0;
+    H[1] = H[1] + b >>> 0;
+    H[2] = H[2] + c >>> 0;
+    H[3] = H[3] + d >>> 0;
+    H[4] = H[4] + e >>> 0;
+  }
+  return Uint8Array.of(H[0] >> 24, H[0] >> 16, H[0] >> 8, H[0], H[1] >> 24, H[1] >> 16, H[1] >> 8, H[1], H[2] >> 24, H[2] >> 16, H[2] >> 8, H[2], H[3] >> 24, H[3] >> 16, H[3] >> 8, H[3], H[4] >> 24, H[4] >> 16, H[4] >> 8, H[4]);
+}
+exports["default"] = sha1;
+
+},{}],18:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.unsafeStringify = void 0;
+var validate_js_1 = require("./validate.js");
+var byteToHex = [];
+for (var i = 0; i < 256; ++i) {
+  byteToHex.push((i + 0x100).toString(16).slice(1));
+}
+function unsafeStringify(arr) {
+  var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+}
+exports.unsafeStringify = unsafeStringify;
+function stringify(arr) {
+  var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  var uuid = unsafeStringify(arr, offset);
+  if (!(0, validate_js_1["default"])(uuid)) {
+    throw TypeError('Stringified UUID is invalid');
+  }
+  return uuid;
+}
+exports["default"] = stringify;
+
+},{"./validate.js":28}],19:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateV1State = void 0;
+var rng_js_1 = require("./rng.js");
+var stringify_js_1 = require("./stringify.js");
+var _state = {};
 function v1(options, buf, offset) {
-  var i = buf && offset || 0;
-  var b = buf || [];
-
-  options = options || {};
-  var node = options.node || _nodeId;
-  var clockseq = options.clockseq !== undefined ? options.clockseq : _clockseq;
-
-  // node and clockseq need to be initialized to random values if they're not
-  // specified.  We do this lazily to minimize issues related to insufficient
-  // system entropy.  See #189
-  if (node == null || clockseq == null) {
-    var seedBytes = rng();
-    if (node == null) {
-      // Per 4.5, create and 48-bit node id, (47 random bits + multicast bit = 1)
-      node = _nodeId = [
-        seedBytes[0] | 0x01,
-        seedBytes[1], seedBytes[2], seedBytes[3], seedBytes[4], seedBytes[5]
-      ];
-    }
-    if (clockseq == null) {
-      // Per 4.2.2, randomize (14 bit) clockseq
-      clockseq = _clockseq = (seedBytes[6] << 8 | seedBytes[7]) & 0x3fff;
+  var _options$_v, _options;
+  var bytes;
+  var isV6 = (_options$_v = (_options = options) === null || _options === void 0 ? void 0 : _options._v6) !== null && _options$_v !== void 0 ? _options$_v : false;
+  if (options) {
+    var optionsKeys = Object.keys(options);
+    if (optionsKeys.length === 1 && optionsKeys[0] === '_v6') {
+      options = undefined;
     }
   }
-
-  // UUID timestamps are 100 nano-second units since the Gregorian epoch,
-  // (1582-10-15 00:00).  JSNumbers aren't precise enough for this, so
-  // time is handled internally as 'msecs' (integer milliseconds) and 'nsecs'
-  // (100-nanoseconds offset from msecs) since unix epoch, 1970-01-01 00:00.
-  var msecs = options.msecs !== undefined ? options.msecs : new Date().getTime();
-
-  // Per 4.2.1.2, use count of uuid's generated during the current clock
-  // cycle to simulate higher resolution clock
-  var nsecs = options.nsecs !== undefined ? options.nsecs : _lastNSecs + 1;
-
-  // Time since last uuid creation (in msecs)
-  var dt = (msecs - _lastMSecs) + (nsecs - _lastNSecs)/10000;
-
-  // Per 4.2.1.2, Bump clockseq on clock regression
-  if (dt < 0 && options.clockseq === undefined) {
-    clockseq = clockseq + 1 & 0x3fff;
+  if (options) {
+    var _ref, _options$random, _options$rng, _options2;
+    bytes = v1Bytes((_ref = (_options$random = options.random) !== null && _options$random !== void 0 ? _options$random : (_options$rng = (_options2 = options).rng) === null || _options$rng === void 0 ? void 0 : _options$rng.call(_options2)) !== null && _ref !== void 0 ? _ref : (0, rng_js_1["default"])(), options.msecs, options.nsecs, options.clockseq, options.node, buf, offset);
+  } else {
+    var now = Date.now();
+    var rnds = (0, rng_js_1["default"])();
+    updateV1State(_state, now, rnds);
+    bytes = v1Bytes(rnds, _state.msecs, _state.nsecs, isV6 ? undefined : _state.clockseq, isV6 ? undefined : _state.node, buf, offset);
   }
-
-  // Reset nsecs if clock regresses (new clockseq) or we've moved onto a new
-  // time interval
-  if ((dt < 0 || msecs > _lastMSecs) && options.nsecs === undefined) {
-    nsecs = 0;
+  return buf !== null && buf !== void 0 ? buf : (0, stringify_js_1.unsafeStringify)(bytes);
+}
+function updateV1State(state, now, rnds) {
+  var _state$msecs, _state$nsecs;
+  (_state$msecs = state.msecs) !== null && _state$msecs !== void 0 ? _state$msecs : state.msecs = -Infinity;
+  (_state$nsecs = state.nsecs) !== null && _state$nsecs !== void 0 ? _state$nsecs : state.nsecs = 0;
+  if (now === state.msecs) {
+    state.nsecs++;
+    if (state.nsecs >= 10000) {
+      state.node = undefined;
+      state.nsecs = 0;
+    }
+  } else if (now > state.msecs) {
+    state.nsecs = 0;
+  } else if (now < state.msecs) {
+    state.node = undefined;
   }
-
-  // Per 4.2.1.2 Throw error if too many uuids are requested
-  if (nsecs >= 10000) {
-    throw new Error('uuid.v1(): Can\'t create more than 10M uuids/sec');
+  if (!state.node) {
+    state.node = rnds.slice(10, 16);
+    state.node[0] |= 0x01;
+    state.clockseq = (rnds[8] << 8 | rnds[9]) & 0x3fff;
   }
-
-  _lastMSecs = msecs;
-  _lastNSecs = nsecs;
-  _clockseq = clockseq;
-
-  // Per 4.1.4 - Convert from unix epoch to Gregorian epoch
+  state.msecs = now;
+  return state;
+}
+exports.updateV1State = updateV1State;
+function v1Bytes(rnds, msecs, nsecs, clockseq, node, buf) {
+  var offset = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
+  if (rnds.length < 16) {
+    throw new Error('Random bytes length must be >= 16');
+  }
+  if (!buf) {
+    buf = new Uint8Array(16);
+    offset = 0;
+  } else {
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError("UUID byte range ".concat(offset, ":").concat(offset + 15, " is out of buffer bounds"));
+    }
+  }
+  msecs !== null && msecs !== void 0 ? msecs : msecs = Date.now();
+  nsecs !== null && nsecs !== void 0 ? nsecs : nsecs = 0;
+  clockseq !== null && clockseq !== void 0 ? clockseq : clockseq = (rnds[8] << 8 | rnds[9]) & 0x3fff;
+  node !== null && node !== void 0 ? node : node = rnds.slice(10, 16);
   msecs += 12219292800000;
-
-  // `time_low`
   var tl = ((msecs & 0xfffffff) * 10000 + nsecs) % 0x100000000;
-  b[i++] = tl >>> 24 & 0xff;
-  b[i++] = tl >>> 16 & 0xff;
-  b[i++] = tl >>> 8 & 0xff;
-  b[i++] = tl & 0xff;
-
-  // `time_mid`
-  var tmh = (msecs / 0x100000000 * 10000) & 0xfffffff;
-  b[i++] = tmh >>> 8 & 0xff;
-  b[i++] = tmh & 0xff;
-
-  // `time_high_and_version`
-  b[i++] = tmh >>> 24 & 0xf | 0x10; // include version
-  b[i++] = tmh >>> 16 & 0xff;
-
-  // `clock_seq_hi_and_reserved` (Per 4.2.2 - include variant)
-  b[i++] = clockseq >>> 8 | 0x80;
-
-  // `clock_seq_low`
-  b[i++] = clockseq & 0xff;
-
-  // `node`
+  buf[offset++] = tl >>> 24 & 0xff;
+  buf[offset++] = tl >>> 16 & 0xff;
+  buf[offset++] = tl >>> 8 & 0xff;
+  buf[offset++] = tl & 0xff;
+  var tmh = msecs / 0x100000000 * 10000 & 0xfffffff;
+  buf[offset++] = tmh >>> 8 & 0xff;
+  buf[offset++] = tmh & 0xff;
+  buf[offset++] = tmh >>> 24 & 0xf | 0x10;
+  buf[offset++] = tmh >>> 16 & 0xff;
+  buf[offset++] = clockseq >>> 8 | 0x80;
+  buf[offset++] = clockseq & 0xff;
   for (var n = 0; n < 6; ++n) {
-    b[i + n] = node[n];
+    buf[offset++] = node[n];
   }
+  return buf;
+}
+exports["default"] = v1;
 
-  return buf ? buf : bytesToUuid(b);
+},{"./rng.js":16,"./stringify.js":18}],20:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var parse_js_1 = require("./parse.js");
+var stringify_js_1 = require("./stringify.js");
+function v1ToV6(uuid) {
+  var v1Bytes = typeof uuid === 'string' ? (0, parse_js_1["default"])(uuid) : uuid;
+  var v6Bytes = _v1ToV6(v1Bytes);
+  return typeof uuid === 'string' ? (0, stringify_js_1.unsafeStringify)(v6Bytes) : v6Bytes;
+}
+exports["default"] = v1ToV6;
+function _v1ToV6(v1Bytes) {
+  return Uint8Array.of((v1Bytes[6] & 0x0f) << 4 | v1Bytes[7] >> 4 & 0x0f, (v1Bytes[7] & 0x0f) << 4 | (v1Bytes[4] & 0xf0) >> 4, (v1Bytes[4] & 0x0f) << 4 | (v1Bytes[5] & 0xf0) >> 4, (v1Bytes[5] & 0x0f) << 4 | (v1Bytes[0] & 0xf0) >> 4, (v1Bytes[0] & 0x0f) << 4 | (v1Bytes[1] & 0xf0) >> 4, (v1Bytes[1] & 0x0f) << 4 | (v1Bytes[2] & 0xf0) >> 4, 0x60 | v1Bytes[2] & 0x0f, v1Bytes[3], v1Bytes[8], v1Bytes[9], v1Bytes[10], v1Bytes[11], v1Bytes[12], v1Bytes[13], v1Bytes[14], v1Bytes[15]);
 }
 
-module.exports = v1;
+},{"./parse.js":14,"./stringify.js":18}],21:[function(require,module,exports){
+"use strict";
 
-},{"./lib/bytesToUuid":10,"./lib/rng":11}],13:[function(require,module,exports){
-var rng = require('./lib/rng');
-var bytesToUuid = require('./lib/bytesToUuid');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.URL = exports.DNS = void 0;
+var md5_js_1 = require("./md5.js");
+var v35_js_1 = require("./v35.js");
+var v35_js_2 = require("./v35.js");
+Object.defineProperty(exports, "DNS", {
+  enumerable: true,
+  get: function get() {
+    return v35_js_2.DNS;
+  }
+});
+Object.defineProperty(exports, "URL", {
+  enumerable: true,
+  get: function get() {
+    return v35_js_2.URL;
+  }
+});
+function v3(value, namespace, buf, offset) {
+  return (0, v35_js_1["default"])(0x30, md5_js_1["default"], value, namespace, buf, offset);
+}
+v3.DNS = v35_js_1.DNS;
+v3.URL = v35_js_1.URL;
+exports["default"] = v3;
 
+},{"./md5.js":11,"./v35.js":22}],22:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.URL = exports.DNS = exports.stringToBytes = void 0;
+var parse_js_1 = require("./parse.js");
+var stringify_js_1 = require("./stringify.js");
+function stringToBytes(str) {
+  str = unescape(encodeURIComponent(str));
+  var bytes = new Uint8Array(str.length);
+  for (var i = 0; i < str.length; ++i) {
+    bytes[i] = str.charCodeAt(i);
+  }
+  return bytes;
+}
+exports.stringToBytes = stringToBytes;
+exports.DNS = '6ba7b810-9dad-11d1-80b4-00c04fd430c8';
+exports.URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
+function v35(version, hash, value, namespace, buf, offset) {
+  var _namespace;
+  var valueBytes = typeof value === 'string' ? stringToBytes(value) : value;
+  var namespaceBytes = typeof namespace === 'string' ? (0, parse_js_1["default"])(namespace) : namespace;
+  if (typeof namespace === 'string') {
+    namespace = (0, parse_js_1["default"])(namespace);
+  }
+  if (((_namespace = namespace) === null || _namespace === void 0 ? void 0 : _namespace.length) !== 16) {
+    throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
+  }
+  var bytes = new Uint8Array(16 + valueBytes.length);
+  bytes.set(namespaceBytes);
+  bytes.set(valueBytes, namespaceBytes.length);
+  bytes = hash(bytes);
+  bytes[6] = bytes[6] & 0x0f | version;
+  bytes[8] = bytes[8] & 0x3f | 0x80;
+  if (buf) {
+    offset = offset || 0;
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError("UUID byte range ".concat(offset, ":").concat(offset + 15, " is out of buffer bounds"));
+    }
+    for (var i = 0; i < 16; ++i) {
+      buf[offset + i] = bytes[i];
+    }
+    return buf;
+  }
+  return (0, stringify_js_1.unsafeStringify)(bytes);
+}
+exports["default"] = v35;
+
+},{"./parse.js":14,"./stringify.js":18}],23:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var native_js_1 = require("./native.js");
+var rng_js_1 = require("./rng.js");
+var stringify_js_1 = require("./stringify.js");
 function v4(options, buf, offset) {
-  var i = buf && offset || 0;
-
-  if (typeof(options) == 'string') {
-    buf = options === 'binary' ? new Array(16) : null;
-    options = null;
+  var _ref, _options$random, _options$rng, _options;
+  if (native_js_1["default"].randomUUID && !buf && !options) {
+    return native_js_1["default"].randomUUID();
   }
   options = options || {};
-
-  var rnds = options.random || (options.rng || rng)();
-
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-  // Copy bytes to buffer, if provided
-  if (buf) {
-    for (var ii = 0; ii < 16; ++ii) {
-      buf[i + ii] = rnds[ii];
-    }
+  var rnds = (_ref = (_options$random = options.random) !== null && _options$random !== void 0 ? _options$random : (_options$rng = (_options = options).rng) === null || _options$rng === void 0 ? void 0 : _options$rng.call(_options)) !== null && _ref !== void 0 ? _ref : (0, rng_js_1["default"])();
+  if (rnds.length < 16) {
+    throw new Error('Random bytes length must be >= 16');
   }
+  rnds[6] = rnds[6] & 0x0f | 0x40;
+  rnds[8] = rnds[8] & 0x3f | 0x80;
+  if (buf) {
+    offset = offset || 0;
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError("UUID byte range ".concat(offset, ":").concat(offset + 15, " is out of buffer bounds"));
+    }
+    for (var i = 0; i < 16; ++i) {
+      buf[offset + i] = rnds[i];
+    }
+    return buf;
+  }
+  return (0, stringify_js_1.unsafeStringify)(rnds);
+}
+exports["default"] = v4;
 
-  return buf || bytesToUuid(rnds);
+},{"./native.js":12,"./rng.js":16,"./stringify.js":18}],24:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.URL = exports.DNS = void 0;
+var sha1_js_1 = require("./sha1.js");
+var v35_js_1 = require("./v35.js");
+var v35_js_2 = require("./v35.js");
+Object.defineProperty(exports, "DNS", {
+  enumerable: true,
+  get: function get() {
+    return v35_js_2.DNS;
+  }
+});
+Object.defineProperty(exports, "URL", {
+  enumerable: true,
+  get: function get() {
+    return v35_js_2.URL;
+  }
+});
+function v5(value, namespace, buf, offset) {
+  return (0, v35_js_1["default"])(0x50, sha1_js_1["default"], value, namespace, buf, offset);
+}
+v5.DNS = v35_js_1.DNS;
+v5.URL = v35_js_1.URL;
+exports["default"] = v5;
+
+},{"./sha1.js":17,"./v35.js":22}],25:[function(require,module,exports){
+"use strict";
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
+function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
+function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var stringify_js_1 = require("./stringify.js");
+var v1_js_1 = require("./v1.js");
+var v1ToV6_js_1 = require("./v1ToV6.js");
+function v6(options, buf, offset) {
+  options !== null && options !== void 0 ? options : options = {};
+  offset !== null && offset !== void 0 ? offset : offset = 0;
+  var bytes = (0, v1_js_1["default"])(_objectSpread(_objectSpread({}, options), {}, {
+    _v6: true
+  }), new Uint8Array(16));
+  bytes = (0, v1ToV6_js_1["default"])(bytes);
+  if (buf) {
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError("UUID byte range ".concat(offset, ":").concat(offset + 15, " is out of buffer bounds"));
+    }
+    for (var i = 0; i < 16; i++) {
+      buf[offset + i] = bytes[i];
+    }
+    return buf;
+  }
+  return (0, stringify_js_1.unsafeStringify)(bytes);
+}
+exports["default"] = v6;
+
+},{"./stringify.js":18,"./v1.js":19,"./v1ToV6.js":20}],26:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var parse_js_1 = require("./parse.js");
+var stringify_js_1 = require("./stringify.js");
+function v6ToV1(uuid) {
+  var v6Bytes = typeof uuid === 'string' ? (0, parse_js_1["default"])(uuid) : uuid;
+  var v1Bytes = _v6ToV1(v6Bytes);
+  return typeof uuid === 'string' ? (0, stringify_js_1.unsafeStringify)(v1Bytes) : v1Bytes;
+}
+exports["default"] = v6ToV1;
+function _v6ToV1(v6Bytes) {
+  return Uint8Array.of((v6Bytes[3] & 0x0f) << 4 | v6Bytes[4] >> 4 & 0x0f, (v6Bytes[4] & 0x0f) << 4 | (v6Bytes[5] & 0xf0) >> 4, (v6Bytes[5] & 0x0f) << 4 | v6Bytes[6] & 0x0f, v6Bytes[7], (v6Bytes[1] & 0x0f) << 4 | (v6Bytes[2] & 0xf0) >> 4, (v6Bytes[2] & 0x0f) << 4 | (v6Bytes[3] & 0xf0) >> 4, 0x10 | (v6Bytes[0] & 0xf0) >> 4, (v6Bytes[0] & 0x0f) << 4 | (v6Bytes[1] & 0xf0) >> 4, v6Bytes[8], v6Bytes[9], v6Bytes[10], v6Bytes[11], v6Bytes[12], v6Bytes[13], v6Bytes[14], v6Bytes[15]);
 }
 
-module.exports = v4;
+},{"./parse.js":14,"./stringify.js":18}],27:[function(require,module,exports){
+"use strict";
 
-},{"./lib/bytesToUuid":10,"./lib/rng":11}],14:[function(require,module,exports){
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.updateV7State = void 0;
+var rng_js_1 = require("./rng.js");
+var stringify_js_1 = require("./stringify.js");
+var _state = {};
+function v7(options, buf, offset) {
+  var bytes;
+  if (options) {
+    var _ref, _options$random, _options$rng;
+    bytes = v7Bytes((_ref = (_options$random = options.random) !== null && _options$random !== void 0 ? _options$random : (_options$rng = options.rng) === null || _options$rng === void 0 ? void 0 : _options$rng.call(options)) !== null && _ref !== void 0 ? _ref : (0, rng_js_1["default"])(), options.msecs, options.seq, buf, offset);
+  } else {
+    var now = Date.now();
+    var rnds = (0, rng_js_1["default"])();
+    updateV7State(_state, now, rnds);
+    bytes = v7Bytes(rnds, _state.msecs, _state.seq, buf, offset);
+  }
+  return buf !== null && buf !== void 0 ? buf : (0, stringify_js_1.unsafeStringify)(bytes);
+}
+function updateV7State(state, now, rnds) {
+  var _state$msecs, _state$seq;
+  (_state$msecs = state.msecs) !== null && _state$msecs !== void 0 ? _state$msecs : state.msecs = -Infinity;
+  (_state$seq = state.seq) !== null && _state$seq !== void 0 ? _state$seq : state.seq = 0;
+  if (now > state.msecs) {
+    state.seq = rnds[6] << 23 | rnds[7] << 16 | rnds[8] << 8 | rnds[9];
+    state.msecs = now;
+  } else {
+    state.seq = state.seq + 1 | 0;
+    if (state.seq === 0) {
+      state.msecs++;
+    }
+  }
+  return state;
+}
+exports.updateV7State = updateV7State;
+function v7Bytes(rnds, msecs, seq, buf) {
+  var offset = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : 0;
+  if (rnds.length < 16) {
+    throw new Error('Random bytes length must be >= 16');
+  }
+  if (!buf) {
+    buf = new Uint8Array(16);
+    offset = 0;
+  } else {
+    if (offset < 0 || offset + 16 > buf.length) {
+      throw new RangeError("UUID byte range ".concat(offset, ":").concat(offset + 15, " is out of buffer bounds"));
+    }
+  }
+  msecs !== null && msecs !== void 0 ? msecs : msecs = Date.now();
+  seq !== null && seq !== void 0 ? seq : seq = rnds[6] * 0x7f << 24 | rnds[7] << 16 | rnds[8] << 8 | rnds[9];
+  buf[offset++] = msecs / 0x10000000000 & 0xff;
+  buf[offset++] = msecs / 0x100000000 & 0xff;
+  buf[offset++] = msecs / 0x1000000 & 0xff;
+  buf[offset++] = msecs / 0x10000 & 0xff;
+  buf[offset++] = msecs / 0x100 & 0xff;
+  buf[offset++] = msecs & 0xff;
+  buf[offset++] = 0x70 | seq >>> 28 & 0x0f;
+  buf[offset++] = seq >>> 20 & 0xff;
+  buf[offset++] = 0x80 | seq >>> 14 & 0x3f;
+  buf[offset++] = seq >>> 6 & 0xff;
+  buf[offset++] = seq << 2 & 0xff | rnds[10] & 0x03;
+  buf[offset++] = rnds[11];
+  buf[offset++] = rnds[12];
+  buf[offset++] = rnds[13];
+  buf[offset++] = rnds[14];
+  buf[offset++] = rnds[15];
+  return buf;
+}
+exports["default"] = v7;
+
+},{"./rng.js":16,"./stringify.js":18}],28:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var regex_js_1 = require("./regex.js");
+function validate(uuid) {
+  return typeof uuid === 'string' && regex_js_1["default"].test(uuid);
+}
+exports["default"] = validate;
+
+},{"./regex.js":15}],29:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var validate_js_1 = require("./validate.js");
+function version(uuid) {
+  if (!(0, validate_js_1["default"])(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+  return parseInt(uuid.slice(14, 15), 16);
+}
+exports["default"] = version;
+
+},{"./validate.js":28}],30:[function(require,module,exports){
 (function (global){(function (){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
@@ -5666,7 +6275,7 @@ var adapterFactory = require('./adapter_factory.js');
 module.exports = adapterFactory({window: global.window});
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./adapter_factory.js":15}],15:[function(require,module,exports){
+},{"./adapter_factory.js":31}],31:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -5823,7 +6432,7 @@ module.exports = function(dependencies, opts) {
   return adapter;
 };
 
-},{"./chrome/chrome_shim":16,"./common_shim":18,"./edge/edge_shim":19,"./firefox/firefox_shim":22,"./safari/safari_shim":24,"./utils":25}],16:[function(require,module,exports){
+},{"./chrome/chrome_shim":32,"./common_shim":34,"./edge/edge_shim":35,"./firefox/firefox_shim":38,"./safari/safari_shim":40,"./utils":41}],32:[function(require,module,exports){
 
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
@@ -6762,7 +7371,7 @@ module.exports = {
   }
 };
 
-},{"../utils.js":25,"./getusermedia":17}],17:[function(require,module,exports){
+},{"../utils.js":41,"./getusermedia":33}],33:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -7011,7 +7620,7 @@ module.exports = function(window) {
   }
 };
 
-},{"../utils.js":25}],18:[function(require,module,exports){
+},{"../utils.js":41}],34:[function(require,module,exports){
 /*
  *  Copyright (c) 2017 The WebRTC project authors. All Rights Reserved.
  *
@@ -7303,7 +7912,7 @@ module.exports = {
   }
 };
 
-},{"./utils":25,"sdp":7}],19:[function(require,module,exports){
+},{"./utils":41,"sdp":7}],35:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -7409,7 +8018,7 @@ module.exports = {
   }
 };
 
-},{"../utils":25,"./filtericeservers":20,"./getusermedia":21,"rtcpeerconnection-shim":6}],20:[function(require,module,exports){
+},{"../utils":41,"./filtericeservers":36,"./getusermedia":37,"rtcpeerconnection-shim":6}],36:[function(require,module,exports){
 /*
  *  Copyright (c) 2018 The WebRTC project authors. All Rights Reserved.
  *
@@ -7460,7 +8069,7 @@ module.exports = function(iceServers, edgeVersion) {
   });
 };
 
-},{"../utils":25}],21:[function(require,module,exports){
+},{"../utils":41}],37:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -7496,7 +8105,7 @@ module.exports = function(window) {
   };
 };
 
-},{}],22:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -7815,7 +8424,7 @@ module.exports = {
   }
 };
 
-},{"../utils":25,"./getusermedia":23}],23:[function(require,module,exports){
+},{"../utils":41,"./getusermedia":39}],39:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -8026,7 +8635,7 @@ module.exports = function(window) {
   };
 };
 
-},{"../utils":25}],24:[function(require,module,exports){
+},{"../utils":41}],40:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -8342,7 +8951,7 @@ module.exports = {
   }
 };
 
-},{"../utils":25}],25:[function(require,module,exports){
+},{"../utils":41}],41:[function(require,module,exports){
 /*
  *  Copyright (c) 2016 The WebRTC project authors. All Rights Reserved.
  *
@@ -8524,300 +9133,440 @@ module.exports = {
   }
 };
 
-},{}],26:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
-const session_report_1 = require("./session_report");
-const rtc_const_1 = require("./rtc_const");
-const uuid_1 = require("uuid");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var utils_1 = require("./utils");
+var session_report_1 = require("./session_report");
+var rtc_const_1 = require("./rtc_const");
+var uuid_1 = require("uuid");
 /**
  * CallSessionState - class for all call session states
  */
-class CallSessionState {
-    constructor(callSession) {
-        this._callSession = callSession;
-    }
-    onEnter() {
-    }
-    onExit() {
-    }
+var CallSessionState = /*#__PURE__*/function () {
+  function CallSessionState(callSession) {
+    _classCallCheck(this, CallSessionState);
+    this._callSession = callSession;
+  }
+  return _createClass(CallSessionState, [{
+    key: "onEnter",
+    value: function onEnter() {}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
     //Todo: Throw UnsupportedOperation
-    connectContact() {
-    }
+  }, {
+    key: "connectContact",
+    value: function connectContact() {}
     //Todo: Throw UnsupportedOperation
-    disconnectContact() {
+  }, {
+    key: "disconnectContact",
+    value: function disconnectContact() {}
+  }, {
+    key: "handleMessage",
+    value: function handleMessage(/* message */
+    ) {}
+  }, {
+    key: "onSharedMediaSessionConnected",
+    value: function onSharedMediaSessionConnected() {}
+  }, {
+    key: "onSharedMediaSessionError",
+    value: function onSharedMediaSessionError(/* error */
+    ) {}
+  }, {
+    key: "onSharedMediaSessionEvent",
+    value: function onSharedMediaSessionEvent() {}
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._callSession._logger;
     }
-    handleMessage( /* message */) {
+  }, {
+    key: "name",
+    get: function get() {
+      return "CallSessionState";
     }
-    onSharedMediaSessionConnected() {
+  }, {
+    key: "_isCurrentState",
+    value: function _isCurrentState() {
+      return this._callSession._state === this;
     }
-    onSharedMediaSessionError( /* error */) {
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      if (this._isCurrentState()) {
+        this._callSession.transit(nextState);
+      }
     }
-    onSharedMediaSessionEvent() {
-    }
-    get logger() {
-        return this._callSession._logger;
-    }
-    get name() {
-        return "CallSessionState";
-    }
-    _isCurrentState() {
-        return this._callSession._state === this;
-    }
-    transit(nextState) {
-        if (this._isCurrentState()) {
-            this._callSession.transit(nextState);
-        }
-    }
-}
+  }]);
+}();
 /**
  * InitialState - Starting state for call sessions
  */
-class InitialState extends CallSessionState {
-    onEnter() {
-        this.logger.info("Entering Initial state").sendInternalLogToServer();
+var InitialState = /*#__PURE__*/function (_CallSessionState) {
+  function InitialState() {
+    _classCallCheck(this, InitialState);
+    return _callSuper(this, InitialState, arguments);
+  }
+  _inherits(InitialState, _CallSessionState);
+  return _createClass(InitialState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.logger.info("Entering Initial state").sendInternalLogToServer();
     }
-    onSharedMediaSessionConnected() {
-        this.logger.info("Shared media session connected, transitioning to ConnectContactState").sendInternalLogToServer();
-        this.transit(new ConnectContactState(this._callSession));
+  }, {
+    key: "onSharedMediaSessionConnected",
+    value: function onSharedMediaSessionConnected() {
+      this.logger.info("Shared media session connected, transitioning to ConnectContactState").sendInternalLogToServer();
+      this.transit(new ConnectContactState(this._callSession));
     }
-    onSharedMediaSessionError(error) {
-        this.logger.error("Shared media session error in InitialState", error).sendInternalLogToServer();
-        this.transit(new FailedState(this._callSession, error));
+  }, {
+    key: "onSharedMediaSessionError",
+    value: function onSharedMediaSessionError(error) {
+      this.logger.error("Shared media session error in InitialState", error).sendInternalLogToServer();
+      this.transit(new FailedState(this._callSession, error));
     }
     // Todo: need to properly handle call disconnection while setup in progress
-    get name() {
-        return rtc_const_1.CALL_SESSION_STATE.INITIAL_STATE;
+  }, {
+    key: "name",
+    get: function get() {
+      return rtc_const_1.CALL_SESSION_STATE.INITIAL_STATE;
     }
-}
+  }]);
+}(CallSessionState);
 /**
  * ConnectContactState - State for connecting to a contact
  */
-class ConnectContactState extends CallSessionState {
-    onEnter() {
-        this.logger.info("Entering ConnectContact state").sendInternalLogToServer();
-        if (!this._callSession._shouldSkipConnectContact) {
-            this.logger.info("Sending ConnectContact").sendInternalLogToServer();
-            // Send connect contact request through SignalingChannelManager
-            this._callSession._signalingChannelManager.send(JSON.stringify({
-                jsonrpc: '2.0', method: rtc_const_1.CONNECT_CONTACT_METHOD_NAME, params: {
-                    contactId: this._callSession._contactId,
-                    persistentConnection: this._callSession._persistentConnection,
-                    peerConnectionId: this._callSession._peerConnectionId,
-                    peerConnectionToken: this._callSession._peerConnectionToken,
-                    callContextToken: this._callSession._contactToken,
-                }, id: (0, uuid_1.v4)()
-            }), this._callSession._agentMediaLegId);
-            // Mark as using existing persistent peer connection when connectContact is sent
-            this._callSession._sessionReport.isExistingPersistentPeerConnection = true;
-        }
-        // Immediately transition to TalkingState - don't wait for response
-        this.transit(new TalkingState(this._callSession));
+var ConnectContactState = /*#__PURE__*/function (_CallSessionState2) {
+  function ConnectContactState() {
+    _classCallCheck(this, ConnectContactState);
+    return _callSuper(this, ConnectContactState, arguments);
+  }
+  _inherits(ConnectContactState, _CallSessionState2);
+  return _createClass(ConnectContactState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.logger.info("Entering ConnectContact state").sendInternalLogToServer();
+      if (!this._callSession._shouldSkipConnectContact) {
+        this.logger.info("Sending ConnectContact").sendInternalLogToServer();
+        // Send connect contact request through SignalingChannelManager
+        this._callSession._signalingChannelManager.send(JSON.stringify({
+          jsonrpc: '2.0',
+          method: rtc_const_1.CONNECT_CONTACT_METHOD_NAME,
+          params: {
+            contactId: this._callSession._contactId,
+            persistentConnection: this._callSession._persistentConnection,
+            peerConnectionId: this._callSession._peerConnectionId,
+            peerConnectionToken: this._callSession._peerConnectionToken,
+            callContextToken: this._callSession._contactToken
+          },
+          id: (0, uuid_1.v4)()
+        }), this._callSession._agentMediaLegId);
+        // Mark as using existing persistent peer connection when connectContact is sent
+        this._callSession._sessionReport.isExistingPersistentPeerConnection = true;
+      }
+      // Immediately transition to TalkingState - don't wait for response
+      this.transit(new TalkingState(this._callSession));
     }
-    get name() {
-        return rtc_const_1.CALL_SESSION_STATE.CONNECT_CONTACT_STATE;
+  }, {
+    key: "name",
+    get: function get() {
+      return rtc_const_1.CALL_SESSION_STATE.CONNECT_CONTACT_STATE;
     }
-}
+  }]);
+}(CallSessionState);
 /**
  * TalkingState - State when the call is active
  */
-class TalkingState extends CallSessionState {
-    onEnter() {
-        this.logger.info("Entering Talking state").sendInternalLogToServer();
-        this._startTime = Date.now();
-        this._callSession._onSessionConnected(this._callSession);
-        // Calculate time taken to receive the first RTP packet
-        // This measures the time from call session connect() to first RTP packet receipt
-        let interval;
-        let timeout;
-        const getSynchronizationSourcesAndProcess = () => __awaiter(this, void 0, void 0, function* () {
-            try {
-                // Null checks for call session and peer connection
-                if (!this._callSession || !this._callSession._pc) {
-                    this.logger.warn('Peer connection not available for RTP tracking');
-                    return;
+var TalkingState = /*#__PURE__*/function (_CallSessionState3) {
+  function TalkingState() {
+    _classCallCheck(this, TalkingState);
+    return _callSuper(this, TalkingState, arguments);
+  }
+  _inherits(TalkingState, _CallSessionState3);
+  return _createClass(TalkingState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var _this = this;
+      this.logger.info("Entering Talking state").sendInternalLogToServer();
+      this._startTime = Date.now();
+      this._callSession._onSessionConnected(this._callSession);
+      // Calculate time taken to receive the first RTP packet
+      // This measures the time from call session connect() to first RTP packet receipt
+      var interval;
+      var timeout;
+      var getSynchronizationSourcesAndProcess = function getSynchronizationSourcesAndProcess() {
+        return __awaiter(_this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+          var _this2 = this;
+          var receivers, rtcRtpReceiver, synchronizationSources, _t;
+          return _regenerator().w(function (_context) {
+            while (1) switch (_context.p = _context.n) {
+              case 0:
+                _context.p = 0;
+                if (!(!this._callSession || !this._callSession._pc)) {
+                  _context.n = 1;
+                  break;
                 }
-                const receivers = this._callSession._pc.getReceivers();
-                if (!receivers || receivers.length === 0) {
-                    // No receivers yet, continue polling
-                    return;
+                this.logger.warn('Peer connection not available for RTP tracking');
+                return _context.a(2);
+              case 1:
+                receivers = this._callSession._pc.getReceivers();
+                if (!(!receivers || receivers.length === 0)) {
+                  _context.n = 2;
+                  break;
                 }
-                const rtcRtpReceiver = receivers[0];
-                if (!(rtcRtpReceiver instanceof RTCRtpReceiver)) {
-                    this.logger.warn('Invalid RTP receiver type');
-                    return;
+                return _context.a(2);
+              case 2:
+                rtcRtpReceiver = receivers[0];
+                if (rtcRtpReceiver instanceof RTCRtpReceiver) {
+                  _context.n = 3;
+                  break;
                 }
-                const synchronizationSources = rtcRtpReceiver.getSynchronizationSources();
-                if (!synchronizationSources || synchronizationSources.length === 0) {
-                    // No packets yet, continue polling
-                    return;
+                this.logger.warn('Invalid RTP receiver type');
+                return _context.a(2);
+              case 3:
+                synchronizationSources = rtcRtpReceiver.getSynchronizationSources();
+                if (!(!synchronizationSources || synchronizationSources.length === 0)) {
+                  _context.n = 4;
+                  break;
                 }
-                synchronizationSources.forEach((source) => {
-                    if (source.timestamp && this._callSession._connectTimeStamp) {
-                        const firstRTPTimeMillis = source.timestamp - this._callSession._connectTimeStamp;
-                        if (firstRTPTimeMillis > 0) {
-                            this._callSession._sessionReport.firstRTPTimeMillis = firstRTPTimeMillis;
-                            this.logger.info(`First RTP packet received after ${firstRTPTimeMillis}ms`).sendInternalLogToServer();
-                            // Clear interval and timeout once we get the first packet
-                            clearInterval(interval);
-                            clearTimeout(timeout);
-                        }
+                return _context.a(2);
+              case 4:
+                synchronizationSources.forEach(function (source) {
+                  if (source.timestamp && _this2._callSession._connectTimeStamp) {
+                    var firstRTPTimeMillis = source.timestamp - _this2._callSession._connectTimeStamp;
+                    if (firstRTPTimeMillis > 0) {
+                      _this2._callSession._sessionReport.firstRTPTimeMillis = firstRTPTimeMillis;
+                      _this2.logger.info("First RTP packet received after ".concat(firstRTPTimeMillis, "ms")).sendInternalLogToServer();
+                      // Clear interval and timeout once we get the first packet
+                      clearInterval(interval);
+                      clearTimeout(timeout);
                     }
+                  }
                 });
+                _context.n = 6;
+                break;
+              case 5:
+                _context.p = 5;
+                _t = _context.v;
+                this.logger.error('Error getting synchronization sources for RTP tracking', _t).sendInternalLogToServer();
+              case 6:
+                return _context.a(2);
             }
-            catch (error) {
-                this.logger.error('Error getting synchronization sources for RTP tracking', error).sendInternalLogToServer();
-            }
-        });
-        try {
-            // Set up timeout to stop the interval after 1 second
-            timeout = setTimeout(() => {
-                if (interval) {
-                    clearInterval(interval);
-                }
-                this.logger.info('RTP tracking timeout reached, stopping the interval').sendInternalLogToServer();
-            }, 1000);
-            // Start polling for RTP packets every 20ms
-            interval = setInterval(getSynchronizationSourcesAndProcess, 20);
-        }
-        catch (error) {
-            this.logger.error('Failed to set up RTP packet tracking', error).sendInternalLogToServer();
-        }
+          }, _callee, this, [[0, 5]]);
+        }));
+      };
+      try {
+        // Set up timeout to stop the interval after 1 second
+        timeout = setTimeout(function () {
+          if (interval) {
+            clearInterval(interval);
+          }
+          _this.logger.info('RTP tracking timeout reached, stopping the interval').sendInternalLogToServer();
+        }, 1000);
+        // Start polling for RTP packets every 20ms
+        interval = setInterval(getSynchronizationSourcesAndProcess, 20);
+      } catch (error) {
+        this.logger.error('Failed to set up RTP packet tracking', error).sendInternalLogToServer();
+      }
     }
-    onExit() {
-        this._callSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
-        this._callSession._sessionReport.sessionEndTime = new Date();
-        this._callSession._onSessionCompleted(this._callSession);
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      this._callSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
+      this._callSession._sessionReport.sessionEndTime = new Date();
+      this._callSession._onSessionCompleted(this._callSession);
     }
-    disconnectContact() {
-        this.logger.info("Disconnecting contact from Talking state").sendInternalLogToServer();
-        if (this._callSession._isPersistentConnectionAllowlistedAndEnabled) {
-            this.logger.info("Sending DisconnectContact for Persistent Connection Enabled path").sendInternalLogToServer();
-            this._callSession._signalingChannelManager.send(JSON.stringify({
-                jsonrpc: '2.0', method: 'disconnectContact', params: {
-                    contactId: this._callSession._contactId,
-                    peerConnectionId: this._callSession._peerConnectionId,
-                    peerConnectionToken: this._callSession._peerConnectionToken,
-                }, id: (0, uuid_1.v4)()
-            }), this._callSession._agentMediaLegId);
-        }
-        else {
-            this.logger.info("Skipping DisconnectContact for Persistent Connection Disabled and Not Allowlisted path").sendInternalLogToServer();
-        }
-        this.transit(new DisconnectedState(this._callSession));
+  }, {
+    key: "disconnectContact",
+    value: function disconnectContact() {
+      this.logger.info("Disconnecting contact from Talking state").sendInternalLogToServer();
+      if (this._callSession._isPersistentConnectionAllowlistedAndEnabled) {
+        this.logger.info("Sending DisconnectContact for Persistent Connection Enabled path").sendInternalLogToServer();
+        this._callSession._signalingChannelManager.send(JSON.stringify({
+          jsonrpc: '2.0',
+          method: 'disconnectContact',
+          params: {
+            contactId: this._callSession._contactId,
+            peerConnectionId: this._callSession._peerConnectionId,
+            peerConnectionToken: this._callSession._peerConnectionToken
+          },
+          id: (0, uuid_1.v4)()
+        }), this._callSession._agentMediaLegId);
+      } else {
+        this.logger.info("Skipping DisconnectContact for Persistent Connection Disabled and Not Allowlisted path").sendInternalLogToServer();
+      }
+      this.transit(new DisconnectedState(this._callSession));
     }
-    handleMessage( /*msg*/) {
-        //     no remote (voice to CCP) bye for SIP path
+  }, {
+    key: "handleMessage",
+    value: function handleMessage(/*msg*/
+    ) {
+      //     no remote (voice to CCP) bye for SIP path
     }
-    onSharedMediaSessionError(error) {
-        this.logger.error("Shared media session error in TalkingState", error).sendInternalLogToServer();
-        this.transit(new FailedState(this._callSession, error));
+  }, {
+    key: "onSharedMediaSessionError",
+    value: function onSharedMediaSessionError(error) {
+      this.logger.error("Shared media session error in TalkingState", error).sendInternalLogToServer();
+      this.transit(new FailedState(this._callSession, error));
     }
-    get name() {
-        return rtc_const_1.CALL_SESSION_STATE.TALKING_STATE;
+  }, {
+    key: "name",
+    get: function get() {
+      return rtc_const_1.CALL_SESSION_STATE.TALKING_STATE;
     }
-}
+  }]);
+}(CallSessionState);
 /**
  * DisconnectedState - State after call ends normally
  */
-class DisconnectedState extends CallSessionState {
-    onEnter() {
-        this.logger.info("Entering Disconnected state").sendInternalLogToServer();
-        this._callSession._sessionReport.sessionEndTime = new Date();
+var DisconnectedState = /*#__PURE__*/function (_CallSessionState4) {
+  function DisconnectedState() {
+    _classCallCheck(this, DisconnectedState);
+    return _callSuper(this, DisconnectedState, arguments);
+  }
+  _inherits(DisconnectedState, _CallSessionState4);
+  return _createClass(DisconnectedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.logger.info("Entering Disconnected state").sendInternalLogToServer();
+      this._callSession._sessionReport.sessionEndTime = new Date();
     }
-    get name() {
-        return rtc_const_1.CALL_SESSION_STATE.DISCONNECTED_STATE;
+  }, {
+    key: "name",
+    get: function get() {
+      return rtc_const_1.CALL_SESSION_STATE.DISCONNECTED_STATE;
     }
-}
+  }]);
+}(CallSessionState);
 /**
  * FailedState - State when call fails
  */
-class FailedState extends CallSessionState {
-    constructor(callSession, error) {
-        super(callSession);
-        this._error = error;
+var FailedState = /*#__PURE__*/function (_CallSessionState5) {
+  function FailedState(callSession, error) {
+    var _this3;
+    _classCallCheck(this, FailedState);
+    _this3 = _callSuper(this, FailedState, [callSession]);
+    _this3._error = error;
+    return _this3;
+  }
+  _inherits(FailedState, _CallSessionState5);
+  return _createClass(FailedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.logger.error("Entering Failed state: ".concat(this._error)).sendInternalLogToServer();
+      this._callSession._sessionReport.sessionEndTime = new Date();
+      this._callSession._onSessionFailed(this._callSession, this._error);
     }
-    onEnter() {
-        this.logger.error(`Entering Failed state: ${this._error}`).sendInternalLogToServer();
-        this._callSession._sessionReport.sessionEndTime = new Date();
-        this._callSession._onSessionFailed(this._callSession, this._error);
+  }, {
+    key: "name",
+    get: function get() {
+      return rtc_const_1.CALL_SESSION_STATE.FAILED_STATE;
     }
-    get name() {
-        return rtc_const_1.CALL_SESSION_STATE.FAILED_STATE;
-    }
-}
+  }]);
+}(CallSessionState);
 /**
  * CallSession Class
  *
  * This class manages an individual call session that uses a shared media session for WebRTC connections.
  * It is designed to work with multiple concurrent calls (bullet routing).
  */
-class CallSession {
-    /**
-     * @param {Object} config - Configuration object
-     * @param {Object} [config.logger] - Logger instance
-     * @param {String} [config.callId] - contactId
-     * @param {String} [config.contactId] - contactId
-     * @param {String} [config.contactToken] - Contact token
-     * @param {String} [config.connectionId] - Agent media leg identifier
-     * @param {Object} [config.signalingChannelManager] - SignalingChannelManager instance
-     */
-    constructor(config = {}) {
-        this._logger = (0, utils_1.wrapLogger)(config.logger, config.callId || 'unknown', 'CallSession');
-        this._logger.info("Creating CallSession").sendInternalLogToServer();
-        this._callId = config.callId;
-        this._contactId = config.callId;
-        this._contactToken = config.contactToken;
-        this._connectionId = config.connectionId;
-        this._agentMediaLegId = config.connectionId;
-        this._iceServers = config.iceServers; // For error handling in softphone.js
-        this._sessionReport = new session_report_1.SessionReport();
-        this._sessionReport.sessionStartTime = new Date();
-        this._sessionReport.isPCMv2Path = true; // Mark calls handled by call sessions as PCMv2 path
-        this._connectTimeStamp = Date.now();
-        this._signalingChannelManager = config.signalingChannelManager;
-        // Initialize state machine
-        this._setupStateMachine();
-        this._isConnected = false;
-        this._isTalking = false;
-        this._onGumError =
-            this._onGumSuccess =
-                this._onLocalStreamAdded =
-                    this._onSessionFailed =
-                        this._onSessionInitialized =
-                            this._onSignalingConnected =
-                                this._onIceCollectionComplete =
-                                    this._onSignalingStarted =
-                                        this._onSessionConnected =
-                                            this._onRemoteStreamAdded =
-                                                this._onSessionCompleted =
-                                                    this._onSessionDestroyed =
-                                                        this._replaceStreamCallback = () => {
-                                                        };
+var CallSession = /*#__PURE__*/function () {
+  /**
+   * @param {Object} config - Configuration object
+   * @param {Object} [config.logger] - Logger instance
+   * @param {String} [config.callId] - contactId
+   * @param {String} [config.contactId] - contactId
+   * @param {String} [config.contactToken] - Contact token
+   * @param {String} [config.connectionId] - Agent media leg identifier
+   * @param {Object} [config.signalingChannelManager] - SignalingChannelManager instance
+   */
+  function CallSession() {
+    var config = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    _classCallCheck(this, CallSession);
+    this._logger = (0, utils_1.wrapLogger)(config.logger, config.callId || 'unknown', 'CallSession');
+    this._logger.info("Creating CallSession").sendInternalLogToServer();
+    this._callId = config.callId;
+    this._contactId = config.callId;
+    this._contactToken = config.contactToken;
+    this._connectionId = config.connectionId;
+    this._agentMediaLegId = config.connectionId;
+    this._iceServers = config.iceServers; // For error handling in softphone.js
+    this._sessionReport = new session_report_1.SessionReport();
+    this._sessionReport.sessionStartTime = new Date();
+    this._sessionReport.isPCMv2Path = true; // Mark calls handled by call sessions as PCMv2 path
+    this._connectTimeStamp = Date.now();
+    this._signalingChannelManager = config.signalingChannelManager;
+    // Initialize state machine
+    this._setupStateMachine();
+    this._isConnected = false;
+    this._isTalking = false;
+    this._onGumError = this._onGumSuccess = this._onLocalStreamAdded = this._onSessionFailed = this._onSessionInitialized = this._onSignalingConnected = this._onIceCollectionComplete = this._onSignalingStarted = this._onSessionConnected = this._onRemoteStreamAdded = this._onSessionCompleted = this._onSessionDestroyed = this._replaceStreamCallback = function () {};
+  }
+  return _createClass(CallSession, [{
+    key: "sessionReport",
+    get: function get() {
+      return this._sessionReport;
     }
-    get sessionReport() {
-        return this._sessionReport;
-    }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "callId",
+    get: function get() {
+      return this._callId;
     }
     /**
      * getMediaStream returns the local stream, which may be acquired from local device or from user provided stream.
      * Rather than getting a stream by calling getUserMedia (which gets a stream from local device such as camera),
      * user could also provide the stream to the RtcSession directly to connect to the other end.
      */
-    get mediaStream() {
-        return this._localStream;
+  }, {
+    key: "mediaStream",
+    get: function get() {
+      return this._localStream;
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -8825,15 +9574,30 @@ class CallSession {
      *     if (audioTrack) {
      *         audioTrack.enabled = false;
      *     }
+     */,
+    set:
+    /**
+     * Optional. RtcSession will grab input device if this is not specified.
+     * Please note: this RtcSession class only supports single audio track.
      */
-    pauseLocalAudio() {
-        var audioTrack;
-        if (this._localStream) {
-            audioTrack = this._localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = false;
-            }
+    function set(input) {
+      this._localStream = input;
+      this._isUserProvidedStream = true;
+      this._notifyAttributeChange('mediaStream', input);
+    }
+    /**
+     * Needed, expect an audio element that can be used to play remote audio stream.
+     */
+  }, {
+    key: "pauseLocalAudio",
+    value: function pauseLocalAudio() {
+      var audioTrack;
+      if (this._localStream) {
+        audioTrack = this._localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
+      }
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -8843,67 +9607,83 @@ class CallSession {
      *     }
      * Todo: fix mute/unmute
      */
-    resumeLocalAudio() {
-        var audioTrack;
-        if (this._localStream) {
-            audioTrack = this._localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = true;
-            }
+  }, {
+    key: "resumeLocalAudio",
+    value: function resumeLocalAudio() {
+      var audioTrack;
+      if (this._localStream) {
+        audioTrack = this._localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = true;
         }
+      }
     }
-    pauseRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = false;
-            }
+  }, {
+    key: "pauseRemoteAudio",
+    value: function pauseRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
+      }
     }
-    resumeRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = true;
-            }
+  }, {
+    key: "resumeRemoteAudio",
+    value: function resumeRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = true;
         }
+      }
     }
     /**
      * Callback when gUM succeeds.
      * First param is RtcSession object.
      */
-    set onGumSuccess(handler) {
-        this._onGumSuccess = handler;
+  }, {
+    key: "onGumSuccess",
+    set: function set(handler) {
+      this._onGumSuccess = handler;
     }
     /**
      * Callback when gUM fails.
      * First param is RtcSession object.
      * Second param is the error.
      */
-    set onGumError(handler) {
-        this._onGumError = handler;
+  }, {
+    key: "onGumError",
+    set: function set(handler) {
+      this._onGumError = handler;
     }
     /**
      * Callback if failed initializing local resources
      * First param is RtcSession object.
      */
-    set onSessionFailed(handler) {
-        this._onSessionFailed = handler;
+  }, {
+    key: "onSessionFailed",
+    set: function set(handler) {
+      this._onSessionFailed = handler;
     }
     /**
      * Callback after local user media stream is added to the session.
      * First param is RtcSession object.
      * Second param is media stream
      */
-    set onLocalStreamAdded(handler) {
-        this._onLocalStreamAdded = handler;
+  }, {
+    key: "onLocalStreamAdded",
+    set: function set(handler) {
+      this._onLocalStreamAdded = handler;
     }
     /**
      * Callback when all local resources are ready. Establishing signaling chanel and ICE collection happens at the same time after this.
      * First param is RtcSession object.
      */
-    set onSessionInitialized(handler) {
-        this._onSessionInitialized = handler;
+  }, {
+    key: "onSessionInitialized",
+    set: function set(handler) {
+      this._onSessionInitialized = handler;
     }
     /**
      * Callback when signaling channel is established.
@@ -8911,8 +9691,10 @@ class CallSession {
      *
      * First param is RtcSession object.
      */
-    set onSignalingConnected(handler) {
-        this._onSignalingConnected = handler;
+  }, {
+    key: "onSignalingConnected",
+    set: function set(handler) {
+      this._onSignalingConnected = handler;
     }
     /**
      * Callback when ICE collection completes either because there is no more candidate or collection timed out.
@@ -8922,22 +9704,28 @@ class CallSession {
      * Second param is boolean, TRUE - ICE collection timed out.
      * Third param is number of candidates collected.
      */
-    set onIceCollectionComplete(handler) {
-        this._onIceCollectionComplete = handler;
+  }, {
+    key: "onIceCollectionComplete",
+    set: function set(handler) {
+      this._onIceCollectionComplete = handler;
     }
     /**
      * Callback when signaling channel is established and ICE collection completed with at least one candidate.
      * First param is RtcSession object.
      */
-    set onSignalingStarted(handler) {
-        this._onSignalingStarted = handler;
+  }, {
+    key: "onSignalingStarted",
+    set: function set(handler) {
+      this._onSignalingStarted = handler;
     }
     /**
      * Callback when the call is established (handshaked and media stream should be flowing)
      * First param is RtcSession object.
      */
-    set onSessionConnected(handler) {
-        this._onSessionConnected = handler;
+  }, {
+    key: "onSessionConnected",
+    set: function set(handler) {
+      this._onSessionConnected = handler;
     }
     /**
      * Callback after remote media stream is added to the session.
@@ -8946,70 +9734,78 @@ class CallSession {
      * First param is RtcSession object.
      * Second param is media stream track.
      */
-    set onRemoteStreamAdded(handler) {
-        this._onRemoteStreamAdded = handler;
+  }, {
+    key: "onRemoteStreamAdded",
+    set: function set(handler) {
+      this._onRemoteStreamAdded = handler;
     }
     /**
      * Callback when the hangup is initiated (implies the call was successfully established).
      * First param is RtcSession object.
      */
-    set onSessionCompleted(handler) {
-        this._onSessionCompleted = handler;
+  }, {
+    key: "onSessionCompleted",
+    set: function set(handler) {
+      this._onSessionCompleted = handler;
     }
     /**
      * Callback after session is cleaned up, no matter if the call was successfully established or not.
      * First param is RtcSession object.
      * Second param is SessionReport object.
      */
-    set onSessionDestroyed(handler) {
-        this._onSessionDestroyed = handler;
+  }, {
+    key: "onSessionDestroyed",
+    set: function set(handler) {
+      this._onSessionDestroyed = handler;
     }
     /**
      * Called to give consumers a chance to replace a media stream before it is added to a peer connection.
      */
-    set replaceStreamCallback(handler) {
-        this._replaceStreamCallback = handler;
+  }, {
+    key: "replaceStreamCallback",
+    set: function set(handler) {
+      this._replaceStreamCallback = handler;
     }
-    set enableAudio(flag) {
-        this._enableAudio = flag;
+  }, {
+    key: "enableAudio",
+    set: function set(flag) {
+      this._enableAudio = flag;
     }
-    set echoCancellation(flag) {
-        this._echoCancellation = flag;
-        this._notifyAttributeChange('echoCancellation', flag);
+  }, {
+    key: "echoCancellation",
+    set: function set(flag) {
+      this._echoCancellation = flag;
+      this._notifyAttributeChange('echoCancellation', flag);
     }
-    /**
-     * Optional. RtcSession will grab input device if this is not specified.
-     * Please note: this RtcSession class only supports single audio track.
-     */
-    set mediaStream(input) {
-        this._localStream = input;
-        this._isUserProvidedStream = true;
-        this._notifyAttributeChange('mediaStream', input);
-    }
-    /**
-     * Needed, expect an audio element that can be used to play remote audio stream.
-     */
-    set remoteAudioElement(element) {
-        this._remoteAudioElement = element;
-        this._notifyAttributeChange('remoteAudioElement', element);
+  }, {
+    key: "remoteAudioElement",
+    set: function set(element) {
+      this._remoteAudioElement = element;
+      this._notifyAttributeChange('remoteAudioElement', element);
     }
     /**
      * Override the default signaling connect time out.
      */
-    set signalingConnectTimeout(ms) {
-        this._signalingConnectTimeout = ms;
+  }, {
+    key: "signalingConnectTimeout",
+    set: function set(ms) {
+      this._signalingConnectTimeout = ms;
     }
     /**
      * Override the default ICE collection time limit.
      */
-    set iceTimeoutMillis(timeoutMillis) {
-        this._iceTimeoutMillis = timeoutMillis;
+  }, {
+    key: "iceTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._iceTimeoutMillis = timeoutMillis;
     }
     /**
      * Override the default GUM timeout time limit.
      */
-    set gumTimeoutMillis(timeoutMillis) {
-        this._gumTimeoutMillis = timeoutMillis;
+  }, {
+    key: "gumTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._gumTimeoutMillis = timeoutMillis;
     }
     /**
      * connect-rtc-js initiate the handshaking with all browser supported codec by default, Amazon Connect service will choose the codec according to its preference setting.
@@ -9017,15 +9813,19 @@ class CallSession {
      * WARNING: Setting this to unsupported codec will cause the failure of handshaking.
      * Supported audio codecs: opus.
      */
-    set forceAudioCodec(audioCodec) {
-        this._forceAudioCodec = audioCodec;
+  }, {
+    key: "forceAudioCodec",
+    set: function set(audioCodec) {
+      this._forceAudioCodec = audioCodec;
     }
     /**
      * connect-rtc-js disables OPUS DTX by default because it harms audio quality.
      * @param flag boolean
      */
-    set enableOpusDtx(flag) {
-        this._enableOpusDtx = flag;
+  }, {
+    key: "enableOpusDtx",
+    set: function set(flag) {
+      this._enableOpusDtx = flag;
     }
     /**
      * Disable media stream refresh
@@ -9033,81 +9833,99 @@ class CallSession {
      * Prevents RTC.js from changing the media stream
      * Notifies SharedMediaSession through attribute change mechanism
      */
-    disableMediaStreamRefresh() {
-        this._isUserProvidedStream = true;
-        this._notifyAttributeChange('disableMediaStreamRefresh', true);
+  }, {
+    key: "disableMediaStreamRefresh",
+    value: function disableMediaStreamRefresh() {
+      this._isUserProvidedStream = true;
+      this._notifyAttributeChange('disableMediaStreamRefresh', true);
     }
     /**
      * Set up the state machine
      * @private
      */
-    _setupStateMachine() {
-        this._state = new InitialState(this);
-        this._state.onEnter();
+  }, {
+    key: "_setupStateMachine",
+    value: function _setupStateMachine() {
+      this._state = new InitialState(this);
+      this._state.onEnter();
     }
-    transit(nextState) {
-        try {
-            this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
-            if (this._state && this._state.onExit) {
-                this._state.onExit();
-            }
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      try {
+        this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
+        if (this._state && this._state.onExit) {
+          this._state.onExit();
         }
-        finally {
-            this._state = nextState;
-            if (nextState.onEnter) {
-                try {
-                    nextState.onEnter();
-                }
-                catch (e) {
-                    this._logger.warn(nextState.name + '#onEnter failed', e);
-                    throw e; // eslint-disable-line no-unsafe-finally
-                }
-            }
+      } finally {
+        this._state = nextState;
+        if (nextState.onEnter) {
+          try {
+            nextState.onEnter();
+          } catch (e) {
+            this._logger.warn(nextState.name + '#onEnter failed', e);
+            throw e; // eslint-disable-line no-unsafe-finally
+          }
         }
+      }
     }
     /**
      * Handle message from SignalingChannelManager
      * @param {Object} message - The message to handle
      */
-    handleMessage(message) {
-        this._logger.info(`Received message: ${message.method || message.type}`).sendInternalLogToServer();
-        this._state.handleMessage(message);
+  }, {
+    key: "handleMessage",
+    value: function handleMessage(message) {
+      this._logger.info("Received message: ".concat(message.method || message.type)).sendInternalLogToServer();
+      this._state.handleMessage(message);
     }
     /**
      * Called when shared media session is connected
      */
-    onSharedMediaSessionConnected() {
-        this._logger.info("Shared media session connected").sendInternalLogToServer();
-        this._state.onSharedMediaSessionConnected();
+  }, {
+    key: "onSharedMediaSessionConnected",
+    value: function onSharedMediaSessionConnected() {
+      this._logger.info("Shared media session connected").sendInternalLogToServer();
+      this._state.onSharedMediaSessionConnected();
     }
     /**
      * Called when shared media session encounters an error
      * @param {Error} error - The error that occurred
      */
-    onSharedMediaSessionError(error) {
-        this._logger.error("Shared media session error", error).sendInternalLogToServer();
-        this._state.onSharedMediaSessionError(error);
+  }, {
+    key: "onSharedMediaSessionError",
+    value: function onSharedMediaSessionError(error) {
+      this._logger.error("Shared media session error", error).sendInternalLogToServer();
+      this._state.onSharedMediaSessionError(error);
     }
     /**
      * Connect the call session
      * Will be called when shared media session is ready
      */
-    connect() {
-        this._logger.info("Call session connect is not supported. Use Peer Connectio Manager Connect instead").sendInternalLogToServer();
+  }, {
+    key: "connect",
+    value: function connect() {
+      this._logger.info("Call session connect is not supported. Use Peer Connectio Manager Connect instead").sendInternalLogToServer();
     }
     /**
      * Connect to a contact
      */
-    connectContact() {
-        this._logger.info("Connecting contact").sendInternalLogToServer();
-        this._state.connectContact();
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      this._logger.info("Connecting contact").sendInternalLogToServer();
+      this._state.connectContact();
     }
-    hangup() {
-        this._logger.info("Disconnecting call session").sendInternalLogToServer();
-        this._state.disconnectContact();
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this._logger.info("Disconnecting call session").sendInternalLogToServer();
+      this._state.disconnectContact();
     }
-    shouldSkipConnectContact(shouldSkipConnectContact) {
-        return this._shouldSkipConnectContact = shouldSkipConnectContact;
+  }, {
+    key: "shouldSkipConnectContact",
+    value: function shouldSkipConnectContact(_shouldSkipConnectContact) {
+      return this._shouldSkipConnectContact = _shouldSkipConnectContact;
     }
     /**
      * Handle events from the shared media session
@@ -9116,157 +9934,158 @@ class CallSession {
      * @param {String} eventName - Name of the event from shared media session
      * @param {*} eventData - Optional event data passed from the shared media session
      */
-    onSharedMediaSessionEvent(eventName, eventData) {
-        this._logger.info(`Received shared media session event: ${eventName}`).sendInternalLogToServer();
-        switch (eventName) {
-            // Local media related events
-            case 'gumError':
-                this._onGumError(this, eventData);
-                break;
-            case 'gumSuccess':
-                this._onGumSuccess(this);
-                break;
-            case 'localPeerConnectionAvailable':
-                if (eventData) {
-                    this._pc = eventData;
-                }
-                break;
-            case 'localStreamAdded':
-                this._onLocalStreamAdded(this, eventData);
-                break;
-            case 'replaceStreamCallback':
-                return this._replaceStreamCallback(this, eventData);
-            // Session state events
-            case 'sessionInitialized':
-                this._onSessionInitialized(eventData);
-                break;
-            case 'sessionFailed':
-                if (this._state && typeof this._state.onSharedMediaSessionError === 'function') {
-                    this._state.onSharedMediaSessionError(eventData);
-                }
-                break;
-            // Signaling related events
-            case 'signalingConnected':
-                // Signaling is handled at the shared media session level
-                // No specific action needed for individual call sessions
-                break;
-            case 'iceCollectionComplete':
-                // ICE collection is complete, no specific action needed at call session level
-                break;
-            case 'signalingStarted':
-                // Signaling has started, which means ICE collection is done
-                // and an offer has been sent
-                break;
-            case 'sessionConnected':
-                // Store the peer connection reference if provided
-                if (eventData) {
-                    this._pc = eventData;
-                }
-                // Notify state machine
-                if (this._state && typeof this._state.onSharedMediaSessionConnected === 'function') {
-                    this._state.onSharedMediaSessionConnected();
-                }
-                break;
-            case 'peerConnectionId':
-                // Store the peer connection reference if provided
-                if (eventData) {
-                    this._peerConnectionId = eventData;
-                }
-                break;
-            case 'peerConnectionToken':
-                // Store the peer connection reference if provided
-                if (eventData) {
-                    this._peerConnectionToken = eventData;
-                }
-                break;
-            // Remote stream events
-            case 'remoteStreamAdded':
-                this._onRemoteStreamAdded(eventData);
-                break;
-            case 'sessionCompleted':
-                // Session completed normally
-                if (!(this._state instanceof DisconnectedState) && !(this._state instanceof FailedState)) {
-                    this._logger.info(`Disconnecting the call session as the shared media session is over. Should only happen for Persistent Connection Not Allowlisted code path`);
-                    this.transit(new DisconnectedState(this));
-                }
-                break;
-            case 'sessionDestroyed':
-                // Final cleanup after session is destroyed
-                this._sessionReport.sessionEndTime = new Date();
-                break;
-            case 'isPersistentConnectionAllowlistedAndEnabled':
-                this._isPersistentConnectionAllowlistedAndEnabled = eventData;
-                this._sessionReport.isPersistentPeerConnection = eventData;
-                break;
-            case 'sessionSetupLatencyMetricReady': {
-                // Explicitly copy shared media session properties while preserving call session specific ones
-                if (eventData) {
-                    // Copy shared media session timing properties
-                    this._sessionReport.gumTimeMillis = eventData.gumTimeMillis;
-                    this._sessionReport.initializationTimeMillis = eventData.initializationTimeMillis;
-                    this._sessionReport.iceCollectionTimeMillis = eventData.iceCollectionTimeMillis;
-                    this._sessionReport.signallingConnectTimeMillis = eventData.signallingConnectTimeMillis;
-                    this._sessionReport.handshakingTimeMillis = eventData.handshakingTimeMillis;
-                    this._sessionReport.preTalkingTimeMillis = eventData.preTalkingTimeMillis;
-                    // Copy shared media session failure flags
-                    this._sessionReport.iceCollectionFailure = eventData.iceCollectionFailure;
-                    this._sessionReport.signallingConnectionFailure = eventData.signallingConnectionFailure;
-                    this._sessionReport.handshakingFailure = eventData.handshakingFailure;
-                    this._sessionReport.gumOtherFailure = eventData.gumOtherFailure;
-                    this._sessionReport.gumTimeoutFailure = eventData.gumTimeoutFailure;
-                    this._sessionReport.createOfferFailure = eventData.createOfferFailure;
-                    this._sessionReport.setLocalDescriptionFailure = eventData.setLocalDescriptionFailure;
-                    this._sessionReport.userBusyFailure = eventData.userBusyFailure;
-                    this._sessionReport.invalidRemoteSDPFailure = eventData.invalidRemoteSDPFailure;
-                    this._sessionReport.noRemoteIceCandidateFailure = eventData.noRemoteIceCandidateFailure;
-                    this._sessionReport.setRemoteDescriptionFailure = eventData.setRemoteDescriptionFailure;
-                    // Copy shared media session path and platform properties
-                    this._sessionReport.isMediaClusterPath = eventData.isMediaClusterPath;
-                    this._sessionReport.vdiPlatform = eventData.vdiPlatform;
-                    this._sessionReport.vdiInitializationFailed = eventData.vdiInitializationFailed;
-                    this._sessionReport.vdiClientVersion = eventData.vdiClientVersion;
-                    this._sessionReport.vdiClientPlatform = eventData.vdiClientPlatform;
-                    this._sessionReport.iceCredentialSource = eventData.iceCredentialSource;
-                    this._sessionReport.isContactCredentialsDifferentRegion = eventData.isContactCredentialsDifferentRegion;
-                }
-                break;
+  }, {
+    key: "onSharedMediaSessionEvent",
+    value: function onSharedMediaSessionEvent(eventName, eventData) {
+      this._logger.info("Received shared media session event: ".concat(eventName)).sendInternalLogToServer();
+      switch (eventName) {
+        // Local media related events
+        case 'gumError':
+          this._onGumError(this, eventData);
+          break;
+        case 'gumSuccess':
+          this._onGumSuccess(this);
+          break;
+        case 'localPeerConnectionAvailable':
+          if (eventData) {
+            this._pc = eventData;
+          }
+          break;
+        case 'localStreamAdded':
+          this._onLocalStreamAdded(this, eventData);
+          break;
+        case 'replaceStreamCallback':
+          return this._replaceStreamCallback(this, eventData);
+        // Session state events
+        case 'sessionInitialized':
+          this._onSessionInitialized(eventData);
+          break;
+        case 'sessionFailed':
+          if (this._state && typeof this._state.onSharedMediaSessionError === 'function') {
+            this._state.onSharedMediaSessionError(eventData);
+          }
+          break;
+        // Signaling related events
+        case 'signalingConnected':
+          // Signaling is handled at the shared media session level
+          // No specific action needed for individual call sessions
+          break;
+        case 'iceCollectionComplete':
+          // ICE collection is complete, no specific action needed at call session level
+          break;
+        case 'signalingStarted':
+          // Signaling has started, which means ICE collection is done
+          // and an offer has been sent
+          break;
+        case 'sessionConnected':
+          // Store the peer connection reference if provided
+          if (eventData) {
+            this._pc = eventData;
+          }
+          // Notify state machine
+          if (this._state && typeof this._state.onSharedMediaSessionConnected === 'function') {
+            this._state.onSharedMediaSessionConnected();
+          }
+          break;
+        case 'peerConnectionId':
+          // Store the peer connection reference if provided
+          if (eventData) {
+            this._peerConnectionId = eventData;
+          }
+          break;
+        case 'peerConnectionToken':
+          // Store the peer connection reference if provided
+          if (eventData) {
+            this._peerConnectionToken = eventData;
+          }
+          break;
+        // Remote stream events
+        case 'remoteStreamAdded':
+          this._onRemoteStreamAdded(eventData);
+          break;
+        case 'sessionCompleted':
+          // Session completed normally
+          if (!(this._state instanceof DisconnectedState) && !(this._state instanceof FailedState)) {
+            this._logger.info("Disconnecting the call session as the shared media session is over. Should only happen for Persistent Connection Not Allowlisted code path");
+            this.transit(new DisconnectedState(this));
+          }
+          break;
+        case 'sessionDestroyed':
+          // Final cleanup after session is destroyed
+          this._sessionReport.sessionEndTime = new Date();
+          break;
+        case 'isPersistentConnectionAllowlistedAndEnabled':
+          this._isPersistentConnectionAllowlistedAndEnabled = eventData;
+          this._sessionReport.isPersistentPeerConnection = eventData;
+          break;
+        case 'sessionSetupLatencyMetricReady':
+          {
+            // Explicitly copy shared media session properties while preserving call session specific ones
+            if (eventData) {
+              // Copy shared media session timing properties
+              this._sessionReport.gumTimeMillis = eventData.gumTimeMillis;
+              this._sessionReport.initializationTimeMillis = eventData.initializationTimeMillis;
+              this._sessionReport.iceCollectionTimeMillis = eventData.iceCollectionTimeMillis;
+              this._sessionReport.signallingConnectTimeMillis = eventData.signallingConnectTimeMillis;
+              this._sessionReport.handshakingTimeMillis = eventData.handshakingTimeMillis;
+              this._sessionReport.preTalkingTimeMillis = eventData.preTalkingTimeMillis;
+              // Copy shared media session failure flags
+              this._sessionReport.iceCollectionFailure = eventData.iceCollectionFailure;
+              this._sessionReport.signallingConnectionFailure = eventData.signallingConnectionFailure;
+              this._sessionReport.handshakingFailure = eventData.handshakingFailure;
+              this._sessionReport.gumOtherFailure = eventData.gumOtherFailure;
+              this._sessionReport.gumTimeoutFailure = eventData.gumTimeoutFailure;
+              this._sessionReport.createOfferFailure = eventData.createOfferFailure;
+              this._sessionReport.setLocalDescriptionFailure = eventData.setLocalDescriptionFailure;
+              this._sessionReport.userBusyFailure = eventData.userBusyFailure;
+              this._sessionReport.invalidRemoteSDPFailure = eventData.invalidRemoteSDPFailure;
+              this._sessionReport.noRemoteIceCandidateFailure = eventData.noRemoteIceCandidateFailure;
+              this._sessionReport.setRemoteDescriptionFailure = eventData.setRemoteDescriptionFailure;
+              // Copy shared media session path and platform properties
+              this._sessionReport.isMediaClusterPath = eventData.isMediaClusterPath;
+              this._sessionReport.vdiPlatform = eventData.vdiPlatform;
+              this._sessionReport.vdiInitializationFailed = eventData.vdiInitializationFailed;
+              this._sessionReport.vdiClientPlatform = eventData.vdiClientPlatform;
+              this._sessionReport.iceCredentialSource = eventData.iceCredentialSource;
+              this._sessionReport.isContactCredentialsDifferentRegion = eventData.isContactCredentialsDifferentRegion;
             }
-            // Peer connection state change events (for VDI compatibility - Citrix doesn't support addEventListener)
-            case 'iceConnectionStateChange':
-                this._logger.info(`CallSession ICE Connection State: ${eventData}`).sendInternalLogToServer();
-                if (eventData === 'disconnected') {
-                    this._logger.info('ICE connection lost - incrementing iceConnectionsLost counter').sendInternalLogToServer();
-                    this._sessionReport.iceConnectionsLost += 1;
-                }
-                else if (eventData === 'failed') {
-                    this._logger.info('ICE connection failed - marking iceConnectionsFailed').sendInternalLogToServer();
-                    this._sessionReport.iceConnectionsFailed = true;
-                }
-                break;
-            case 'peerConnectionStateChange':
-                this._logger.info(`CallSession Peer Connection State: ${eventData}`).sendInternalLogToServer();
-                if (eventData === 'failed') {
-                    this._logger.info('Peer connection failed - marking peerConnectionFailed').sendInternalLogToServer();
-                    this._sessionReport.peerConnectionFailed = true;
-                }
-                break;
-            case 'iceRestartComplete':
-                // Record discrete ICE restart event for CloudWatch metrics
-                if (eventData) {
-                    this._logger.info(`ICE restart event: success=${eventData.success}, time=${eventData.timeMillis}ms, retries=${eventData.inviteRetries}`).sendInternalLogToServer();
-                    // Accumulate metrics for this call session
-                    if (eventData.success) {
-                        this._sessionReport.iceRestartSuccesses += 1;
-                    }
-                    this._sessionReport.iceRestartAttempts += 1;
-                    this._sessionReport.iceRestartInviteRetries = eventData.inviteRetries;
-                    this._sessionReport.iceRestartTimeMillis = eventData.timeMillis;
-                    this._sessionReport.iceRestartFailed = !eventData.success;
-                }
-                break;
-            default:
-                this._logger.info(`Unhandled shared media session event: ${eventName}`);
-        }
+            break;
+          }
+        // Peer connection state change events (for VDI compatibility - Citrix doesn't support addEventListener)
+        case 'iceConnectionStateChange':
+          this._logger.info("CallSession ICE Connection State: ".concat(eventData)).sendInternalLogToServer();
+          if (eventData === 'disconnected') {
+            this._logger.info('ICE connection lost - incrementing iceConnectionsLost counter').sendInternalLogToServer();
+            this._sessionReport.iceConnectionsLost += 1;
+          } else if (eventData === 'failed') {
+            this._logger.info('ICE connection failed - marking iceConnectionsFailed').sendInternalLogToServer();
+            this._sessionReport.iceConnectionsFailed = true;
+          }
+          break;
+        case 'peerConnectionStateChange':
+          this._logger.info("CallSession Peer Connection State: ".concat(eventData)).sendInternalLogToServer();
+          if (eventData === 'failed') {
+            this._logger.info('Peer connection failed - marking peerConnectionFailed').sendInternalLogToServer();
+            this._sessionReport.peerConnectionFailed = true;
+          }
+          break;
+        case 'iceRestartComplete':
+          // Record discrete ICE restart event for CloudWatch metrics
+          if (eventData) {
+            this._logger.info("ICE restart event: success=".concat(eventData.success, ", time=").concat(eventData.timeMillis, "ms, retries=").concat(eventData.inviteRetries)).sendInternalLogToServer();
+            // Accumulate metrics for this call session
+            if (eventData.success) {
+              this._sessionReport.iceRestartSuccesses += 1;
+            }
+            this._sessionReport.iceRestartAttempts += 1;
+            this._sessionReport.iceRestartInviteRetries = eventData.inviteRetries;
+            this._sessionReport.iceRestartTimeMillis = eventData.timeMillis;
+            this._sessionReport.iceRestartFailed = !eventData.success;
+          }
+          break;
+        default:
+          this._logger.info("Unhandled shared media session event: ".concat(eventName));
+      }
     }
     /**
      * Notify all registered callbacks about an attribute change
@@ -9274,29 +10093,36 @@ class CallSession {
      * @param {Any} attributeValue - The new value of the attribute
      * @private
      */
-    _notifyAttributeChange(attributeName, attributeValue) {
-        this._logger.info(`Notifying attribute change for ${attributeName}`).sendInternalLogToServer();
-        try {
-            this._attributeChangeCallback(this._agentMediaLegId, attributeName, attributeValue);
-        }
-        catch (e) {
-            this._logger.error(`Error in attribute change callback for ${attributeName}`, e).sendInternalLogToServer();
-        }
+  }, {
+    key: "_notifyAttributeChange",
+    value: function _notifyAttributeChange(attributeName, attributeValue) {
+      this._logger.info("Notifying attribute change for ".concat(attributeName)).sendInternalLogToServer();
+      try {
+        this._attributeChangeCallback(this._agentMediaLegId, attributeName, attributeValue);
+      } catch (e) {
+        this._logger.error("Error in attribute change callback for ".concat(attributeName), e).sendInternalLogToServer();
+      }
     }
     /**
      * Register a callback to PCM
      * @param {Function} callback - Function to call when attributes change
      */
-    registerAttributeChangeCallback(callback) {
-        this._attributeChangeCallback = callback;
+  }, {
+    key: "registerAttributeChangeCallback",
+    value: function registerAttributeChangeCallback(callback) {
+      this._attributeChangeCallback = callback;
     }
-}
-exports.default = CallSession;
+  }]);
+}();
+exports["default"] = CallSession;
 
-},{"./rtc_const":32,"./session_report":39,"./utils":54,"uuid":9}],27:[function(require,module,exports){
+},{"./rtc_const":48,"./session_report":55,"./utils":70,"uuid":9}],43:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.AZURE = exports.AZURE_VDI_STRATEGY = exports.CITRIX = exports.CITRIX_413 = exports.CITRIX_SDK_310 = exports.CITRIX_SDK_413 = exports.ONE_SEC_IN_MILLIS = exports.CITRIX_VDI_STRATEGY = exports.CHROME = exports.ANSWER = exports.AUDIO = exports.DCV_STRATEGY = exports.UNDEFINED = void 0;
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.LOGIN_POPUP_WINDOW_NAME = exports.AZURE = exports.AZURE_VDI_STRATEGY = exports.CITRIX = exports.CITRIX_413 = exports.CITRIX_SDK_310 = exports.CITRIX_SDK_413 = exports.ONE_SEC_IN_MILLIS = exports.CITRIX_VDI_STRATEGY = exports.CHROME = exports.ANSWER = exports.AUDIO = exports.DCV_STRATEGY = exports.UNDEFINED = void 0;
 exports.UNDEFINED = 'undefined';
 exports.DCV_STRATEGY = 'DCVStrategy';
 exports.AUDIO = 'audio';
@@ -9310,11 +10136,19 @@ exports.CITRIX_413 = 'CITRIX_413';
 exports.CITRIX = 'CITRIX';
 exports.AZURE_VDI_STRATEGY = 'AzureVDIStrategy';
 exports.AZURE = 'AZURE';
+// window.name that Streams' PopupManager assigns to the CCP login popup.
+// Mirrors connect.MasterTopics.LOGIN_POPUP in AmazonConnectStreams (src/event.js,
+// makeNamespacedEnum('connect', ['loginPopup', ...])). Duplicated because RtcJS
+// does not depend on Streams; keep in sync if that enum ever changes.
+exports.LOGIN_POPUP_WINDOW_NAME = 'connect::loginPopup';
 
-},{}],28:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 /**
  * @license
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -9358,40 +10192,40 @@ require("webrtc-adapter");
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-const rtc_session_1 = require("./rtc_session");
-const media_devices_js_1 = require("./media_devices.js");
-const rtc_const_1 = require("./rtc_const");
-const rtc_peer_connection_factory_1 = require("./rtc_peer_connection_factory");
-const uuid_1 = require("uuid");
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-const CitrixVDIStrategy_1 = require("./strategies/CitrixVDIStrategy");
-const rtc_peer_connection_manager_1 = require("./rtc_peer_connection_manager");
-const rtc_peer_connection_manager_v2_1 = require("./rtc_peer_connection_manager_v2");
-const DCVWebRTCStrategy_1 = require("./strategies/DCVWebRTCStrategy");
-const OmnissaVDIStrategy_1 = require("./strategies/OmnissaVDIStrategy");
-const AzureVDIStrategy_1 = require("./strategies/AzureVDIStrategy");
-const FailedVDIStrategy_1 = require("./strategies/FailedVDIStrategy");
+var rtc_session_1 = require("./rtc_session");
+var media_devices_js_1 = require("./media_devices.js");
+var rtc_const_1 = require("./rtc_const");
+var rtc_peer_connection_factory_1 = require("./rtc_peer_connection_factory");
+var uuid_1 = require("uuid");
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var CitrixVDIStrategy_1 = require("./strategies/CitrixVDIStrategy");
+var rtc_peer_connection_manager_1 = require("./rtc_peer_connection_manager");
+var rtc_peer_connection_manager_v2_1 = require("./rtc_peer_connection_manager_v2");
+var DCVWebRTCStrategy_1 = require("./strategies/DCVWebRTCStrategy");
+var OmnissaVDIStrategy_1 = require("./strategies/OmnissaVDIStrategy");
+var AzureVDIStrategy_1 = require("./strategies/AzureVDIStrategy");
+var FailedVDIStrategy_1 = require("./strategies/FailedVDIStrategy");
 global.connect = global.connect || {};
-global.connect.RTCSession = rtc_session_1.default;
+global.connect.RTCSession = rtc_session_1["default"];
 global.connect.RTCErrors = rtc_const_1.RTC_ERRORS;
-global.connect.MediaDevices = media_devices_js_1.default;
-global.connect.RtcPeerConnectionFactory = rtc_peer_connection_factory_1.default;
-global.connect.RtcPeerConnectionManager = rtc_peer_connection_manager_1.default;
-global.connect.RtcPeerConnectionManagerV2 = rtc_peer_connection_manager_v2_1.default;
+global.connect.MediaDevices = media_devices_js_1["default"];
+global.connect.RtcPeerConnectionFactory = rtc_peer_connection_factory_1["default"];
+global.connect.RtcPeerConnectionManager = rtc_peer_connection_manager_1["default"];
+global.connect.RtcPeerConnectionManagerV2 = rtc_peer_connection_manager_v2_1["default"];
 global.connect.uuid = uuid_1.v4;
-global.connect.StandardStrategy = StandardStrategy_1.default;
-global.connect.CitrixVDIStrategy = CitrixVDIStrategy_1.default;
-global.connect.DCVWebRTCStrategy = DCVWebRTCStrategy_1.default;
-global.connect.OmnissaVDIStrategy = OmnissaVDIStrategy_1.default;
-global.connect.AzureVDIStrategy = AzureVDIStrategy_1.default;
-global.connect.FailedVDIStrategy = FailedVDIStrategy_1.default;
+global.connect.StandardStrategy = StandardStrategy_1["default"];
+global.connect.CitrixVDIStrategy = CitrixVDIStrategy_1["default"];
+global.connect.DCVWebRTCStrategy = DCVWebRTCStrategy_1["default"];
+global.connect.OmnissaVDIStrategy = OmnissaVDIStrategy_1["default"];
+global.connect.AzureVDIStrategy = AzureVDIStrategy_1["default"];
+global.connect.FailedVDIStrategy = FailedVDIStrategy_1["default"];
 global.connect.activePeerConnectionCount = 0;
 global.lily = global.lily || {};
-global.lily.RTCSession = rtc_session_1.default;
+global.lily.RTCSession = rtc_session_1["default"];
 global.lily.RTCErrors = rtc_const_1.RTC_ERRORS;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./media_devices.js":31,"./rtc_const":32,"./rtc_peer_connection_factory":33,"./rtc_peer_connection_manager":34,"./rtc_peer_connection_manager_v2":35,"./rtc_session":36,"./strategies/AzureVDIStrategy":46,"./strategies/CitrixVDIStrategy":48,"./strategies/DCVWebRTCStrategy":49,"./strategies/FailedVDIStrategy":50,"./strategies/OmnissaVDIStrategy":51,"./strategies/StandardStrategy":52,"uuid":9,"webrtc-adapter":14}],29:[function(require,module,exports){
+},{"./media_devices.js":47,"./rtc_const":48,"./rtc_peer_connection_factory":49,"./rtc_peer_connection_manager":50,"./rtc_peer_connection_manager_v2":51,"./rtc_session":52,"./strategies/AzureVDIStrategy":62,"./strategies/CitrixVDIStrategy":64,"./strategies/DCVWebRTCStrategy":65,"./strategies/FailedVDIStrategy":66,"./strategies/OmnissaVDIStrategy":67,"./strategies/StandardStrategy":68,"uuid":9,"webrtc-adapter":30}],45:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -9529,9 +10363,28 @@ class CredentialResolver {
 }
 exports.CredentialResolver = CredentialResolver;
 
-},{}],30:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _wrapNativeSuper(t) { var r = "function" == typeof Map ? new Map() : void 0; return _wrapNativeSuper = function _wrapNativeSuper(t) { if (null === t || !_isNativeFunction(t)) return t; if ("function" != typeof t) throw new TypeError("Super expression must either be null or a function"); if (void 0 !== r) { if (r.has(t)) return r.get(t); r.set(t, Wrapper); } function Wrapper() { return _construct(t, arguments, _getPrototypeOf(this).constructor); } return Wrapper.prototype = Object.create(t.prototype, { constructor: { value: Wrapper, enumerable: !1, writable: !0, configurable: !0 } }), _setPrototypeOf(Wrapper, t); }, _wrapNativeSuper(t); }
+function _construct(t, e, r) { if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments); var o = [null]; o.push.apply(o, e); var p = new (t.bind.apply(t, o))(); return r && _setPrototypeOf(p, r.prototype), p; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _isNativeFunction(t) { try { return -1 !== Function.toString.call(t).indexOf("[native code]"); } catch (n) { return "function" == typeof t; } }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.SignalingChannelDownError = exports.SignalingChannelDownErrorName = exports.AccessDeniedException = exports.AccessDeniedExceptionName = exports.UnknownSignalingError = exports.UnknownSignalingErrorName = exports.IdempotencyException = exports.IdempotencyExceptionName = exports.BadRequestException = exports.BadRequestExceptionName = exports.InternalServerException = exports.InternalServerExceptionName = exports.RequestTimeoutException = exports.RequestTimeoutExceptionName = exports.CallNotFoundException = exports.CallNotFoundExceptionName = exports.BusyException = exports.BusyExceptionName = exports.UnsupportedOperation = exports.UnsupportedOperationExceptionName = exports.IllegalState = exports.IllegalStateExceptionName = exports.IllegalParameters = exports.IllegalParametersExceptionName = exports.GumTimeout = exports.GumTimeoutExceptionName = exports.Timeout = exports.TimeoutExceptionName = void 0;
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -9539,144 +10392,239 @@ exports.SignalingChannelDownError = exports.SignalingChannelDownErrorName = expo
  * SPDX-License-Identifier: Apache-2.0
  */
 exports.TimeoutExceptionName = 'Timeout';
-class Timeout extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.TimeoutExceptionName;
-    }
-}
+var Timeout = /*#__PURE__*/function (_Error) {
+  function Timeout(msg) {
+    var _this;
+    _classCallCheck(this, Timeout);
+    _this = _callSuper(this, Timeout, [msg]);
+    _this.name = exports.TimeoutExceptionName;
+    return _this;
+  }
+  _inherits(Timeout, _Error);
+  return _createClass(Timeout);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.Timeout = Timeout;
 exports.GumTimeoutExceptionName = 'GumTimeout';
-class GumTimeout extends Timeout {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.GumTimeoutExceptionName;
-    }
-}
+var GumTimeout = /*#__PURE__*/function (_Timeout) {
+  function GumTimeout(msg) {
+    var _this2;
+    _classCallCheck(this, GumTimeout);
+    _this2 = _callSuper(this, GumTimeout, [msg]);
+    _this2.name = exports.GumTimeoutExceptionName;
+    return _this2;
+  }
+  _inherits(GumTimeout, _Timeout);
+  return _createClass(GumTimeout);
+}(Timeout);
 exports.GumTimeout = GumTimeout;
 exports.IllegalParametersExceptionName = 'IllegalParameters';
-class IllegalParameters extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.IllegalParametersExceptionName;
-    }
-}
+var IllegalParameters = /*#__PURE__*/function (_Error2) {
+  function IllegalParameters(msg) {
+    var _this3;
+    _classCallCheck(this, IllegalParameters);
+    _this3 = _callSuper(this, IllegalParameters, [msg]);
+    _this3.name = exports.IllegalParametersExceptionName;
+    return _this3;
+  }
+  _inherits(IllegalParameters, _Error2);
+  return _createClass(IllegalParameters);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.IllegalParameters = IllegalParameters;
 exports.IllegalStateExceptionName = 'IllegalState';
-class IllegalState extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.IllegalStateExceptionName;
-    }
-}
+var IllegalState = /*#__PURE__*/function (_Error3) {
+  function IllegalState(msg) {
+    var _this4;
+    _classCallCheck(this, IllegalState);
+    _this4 = _callSuper(this, IllegalState, [msg]);
+    _this4.name = exports.IllegalStateExceptionName;
+    return _this4;
+  }
+  _inherits(IllegalState, _Error3);
+  return _createClass(IllegalState);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.IllegalState = IllegalState;
 exports.UnsupportedOperationExceptionName = 'UnsupportedOperation';
-class UnsupportedOperation extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.UnsupportedOperationExceptionName;
-    }
-}
+var UnsupportedOperation = /*#__PURE__*/function (_Error4) {
+  function UnsupportedOperation(msg) {
+    var _this5;
+    _classCallCheck(this, UnsupportedOperation);
+    _this5 = _callSuper(this, UnsupportedOperation, [msg]);
+    _this5.name = exports.UnsupportedOperationExceptionName;
+    return _this5;
+  }
+  _inherits(UnsupportedOperation, _Error4);
+  return _createClass(UnsupportedOperation);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.UnsupportedOperation = UnsupportedOperation;
 exports.BusyExceptionName = 'BusyException';
-class BusyException extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.BusyExceptionName;
-    }
-}
+var BusyException = /*#__PURE__*/function (_Error5) {
+  function BusyException(msg) {
+    var _this6;
+    _classCallCheck(this, BusyException);
+    _this6 = _callSuper(this, BusyException, [msg]);
+    _this6.name = exports.BusyExceptionName;
+    return _this6;
+  }
+  _inherits(BusyException, _Error5);
+  return _createClass(BusyException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.BusyException = BusyException;
 exports.CallNotFoundExceptionName = 'CallNotFoundException';
-class CallNotFoundException extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.CallNotFoundExceptionName;
-    }
-}
+var CallNotFoundException = /*#__PURE__*/function (_Error6) {
+  function CallNotFoundException(msg) {
+    var _this7;
+    _classCallCheck(this, CallNotFoundException);
+    _this7 = _callSuper(this, CallNotFoundException, [msg]);
+    _this7.name = exports.CallNotFoundExceptionName;
+    return _this7;
+  }
+  _inherits(CallNotFoundException, _Error6);
+  return _createClass(CallNotFoundException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.CallNotFoundException = CallNotFoundException;
 exports.RequestTimeoutExceptionName = 'RequestTimeoutException';
-class RequestTimeoutException extends Error {
-    constructor() {
-        super();
-        this.name = exports.RequestTimeoutExceptionName;
-    }
-}
+var RequestTimeoutException = /*#__PURE__*/function (_Error7) {
+  function RequestTimeoutException() {
+    var _this8;
+    _classCallCheck(this, RequestTimeoutException);
+    _this8 = _callSuper(this, RequestTimeoutException);
+    _this8.name = exports.RequestTimeoutExceptionName;
+    return _this8;
+  }
+  _inherits(RequestTimeoutException, _Error7);
+  return _createClass(RequestTimeoutException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.RequestTimeoutException = RequestTimeoutException;
 exports.InternalServerExceptionName = 'InternalServerException';
-class InternalServerException extends Error {
-    constructor() {
-        super();
-        this.name = exports.InternalServerExceptionName;
-    }
-}
+var InternalServerException = /*#__PURE__*/function (_Error8) {
+  function InternalServerException() {
+    var _this9;
+    _classCallCheck(this, InternalServerException);
+    _this9 = _callSuper(this, InternalServerException);
+    _this9.name = exports.InternalServerExceptionName;
+    return _this9;
+  }
+  _inherits(InternalServerException, _Error8);
+  return _createClass(InternalServerException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.InternalServerException = InternalServerException;
 exports.BadRequestExceptionName = 'BadRequestException';
-class BadRequestException extends Error {
-    constructor(msg) {
-        super(msg);
-        this.name = exports.BadRequestExceptionName;
-    }
-}
+var BadRequestException = /*#__PURE__*/function (_Error9) {
+  function BadRequestException(msg) {
+    var _this0;
+    _classCallCheck(this, BadRequestException);
+    _this0 = _callSuper(this, BadRequestException, [msg]);
+    _this0.name = exports.BadRequestExceptionName;
+    return _this0;
+  }
+  _inherits(BadRequestException, _Error9);
+  return _createClass(BadRequestException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.BadRequestException = BadRequestException;
 exports.IdempotencyExceptionName = 'IdempotencyException';
-class IdempotencyException extends Error {
-    constructor() {
-        super();
-        this.name = exports.IdempotencyExceptionName;
-    }
-}
+var IdempotencyException = /*#__PURE__*/function (_Error0) {
+  function IdempotencyException() {
+    var _this1;
+    _classCallCheck(this, IdempotencyException);
+    _this1 = _callSuper(this, IdempotencyException);
+    _this1.name = exports.IdempotencyExceptionName;
+    return _this1;
+  }
+  _inherits(IdempotencyException, _Error0);
+  return _createClass(IdempotencyException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.IdempotencyException = IdempotencyException;
 exports.UnknownSignalingErrorName = 'UnknownSignalingError';
-class UnknownSignalingError extends Error {
-    constructor() {
-        super();
-        this.name = exports.UnknownSignalingErrorName;
-    }
-}
+var UnknownSignalingError = /*#__PURE__*/function (_Error1) {
+  function UnknownSignalingError() {
+    var _this10;
+    _classCallCheck(this, UnknownSignalingError);
+    _this10 = _callSuper(this, UnknownSignalingError);
+    _this10.name = exports.UnknownSignalingErrorName;
+    return _this10;
+  }
+  _inherits(UnknownSignalingError, _Error1);
+  return _createClass(UnknownSignalingError);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.UnknownSignalingError = UnknownSignalingError;
 exports.AccessDeniedExceptionName = 'AccessDeniedException';
-class AccessDeniedException extends Error {
-    constructor() {
-        super();
-        this.name = exports.AccessDeniedExceptionName;
-    }
-}
+var AccessDeniedException = /*#__PURE__*/function (_Error10) {
+  function AccessDeniedException() {
+    var _this11;
+    _classCallCheck(this, AccessDeniedException);
+    _this11 = _callSuper(this, AccessDeniedException);
+    _this11.name = exports.AccessDeniedExceptionName;
+    return _this11;
+  }
+  _inherits(AccessDeniedException, _Error10);
+  return _createClass(AccessDeniedException);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.AccessDeniedException = AccessDeniedException;
 exports.SignalingChannelDownErrorName = 'SignalingChannelDownError';
-class SignalingChannelDownError extends Error {
-    constructor() {
-        super();
-        this.name = exports.SignalingChannelDownErrorName;
-    }
-}
+var SignalingChannelDownError = /*#__PURE__*/function (_Error11) {
+  function SignalingChannelDownError() {
+    var _this12;
+    _classCallCheck(this, SignalingChannelDownError);
+    _this12 = _callSuper(this, SignalingChannelDownError);
+    _this12.name = exports.SignalingChannelDownErrorName;
+    return _this12;
+  }
+  _inherits(SignalingChannelDownError, _Error11);
+  return _createClass(SignalingChannelDownError);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
 exports.SignalingChannelDownError = SignalingChannelDownError;
 
-},{}],31:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.MediaDevices = void 0;
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-class MediaDevices {
-    static enumerateDevices(strategy = new StandardStrategy_1.default()) {
-        return strategy._enumerateDevices();
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var MediaDevices = /*#__PURE__*/function () {
+  function MediaDevices() {
+    _classCallCheck(this, MediaDevices);
+  }
+  return _createClass(MediaDevices, null, [{
+    key: "enumerateDevices",
+    value: function enumerateDevices() {
+      var strategy = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new StandardStrategy_1["default"]();
+      return strategy._enumerateDevices();
     }
-    static addOnDeviceChange(listener, strategy = new StandardStrategy_1.default()) {
-        return strategy._addDeviceChangeListener(listener);
+  }, {
+    key: "addOnDeviceChange",
+    value: function addOnDeviceChange(listener) {
+      var strategy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new StandardStrategy_1["default"]();
+      return strategy._addDeviceChangeListener(listener);
     }
-    static removeOnDeviceChange(listener, strategy = new StandardStrategy_1.default()) {
-        return strategy._removeDeviceChangeListener(listener);
+  }, {
+    key: "removeOnDeviceChange",
+    value: function removeOnDeviceChange(listener) {
+      var strategy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : new StandardStrategy_1["default"]();
+      return strategy._removeDeviceChangeListener(listener);
     }
-}
+  }]);
+}();
 exports.MediaDevices = MediaDevices;
 
-},{"./strategies/StandardStrategy":52}],32:[function(require,module,exports){
+},{"./strategies/StandardStrategy":68}],48:[function(require,module,exports){
 "use strict";
+
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.CALL_SESSION_STATE = exports.ACITVE_SOFTPHONE_TAB = exports.FIREFOX = exports.BROWSER_LIST = exports.RTC_SESSION_STATE = exports.PEER_CONNECTION_STATE = exports.ICE_CONNECTION_STATE = exports.RTC_ERRORS = exports.CHROME_SUPPORTED_VERSION = exports.NETWORK_CONNECTIVITY_CHECK_INTERVAL_MS = exports.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS = exports.DEFAULT_ICE_CANDIDATE_POOL_SIZE = exports.RTC_PEER_CONNECTION_OPTIONAL_CONFIG = exports.RTC_PEER_CONNECTION_CONFIG = exports.DISCONNECT_CONTACT_METHOD_NAME = exports.CONNECT_CONTACT_METHOD_NAME = exports.PC_BYE_METHOD_NAME = exports.BYE_METHOD_NAME = exports.ACCEPT_METHOD_NAME = exports.INVITE_METHOD_NAME = exports.SOFTPHONE_ROUTE_KEY = exports.DEFAULT_GUM_TIMEOUT_MS = exports.DEFAULT_ICE_TIMEOUT_MS = exports.DEFAULT_CONNECT_TIMEOUT_MS = exports.MAX_INVITE_DELAY_MS = exports.MAX_ACCEPT_BYE_DELAY_MS = void 0;
 /**
  * Timeout waiting for server response to accept/hangup request.
@@ -9706,21 +10654,18 @@ exports.PC_BYE_METHOD_NAME = "PCBye";
 exports.CONNECT_CONTACT_METHOD_NAME = "connectContact";
 exports.DISCONNECT_CONTACT_METHOD_NAME = "disconnectContact";
 exports.RTC_PEER_CONNECTION_CONFIG = {
-    iceTransportPolicy: 'relay',
-    rtcpMuxPolicy: 'require',
-    bundlePolicy: 'balanced',
-    sdpSemantics: 'unified-plan',
-    enableDtlsSrtp: true
+  iceTransportPolicy: 'relay',
+  rtcpMuxPolicy: 'require',
+  bundlePolicy: 'balanced',
+  sdpSemantics: 'unified-plan',
+  enableDtlsSrtp: true
 };
 exports.RTC_PEER_CONNECTION_OPTIONAL_CONFIG = {
-    optional: [
-        {
-            googDscp: true
-        },
-        {
-            DtlsSrtpKeyAgreement: true
-        }
-    ]
+  optional: [{
+    googDscp: true
+  }, {
+    DtlsSrtpKeyAgreement: true
+  }]
 };
 exports.DEFAULT_ICE_CANDIDATE_POOL_SIZE = 1;
 exports.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS = 1 * 60 * 1000;
@@ -9730,48 +10675,49 @@ exports.CHROME_SUPPORTED_VERSION = 59;
  * RTC error names.
  */
 exports.RTC_ERRORS = {
-    ICE_COLLECTION_TIMEOUT: 'Ice Collection Timeout',
-    USER_BUSY: 'User Busy',
-    SIGNALLING_CONNECTION_FAILURE: 'Signalling Connection Failure',
-    SIGNALLING_HANDSHAKE_FAILURE: 'Signalling Handshake Failure',
-    SET_REMOTE_DESCRIPTION_FAILURE: 'Set Remote Description Failure',
-    CREATE_OFFER_FAILURE: 'Create Offer Failure',
-    SET_LOCAL_DESCRIPTION_FAILURE: 'Set Local Description Failure',
-    INVALID_REMOTE_SDP: 'Invalid Remote SDP',
-    NO_REMOTE_ICE_CANDIDATE: 'No Remote ICE Candidate',
-    GUM_TIMEOUT_FAILURE: 'GUM Timeout Failure',
-    GUM_OTHER_FAILURE: 'GUM Other Failure',
-    CALL_NOT_FOUND: 'Call Not Found',
-    ACCESS_DENIED: 'Access Denied'
+  ICE_COLLECTION_TIMEOUT: 'Ice Collection Timeout',
+  USER_BUSY: 'User Busy',
+  SIGNALLING_CONNECTION_FAILURE: 'Signalling Connection Failure',
+  SIGNALLING_HANDSHAKE_FAILURE: 'Signalling Handshake Failure',
+  SET_REMOTE_DESCRIPTION_FAILURE: 'Set Remote Description Failure',
+  CREATE_OFFER_FAILURE: 'Create Offer Failure',
+  SET_LOCAL_DESCRIPTION_FAILURE: 'Set Local Description Failure',
+  INVALID_REMOTE_SDP: 'Invalid Remote SDP',
+  NO_REMOTE_ICE_CANDIDATE: 'No Remote ICE Candidate',
+  GUM_TIMEOUT_FAILURE: 'GUM Timeout Failure',
+  GUM_OTHER_FAILURE: 'GUM Other Failure',
+  VDI_DISCONNECTED: 'VDI Disconnected',
+  CALL_NOT_FOUND: 'Call Not Found',
+  ACCESS_DENIED: 'Access Denied'
 };
 exports.ICE_CONNECTION_STATE = {
-    NEW: 'new',
-    CHECKING: 'checking',
-    CONNECTED: 'connected',
-    COMPLETED: 'completed',
-    FAILED: 'failed',
-    DISCONNECTED: 'disconnected',
-    CLOSED: 'closed'
+  NEW: 'new',
+  CHECKING: 'checking',
+  CONNECTED: 'connected',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  DISCONNECTED: 'disconnected',
+  CLOSED: 'closed'
 };
 exports.PEER_CONNECTION_STATE = {
-    NEW: 'new',
-    CONNECTING: 'connecting',
-    CONNECTED: 'connected',
-    FAILED: 'failed',
-    DISCONNECTED: 'disconnected',
-    CLOSED: 'closed'
+  NEW: 'new',
+  CONNECTING: 'connecting',
+  CONNECTED: 'connected',
+  FAILED: 'failed',
+  DISCONNECTED: 'disconnected',
+  CLOSED: 'closed'
 };
 exports.RTC_SESSION_STATE = {
-    TALKING_STATE: 'TalkingState',
-    GRAB_LOCAL_MEDIA_STATE: 'GrabLocalMediaState',
-    CREATE_OFFER_STATE: 'CreateOfferState',
-    SET_LOCAL_SESSION_DESCRIPTION_STATE: 'SetLocalSessionDescriptionState',
-    CONNECT_SIGNALING_AND_ICE_COLLECTION_STATE: 'ConnectSignalingAndIceCollectionState',
-    INVITE_ANSWER_STATE: 'InviteAnswerState',
-    ACCEPT_STATE: 'AcceptState',
-    CONNECT_CONTACT_STATE: 'ConnectContactState',
-    CLEAN_UP_STATE: 'CleanUpState',
-    DISCONNECTED_STATE: 'DisconnectedState'
+  TALKING_STATE: 'TalkingState',
+  GRAB_LOCAL_MEDIA_STATE: 'GrabLocalMediaState',
+  CREATE_OFFER_STATE: 'CreateOfferState',
+  SET_LOCAL_SESSION_DESCRIPTION_STATE: 'SetLocalSessionDescriptionState',
+  CONNECT_SIGNALING_AND_ICE_COLLECTION_STATE: 'ConnectSignalingAndIceCollectionState',
+  INVITE_ANSWER_STATE: 'InviteAnswerState',
+  ACCEPT_STATE: 'AcceptState',
+  CONNECT_CONTACT_STATE: 'ConnectContactState',
+  CLEAN_UP_STATE: 'CleanUpState',
+  DISCONNECTED_STATE: 'DisconnectedState'
 };
 exports.BROWSER_LIST = ['Google Chrome', 'Microsoft Edge', 'Firefox'];
 exports.FIREFOX = "Firefox";
@@ -9780,294 +10726,366 @@ exports.ACITVE_SOFTPHONE_TAB = "Active Softphone Tab";
  * CallSession state constants
  */
 exports.CALL_SESSION_STATE = {
-    INITIAL_STATE: 'InitialState',
-    CONNECT_CONTACT_STATE: 'ConnectContactState',
-    TALKING_STATE: 'TalkingState',
-    DISCONNECTED_STATE: 'DisconnectedState',
-    FAILED_STATE: 'FailedState'
+  INITIAL_STATE: 'InitialState',
+  CONNECT_CONTACT_STATE: 'ConnectContactState',
+  TALKING_STATE: 'TalkingState',
+  DISCONNECTED_STATE: 'DisconnectedState',
+  FAILED_STATE: 'FailedState'
 };
 
-},{}],33:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-const CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-class RtcPeerConnectionFactory {
-    //transportHandle must be a callback function which should return a promise which is going to return the iceServers. Please refer https://www.w3.org/TR/webrtc/#rtciceserver-dictionary for iceServer example
-    //publishError(errorType, errorMessage) must be a callback function which will publish the passed error message to client browser
-    constructor(logger, wssManager, clientId, transportHandle, publishError, strategy = new StandardStrategy_1.default()) {
-        if (!(strategy instanceof CCPInitiationStrategyInterface_1.default)) {
-            throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
-        }
-        (0, utils_1.assertTrue)((0, utils_1.isFunction)(transportHandle), 'transportHandle must be a function');
-        (0, utils_1.assertTrue)((0, utils_1.isFunction)(publishError), 'publishError must be a function');
-        this._strategy = strategy;
-        this._logger = logger;
-        this._clientId = clientId;
-        this._wssManager = wssManager;
-        this._requestIceAccess = transportHandle;
-        this._publishError = publishError;
-        this._earlyMediaConnectionSupported = this._isEarlyMediaConnectionSupported();
-        this._initializeWebSocketEventListeners();
-        this._requestPeerConnection();
-        this._networkConnectivityChecker();
-        this._closed = false;
-        this._logger.log("RTC.js is using " + strategy.getStrategyName());
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var RtcPeerConnectionFactory = /*#__PURE__*/function () {
+  //transportHandle must be a callback function which should return a promise which is going to return the iceServers. Please refer https://www.w3.org/TR/webrtc/#rtciceserver-dictionary for iceServer example
+  //publishError(errorType, errorMessage) must be a callback function which will publish the passed error message to client browser
+  function RtcPeerConnectionFactory(logger, wssManager, clientId, transportHandle, publishError) {
+    var strategy = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : new StandardStrategy_1["default"]();
+    _classCallCheck(this, RtcPeerConnectionFactory);
+    if (!(strategy instanceof CCPInitiationStrategyInterface_1["default"])) {
+      throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
     }
-    _isEarlyMediaConnectionSupported() {
-        return this._strategy._isEarlyMediaConnectionSupported();
+    (0, utils_1.assertTrue)((0, utils_1.isFunction)(transportHandle), 'transportHandle must be a function');
+    (0, utils_1.assertTrue)((0, utils_1.isFunction)(publishError), 'publishError must be a function');
+    this._strategy = strategy;
+    this._logger = logger;
+    this._clientId = clientId;
+    this._wssManager = wssManager;
+    this._requestIceAccess = transportHandle;
+    this._publishError = publishError;
+    this._earlyMediaConnectionSupported = this._isEarlyMediaConnectionSupported();
+    this._initializeWebSocketEventListeners();
+    this._requestPeerConnection();
+    this._networkConnectivityChecker();
+    this._closed = false;
+    this._logger.log("RTC.js is using " + strategy.getStrategyName());
+  }
+  return _createClass(RtcPeerConnectionFactory, [{
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      return this._strategy._isEarlyMediaConnectionSupported();
     }
     //This will handle the idleConnection and quota limits notification from the server
-    _webSocketManagerOnMessage(event) {
-        let content;
-        if (event.content) {
-            content = JSON.parse(event.content);
+  }, {
+    key: "_webSocketManagerOnMessage",
+    value: function _webSocketManagerOnMessage(event) {
+      var content;
+      if (event.content) {
+        content = JSON.parse(event.content);
+      }
+      if (content && this._clientId === content.clientId) {
+        if (content.jsonRpcMsg.method === "idleConnection") {
+          this._clearIdleRtcPeerConnection();
+        } else if (content.jsonRpcMsg.method === "quotaBreached") {
+          this._logger.log("Number of active sessions are more then allowed limit for the client " + this._clientId);
+          this._closeRTCPeerConnection();
+          this._publishError("multiple_softphone_active_sessions", "Number of active sessions are more then allowed limit.");
         }
-        if (content && this._clientId === content.clientId) {
-            if (content.jsonRpcMsg.method === "idleConnection") {
-                this._clearIdleRtcPeerConnection();
-            }
-            else if (content.jsonRpcMsg.method === "quotaBreached") {
-                this._logger.log("Number of active sessions are more then allowed limit for the client " + this._clientId);
-                this._closeRTCPeerConnection();
-                this._publishError("multiple_softphone_active_sessions", "Number of active sessions are more then allowed limit.");
-            }
-        }
+      }
     }
-    _initializeWebSocketEventListeners() {
-        this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
-        this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
+  }, {
+    key: "_initializeWebSocketEventListeners",
+    value: function _initializeWebSocketEventListeners() {
+      this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
+      this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
     }
     // This method will create and return new peer connection if browser is not supporting early ice collection.
     // For the supported browser, this method will request for new peerConnection after returning the existing peerConnection
-    get(iceServers) {
-        var self = this;
-        var pc = self._idlePc;
-        self._idlePc = null;
-        if (pc == null) {
-            pc = self._createRtcPeerConnection(iceServers);
+  }, {
+    key: "get",
+    value: function get(iceServers) {
+      var self = this;
+      var pc = self._idlePc;
+      self._idlePc = null;
+      if (pc == null) {
+        pc = self._createRtcPeerConnection(iceServers);
+      }
+      self.clearIdleRtcPeerConnectionTimerId();
+      self._requestPeerConnection();
+      return pc;
+    }
+  }, {
+    key: "clearIdleRtcPeerConnectionTimerId",
+    value: function clearIdleRtcPeerConnectionTimerId() {
+      var self = this;
+      if (self._idleRtcPeerConnectionTimerId) {
+        clearTimeout(self._idleRtcPeerConnectionTimerId);
+        self._idleRtcPeerConnectionTimerId = null;
+      }
+    }
+  }, {
+    key: "_requestPeerConnection",
+    value: function _requestPeerConnection() {
+      var self = this;
+      if (!self._peerConnectionRequestInFlight && self._earlyMediaConnectionSupported) {
+        self._peerConnectionRequestInFlight = true;
+        self._requestIceAccess().then(function (response) {
+          if (self._closed) {
+            self._logger.log("RtcPeerConnectionFactory is already closed, skips creating idle peer connection for " + self._clientId);
+          } else {
+            self._idlePc = self._createRtcPeerConnection(response);
+            self._peerConnectionRequestInFlight = false;
+            self._idleRtcPeerConnectionTimerId = setTimeout((0, utils_1.hitch)(self, self._refreshRtcPeerConnection), rtc_const_1.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS);
+          }
+        },
+        // eslint-disable-next-line no-unused-vars
+        function (reason) {
+          self._peerConnectionRequestInFlight = false;
+        });
+      }
+    }
+  }, {
+    key: "_networkConnectivityChecker",
+    value: function _networkConnectivityChecker() {
+      var self = this;
+      setInterval(function () {
+        if (!navigator.onLine && self._idlePc) {
+          self._logger.log("Network offline. Cleaning up early connection");
+          self._idlePc.close();
+          self._idlePc = null;
         }
-        self.clearIdleRtcPeerConnectionTimerId();
-        self._requestPeerConnection();
-        return pc;
+      }, rtc_const_1.NETWORK_CONNECTIVITY_CHECK_INTERVAL_MS);
     }
-    clearIdleRtcPeerConnectionTimerId() {
-        var self = this;
-        if (self._idleRtcPeerConnectionTimerId) {
-            clearTimeout(self._idleRtcPeerConnectionTimerId);
-            self._idleRtcPeerConnectionTimerId = null;
-        }
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(iceServers) {
+      var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
+      rtcPeerConnectionConfig.iceServers = iceServers;
+      rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+      return this._strategy._createRtcPeerConnection(rtcPeerConnectionConfig, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
     }
-    _requestPeerConnection() {
-        var self = this;
-        if (!self._peerConnectionRequestInFlight && self._earlyMediaConnectionSupported) {
-            self._peerConnectionRequestInFlight = true;
-            self._requestIceAccess().then(function (response) {
-                if (self._closed) {
-                    self._logger.log("RtcPeerConnectionFactory is already closed, skips creating idle peer connection for " + self._clientId);
-                }
-                else {
-                    self._idlePc = self._createRtcPeerConnection(response);
-                    self._peerConnectionRequestInFlight = false;
-                    self._idleRtcPeerConnectionTimerId = setTimeout((0, utils_1.hitch)(self, self._refreshRtcPeerConnection), rtc_const_1.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS);
-                }
-            }, 
-            // eslint-disable-next-line no-unused-vars
-            function (reason) {
-                self._peerConnectionRequestInFlight = false;
-            });
-        }
+  }, {
+    key: "_clearIdleRtcPeerConnection",
+    value: function _clearIdleRtcPeerConnection() {
+      this._logger.log("RtcPeerConnectionFactory: session is idle from long time. closing the peer connection for client " + this._clientId);
+      this._closeRTCPeerConnection();
     }
-    _networkConnectivityChecker() {
-        var self = this;
-        setInterval(function () {
-            if (!navigator.onLine && self._idlePc) {
-                self._logger.log("Network offline. Cleaning up early connection");
-                self._idlePc.close();
-                self._idlePc = null;
-            }
-        }, rtc_const_1.NETWORK_CONNECTIVITY_CHECK_INTERVAL_MS);
+  }, {
+    key: "_refreshRtcPeerConnection",
+    value: function _refreshRtcPeerConnection() {
+      this._idleRtcPeerConnectionTimerId = null;
+      this._clearIdleRtcPeerConnection();
+      if (!this._closed) {
+        this._logger.log("RtcPeerConnectionFactory is refreshing peer connection for client " + this._clientId);
+        this._requestPeerConnection();
+      }
     }
-    _createRtcPeerConnection(iceServers) {
-        var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
-        rtcPeerConnectionConfig.iceServers = iceServers;
-        rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-        return this._strategy._createRtcPeerConnection(rtcPeerConnectionConfig, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
-    }
-    _clearIdleRtcPeerConnection() {
-        this._logger.log("RtcPeerConnectionFactory: session is idle from long time. closing the peer connection for client " + this._clientId);
-        this._closeRTCPeerConnection();
-    }
-    _refreshRtcPeerConnection() {
-        this._idleRtcPeerConnectionTimerId = null;
-        this._clearIdleRtcPeerConnection();
-        if (!this._closed) {
-            this._logger.log("RtcPeerConnectionFactory is refreshing peer connection for client " + this._clientId);
-            this._requestPeerConnection();
-        }
-    }
-    _closeRTCPeerConnection() {
-        if (this._idlePc) {
-            this._idlePc.close();
-            this._idlePc = null;
-        }
+  }, {
+    key: "_closeRTCPeerConnection",
+    value: function _closeRTCPeerConnection() {
+      if (this._idlePc) {
+        this._idlePc.close();
+        this._idlePc = null;
+      }
     }
     // Clear idle peer connection timer first and then close the idle peer connection.
-    close() {
-        this._logger.log("RtcPeerConnectionFactory close method invoked. Clear timer and close idle peer connection " + this._clientId);
-        this._closed = true;
-        this.clearIdleRtcPeerConnectionTimerId();
-        this._closeRTCPeerConnection();
+  }, {
+    key: "close",
+    value: function close() {
+      this._logger.log("RtcPeerConnectionFactory close method invoked. Clear timer and close idle peer connection " + this._clientId);
+      this._closed = true;
+      this.clearIdleRtcPeerConnectionTimerId();
+      this._closeRTCPeerConnection();
     }
-}
-exports.default = RtcPeerConnectionFactory;
+  }]);
+}();
+exports["default"] = RtcPeerConnectionFactory;
 
-},{"./rtc_const":32,"./strategies/CCPInitiationStrategyInterface":47,"./strategies/StandardStrategy":52,"./utils":54}],34:[function(require,module,exports){
+},{"./rtc_const":48,"./strategies/CCPInitiationStrategyInterface":63,"./strategies/StandardStrategy":68,"./utils":70}],50:[function(require,module,exports){
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const uuid_1 = require("uuid");
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-const CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
-const rtc_session_1 = require("./rtc_session");
-const exceptions_1 = require("./exceptions");
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-const constants_1 = require("./config/constants");
-class RtcPeerConnectionManager {
-    /**
-     * Create a PeerConnectionManager which manages the life cycle of RTCSession and peer connection
-     * It will be initialized when agent logs into the CCP and be responsible for creating and closing peer connection and RTCSession
-     *
-     * @constructor
-     * @param {string} signalingUri - signalingUri get from call config. (optional, param for CCPv1)
-     * @param {*} iceServers - ice server credentials
-     * @param {*} transportHandle - a callback function which returns a promise which is going to return the iceServers.
-     * @param {*} publishError - a function which publishs errors on CCP.
-     * @param {string} clientId - uuid for softphone client
-     * @param {string} contactToken - contactoken sent from service side  (optional)
-     * @param {object} logger - An object provides logging functions, such as console
-     * @param {string} contactId - ContactId which uniquely identifies the session. (optional)
-     * @param {string} connectionId - Represents media connection id (optional)
-     * @param {string} wssManager - websocket manager
-     * @param {object} strategy - VDI strategy indicates which WebRTC SDK to use: standard, Citrix, WorkSpace (optional, default to be standardStrategy)
-     * @param {boolean} isPPCEnabled - flag indicates if persistent connection is enabled in agent configuration
-     * @param {string} browserId - browser identifier read from local storage and is used for browser refresh and ICE restart
-     */
-    constructor(signalingUri, iceServers, transportHandle, publishError, clientId, contactToken, logger, contactId, connectionId, wssManager, strategy = new StandardStrategy_1.default(), isPPCEnabled, browserId) {
-        // Check if a peer connection manager has already existed
-        if (!RtcPeerConnectionManager.instance) {
-            // check if transportHandle is function
-            (0, utils_1.assertTrue)((0, utils_1.isFunction)(transportHandle), 'transportHandle must be a function');
-            // check if publishError is function
-            (0, utils_1.assertTrue)((0, utils_1.isFunction)(publishError), 'publishError must be a function');
-            // check if logger is provided
-            if (!logger || typeof logger !== 'object') {
-                throw new exceptions_1.IllegalParameters('logger required');
-            }
-            // check if contactId is provided
-            if (!contactId) {
-                // if not provided will create an uuid
-                this._callId = (0, uuid_1.v4)();
-            }
-            else {
-                this._callId = contactId;
-            }
-            if (!connectionId) {
-                // if not provided will create an uuid
-                this._connectionId = (0, uuid_1.v4)();
-            }
-            else {
-                this._connectionId = connectionId;
-            }
-            if (!(strategy instanceof CCPInitiationStrategyInterface_1.default)) {
-                throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
-            }
-            this._strategy = strategy;
-            this._wssManager = wssManager;
-            this._signalingUri = signalingUri;
-            this._iceServers = iceServers;
-            this._contactToken = contactToken;
-            this._originalLogger = logger;
-            this._logger = (0, utils_1.wrapLogger)(this._originalLogger, '', 'RtcPeerConnectionManager');
-            this._isPPCEnabled = isPPCEnabled;
-            this._isRTPSAllowlisted = false; // RTPSAllowlisted flag is false by default
-            this._peerConnectionId = null;
-            this._browserId = browserId;
-            this._clientId = clientId;
-            this._isUnhealthyPersistentPeerConnection = false;
-            if (this._strategy.onConnectionNeedingCleanup && typeof this._strategy.onConnectionNeedingCleanup === 'function') {
-                this._strategy.onConnectionNeedingCleanup(() => this._handleConnectionCleanup());
-            }
-            this._requestIceAccess = transportHandle;
-            this._publishError = publishError;
-            this._initializeWebSocketEventListeners();
-            this.requestPeerConnection().then(() => {
-                if (this.isPersistentConnectionEnabled() && !this._contactToken) {
-                    this.createSession();
-                    this._rtcSessionConnectPromise = this.connect();
-                }
-            });
-            this._networkConnectivityChecker();
-            RtcPeerConnectionManager.instance = this;
-            this._logger.info("Initializing Peer Connection Manager...");
-            this._logger.log("RTC.js is using " + strategy.getStrategyName());
-        }
-        else {
-            logger.info("Peer Connection Manager has already been initialized");
-        }
-        this.browserTabCloseEventListener();
-        return RtcPeerConnectionManager.instance;
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
     }
-    /** Check if current browser supports standby/early peer connection or not.
-     * If persistent peer connection is enabled, standby peer will be disabled.
-     * @returns {*|boolean}
-     * @private
-     */
-    _isEarlyMediaConnectionSupported() {
-        if (!this.isPersistentConnectionEnabled()) {
-            return this._strategy._isEarlyMediaConnectionSupported();
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var uuid_1 = require("uuid");
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
+var rtc_session_1 = require("./rtc_session");
+var exceptions_1 = require("./exceptions");
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var constants_1 = require("./config/constants");
+var RtcPeerConnectionManager = /*#__PURE__*/function () {
+  /**
+   * Create a PeerConnectionManager which manages the life cycle of RTCSession and peer connection
+   * It will be initialized when agent logs into the CCP and be responsible for creating and closing peer connection and RTCSession
+   *
+   * @constructor
+   * @param {string} signalingUri - signalingUri get from call config. (optional, param for CCPv1)
+   * @param {*} iceServers - ice server credentials
+   * @param {*} transportHandle - a callback function which returns a promise which is going to return the iceServers.
+   * @param {*} publishError - a function which publishs errors on CCP.
+   * @param {string} clientId - uuid for softphone client
+   * @param {string} contactToken - contactoken sent from service side  (optional)
+   * @param {object} logger - An object provides logging functions, such as console
+   * @param {string} contactId - ContactId which uniquely identifies the session. (optional)
+   * @param {string} connectionId - Represents media connection id (optional)
+   * @param {string} wssManager - websocket manager
+   * @param {object} strategy - VDI strategy indicates which WebRTC SDK to use: standard, Citrix, WorkSpace (optional, default to be standardStrategy)
+   * @param {boolean} isPPCEnabled - flag indicates if persistent connection is enabled in agent configuration
+   * @param {string} browserId - browser identifier read from local storage and is used for browser refresh and ICE restart
+   */
+  function RtcPeerConnectionManager(signalingUri, iceServers, transportHandle, publishError, clientId, contactToken, logger, contactId, connectionId, wssManager) {
+    var _this = this;
+    var strategy = arguments.length > 10 && arguments[10] !== undefined ? arguments[10] : new StandardStrategy_1["default"]();
+    var isPPCEnabled = arguments.length > 11 ? arguments[11] : undefined;
+    var browserId = arguments.length > 12 ? arguments[12] : undefined;
+    _classCallCheck(this, RtcPeerConnectionManager);
+    // Check if a peer connection manager has already existed
+    if (!RtcPeerConnectionManager.instance) {
+      // check if transportHandle is function
+      (0, utils_1.assertTrue)((0, utils_1.isFunction)(transportHandle), 'transportHandle must be a function');
+      // check if publishError is function
+      (0, utils_1.assertTrue)((0, utils_1.isFunction)(publishError), 'publishError must be a function');
+      // check if logger is provided
+      if (!logger || _typeof(logger) !== 'object') {
+        throw new exceptions_1.IllegalParameters('logger required');
+      }
+      // check if contactId is provided
+      if (!contactId) {
+        // if not provided will create an uuid
+        this._callId = (0, uuid_1.v4)();
+      } else {
+        this._callId = contactId;
+      }
+      if (!connectionId) {
+        // if not provided will create an uuid
+        this._connectionId = (0, uuid_1.v4)();
+      } else {
+        this._connectionId = connectionId;
+      }
+      if (!(strategy instanceof CCPInitiationStrategyInterface_1["default"])) {
+        throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
+      }
+      this._strategy = strategy;
+      this._wssManager = wssManager;
+      this._signalingUri = signalingUri;
+      this._iceServers = iceServers;
+      this._contactToken = contactToken;
+      this._originalLogger = logger;
+      this._logger = (0, utils_1.wrapLogger)(this._originalLogger, '', 'RtcPeerConnectionManager');
+      this._isPPCEnabled = isPPCEnabled;
+      this._isRTPSAllowlisted = false; // RTPSAllowlisted flag is false by default
+      this._peerConnectionId = null;
+      this._browserId = browserId;
+      this._clientId = clientId;
+      this._isUnhealthyPersistentPeerConnection = false;
+      if (this._strategy.onConnectionNeedingCleanup && typeof this._strategy.onConnectionNeedingCleanup === 'function') {
+        this._strategy.onConnectionNeedingCleanup(function () {
+          return _this._handleConnectionCleanup();
+        });
+      }
+      this._requestIceAccess = transportHandle;
+      this._publishError = publishError;
+      this._initializeWebSocketEventListeners();
+      this.requestPeerConnection().then(function () {
+        if (_this.isPersistentConnectionEnabled() && !_this._contactToken) {
+          _this.createSession();
+          _this._rtcSessionConnectPromise = _this.connect();
         }
-        return false;
+      });
+      this._networkConnectivityChecker();
+      RtcPeerConnectionManager.instance = this;
+      this._logger.info("Initializing Peer Connection Manager...");
+      this._logger.log("RTC.js is using " + strategy.getStrategyName());
+    } else {
+      logger.info("Peer Connection Manager has already been initialized");
+    }
+    this.browserTabCloseEventListener();
+    return RtcPeerConnectionManager.instance;
+  }
+  /** Check if current browser supports standby/early peer connection or not.
+   * If persistent peer connection is enabled, standby peer will be disabled.
+   * @returns {*|boolean}
+   * @private
+   */
+  return _createClass(RtcPeerConnectionManager, [{
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      if (!this.isPersistentConnectionEnabled()) {
+        return this._strategy._isEarlyMediaConnectionSupported();
+      }
+      return false;
     }
     /** This function handles the idleConnection and quota limits notification from the server
      *
      * @param event
      * @private
      */
-    _webSocketManagerOnMessage(event) {
-        let content;
-        if (event.content) {
-            content = JSON.parse(event.content);
+  }, {
+    key: "_webSocketManagerOnMessage",
+    value: function _webSocketManagerOnMessage(event) {
+      var content;
+      if (event.content) {
+        content = JSON.parse(event.content);
+      }
+      if (content && this._clientId === content.clientId) {
+        if (content.jsonRpcMsg.method === "idleConnection") {
+          this._clearIdleRtcPeerConnection();
+        } else if (content.jsonRpcMsg.method === "quotaBreached") {
+          this._logger.log("Number of active sessions are more then allowed limit for the client " + this._clientId);
+          this._closeIdleRTCPeerConnection();
+          this._publishError("multiple_softphone_active_sessions", "Number of active sessions are more then allowed limit.");
         }
-        if (content && this._clientId === content.clientId) {
-            if (content.jsonRpcMsg.method === "idleConnection") {
-                this._clearIdleRtcPeerConnection();
-            }
-            else if (content.jsonRpcMsg.method === "quotaBreached") {
-                this._logger.log("Number of active sessions are more then allowed limit for the client " + this._clientId);
-                this._closeIdleRTCPeerConnection();
-                this._publishError("multiple_softphone_active_sessions", "Number of active sessions are more then allowed limit.");
-            }
-        }
+      }
     }
     /**
      * This monitors the Softphone webSocket events
      * @private
      */
-    _initializeWebSocketEventListeners() {
-        this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
-        this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
+  }, {
+    key: "_initializeWebSocketEventListeners",
+    value: function _initializeWebSocketEventListeners() {
+      this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
+      this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
     }
     /**
      * Function to get RTCPeerConnection.
@@ -10075,85 +11093,108 @@ class RtcPeerConnectionManager {
      *
      * @returns {RTCPeerConnection}
      */
-    getPeerConnection() {
-        var self = this;
-        var pc;
-        if (self.isPersistentConnectionEnabled()) {
-            pc = self._pc;
-            if (pc === null || pc === undefined) {
-                pc = self._createRtcPeerConnection(this._iceServers);
-            }
+  }, {
+    key: "getPeerConnection",
+    value: function getPeerConnection() {
+      var self = this;
+      var pc;
+      if (self.isPersistentConnectionEnabled()) {
+        pc = self._pc;
+        if (pc === null || pc === undefined) {
+          pc = self._createRtcPeerConnection(this._iceServers);
         }
-        else {
-            pc = self._idlePc;
-            self._idlePc = null;
-            if (pc === null || pc === undefined) {
-                pc = self._createRtcPeerConnection(this._iceServers);
-            }
-            self.clearIdleRtcPeerConnectionTimerId();
-            self.requestPeerConnection();
+      } else {
+        pc = self._idlePc;
+        self._idlePc = null;
+        if (pc === null || pc === undefined) {
+          pc = self._createRtcPeerConnection(this._iceServers);
         }
-        self._pc = pc;
-        return pc;
+        self.clearIdleRtcPeerConnectionTimerId();
+        self.requestPeerConnection();
+      }
+      self._pc = pc;
+      return pc;
     }
     /**
      * Clear standby/idle peer connection refresh timer
      */
-    clearIdleRtcPeerConnectionTimerId() {
-        var self = this;
-        if (self._idleRtcPeerConnectionTimerId) {
-            clearTimeout(self._idleRtcPeerConnectionTimerId);
-            self._idleRtcPeerConnectionTimerId = null;
-        }
+  }, {
+    key: "clearIdleRtcPeerConnectionTimerId",
+    value: function clearIdleRtcPeerConnectionTimerId() {
+      var self = this;
+      if (self._idleRtcPeerConnectionTimerId) {
+        clearTimeout(self._idleRtcPeerConnectionTimerId);
+        self._idleRtcPeerConnectionTimerId = null;
+      }
     }
     /**
      * When persistent connection is enabled, it creates the persistent peer connection
      * When persistent connection is disabled and early media connection is supported,
      * it creates a standby/ideal peer connection which can be used when a call arrives
      */
-    requestPeerConnection() {
-        return __awaiter(this, void 0, void 0, function* () {
-            var self = this;
-            self._earlyMediaConnectionSupported = self._isEarlyMediaConnectionSupported();
-            if (self.isPersistentConnectionEnabled() && !self._contactToken) {
-                // When requesting a peer connection with persistent connection enabled, it only creates new pc if no contact exist.
-                self._logger.info("RtcPeerConnectionManager initiates persistent peer connection");
-                const response = yield self._requestIceAccess().catch((error) => {
-                    self._logger.info("RtcPeerConnectionManager request ICE access failed for persistent peer connection creation. ", error);
-                });
-                self._iceServers = response;
-                self._pc = self._createRtcPeerConnection(response);
-            }
-            else if ((!self.isPersistentConnectionEnabled()) && !self._peerConnectionRequestInFlight && self._earlyMediaConnectionSupported) {
+  }, {
+    key: "requestPeerConnection",
+    value: function requestPeerConnection() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+        var self, response;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.n) {
+            case 0:
+              self = this;
+              self._earlyMediaConnectionSupported = self._isEarlyMediaConnectionSupported();
+              if (!(self.isPersistentConnectionEnabled() && !self._contactToken)) {
+                _context.n = 2;
+                break;
+              }
+              // When requesting a peer connection with persistent connection enabled, it only creates new pc if no contact exist.
+              self._logger.info("RtcPeerConnectionManager initiates persistent peer connection");
+              _context.n = 1;
+              return self._requestIceAccess()["catch"](function (error) {
+                self._logger.info("RtcPeerConnectionManager request ICE access failed for persistent peer connection creation. ", error);
+              });
+            case 1:
+              response = _context.v;
+              self._iceServers = response;
+              self._pc = self._createRtcPeerConnection(response);
+              _context.n = 3;
+              break;
+            case 2:
+              if (!self.isPersistentConnectionEnabled() && !self._peerConnectionRequestInFlight && self._earlyMediaConnectionSupported) {
                 self._logger.info("RtcPeerConnectionManager initiates idle peer connection for non-persistent connection");
                 self._peerConnectionRequestInFlight = true;
                 self._requestIceAccess().then(function (response) {
-                    self._idlePc = self._createRtcPeerConnection(response);
-                    self._peerConnectionRequestInFlight = false;
-                    self._idleRtcPeerConnectionTimerId = setTimeout((0, utils_1.hitch)(self, self._refreshRtcPeerConnection), rtc_const_1.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS);
-                }, 
+                  self._idlePc = self._createRtcPeerConnection(response);
+                  self._peerConnectionRequestInFlight = false;
+                  self._idleRtcPeerConnectionTimerId = setTimeout((0, utils_1.hitch)(self, self._refreshRtcPeerConnection), rtc_const_1.RTC_PEER_CONNECTION_IDLE_TIMEOUT_MS);
+                },
                 // eslint-disable-next-line no-unused-vars
                 function (reason) {
-                    self._peerConnectionRequestInFlight = false;
-                }).catch((error) => {
-                    self._logger.info("RtcPeerConnectionManager request ICE access failed for idle peer connection creation. ", error);
+                  self._peerConnectionRequestInFlight = false;
+                })["catch"](function (error) {
+                  self._logger.info("RtcPeerConnectionManager request ICE access failed for idle peer connection creation. ", error);
                 });
-            }
-        });
+              }
+            case 3:
+              return _context.a(2);
+          }
+        }, _callee, this);
+      }));
     }
     /**
      * Check network connectivity in every 250 ms
      * @private
      */
-    _networkConnectivityChecker() {
-        var self = this;
-        setInterval(function () {
-            if (!navigator.onLine && self._idlePc) {
-                self._logger.log("Network offline. Cleaning up early connection");
-                self._strategy.close(self._idlePc);
-                self._idlePc = null;
-            }
-        }, rtc_const_1.NETWORK_CONNECTIVITY_CHECK_INTERVAL_MS);
+  }, {
+    key: "_networkConnectivityChecker",
+    value: function _networkConnectivityChecker() {
+      var self = this;
+      setInterval(function () {
+        if (!navigator.onLine && self._idlePc) {
+          self._logger.log("Network offline. Cleaning up early connection");
+          self._strategy.close(self._idlePc);
+          self._idlePc = null;
+        }
+      }, rtc_const_1.NETWORK_CONNECTIVITY_CHECK_INTERVAL_MS);
     }
     /**
      * Create RTCPeerConnection via WebRTC API or VDI WebRTC redirection SDK
@@ -10161,188 +11202,229 @@ class RtcPeerConnectionManager {
      * @returns {RTCPeerConnection}
      * @private
      */
-    _createRtcPeerConnection(iceServers) {
-        var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
-        rtcPeerConnectionConfig.iceServers = iceServers;
-        rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-        return this._strategy._createRtcPeerConnection(rtcPeerConnectionConfig, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(iceServers) {
+      var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
+      rtcPeerConnectionConfig.iceServers = iceServers;
+      rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+      return this._strategy._createRtcPeerConnection(rtcPeerConnectionConfig, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
     }
     /**
      * Clear the standby/Idle peer connection
      * @private
      */
-    _clearIdleRtcPeerConnection() {
-        this._logger.log("session is idle from long time. closing the peer connection for client " + this._clientId);
-        this._closeIdleRTCPeerConnection();
+  }, {
+    key: "_clearIdleRtcPeerConnection",
+    value: function _clearIdleRtcPeerConnection() {
+      this._logger.log("session is idle from long time. closing the peer connection for client " + this._clientId);
+      this._closeIdleRTCPeerConnection();
     }
     /**
      * Refresh standby/ideal peer connection
      * @private
      */
-    _refreshRtcPeerConnection() {
-        this._idleRtcPeerConnectionTimerId = null;
-        this._clearIdleRtcPeerConnection();
-        this._logger.log("RtcPeerConnectionManager is refreshing peer connection for client " + this._clientId);
-        this.requestPeerConnection();
+  }, {
+    key: "_refreshRtcPeerConnection",
+    value: function _refreshRtcPeerConnection() {
+      this._idleRtcPeerConnectionTimerId = null;
+      this._clearIdleRtcPeerConnection();
+      this._logger.log("RtcPeerConnectionManager is refreshing peer connection for client " + this._clientId);
+      this.requestPeerConnection();
     }
-    _closeIdleRTCPeerConnection() {
-        if (this._idlePc) {
-            this._strategy.close(this._idlePc);
-            this._idlePc = null;
-        }
+  }, {
+    key: "_closeIdleRTCPeerConnection",
+    value: function _closeIdleRTCPeerConnection() {
+      if (this._idlePc) {
+        this._strategy.close(this._idlePc);
+        this._idlePc = null;
+      }
     }
     // Clear idle peer connection timer first and then close the idle peer connection.
-    closeEarlyMediaConnection() {
-        this._logger.log("close method invoked. Clear timer and close idle peer connection " + this._clientId);
-        this.clearIdleRtcPeerConnectionTimerId();
-        this._closeIdleRTCPeerConnection();
+  }, {
+    key: "closeEarlyMediaConnection",
+    value: function closeEarlyMediaConnection() {
+      this._logger.log("close method invoked. Clear timer and close idle peer connection " + this._clientId);
+      this.clearIdleRtcPeerConnectionTimerId();
+      this._closeIdleRTCPeerConnection();
     }
-    get signalingUri() {
-        return this._signalingUri;
+  }, {
+    key: "signalingUri",
+    get: function get() {
+      return this._signalingUri;
+    },
+    set: function set(signalingUri) {
+      this._signalingUri = signalingUri;
     }
-    set signalingUri(signalingUri) {
-        this._signalingUri = signalingUri;
+  }, {
+    key: "iceServers",
+    get: function get() {
+      return this._iceServers;
+    },
+    set: function set(iceServers) {
+      this._iceServers = iceServers;
     }
-    get iceServers() {
-        return this._iceServers;
+  }, {
+    key: "contactToken",
+    get: function get() {
+      return this._contactToken;
+    },
+    set: function set(contactToken) {
+      this._contactToken = contactToken;
     }
-    set iceServers(iceServers) {
-        this._iceServers = iceServers;
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._logger;
+    },
+    set: function set(logger) {
+      this._logger = logger;
     }
-    get contactToken() {
-        return this._contactToken;
+  }, {
+    key: "callId",
+    get: function get() {
+      return this._callId;
+    },
+    set: function set(callId) {
+      this._callId = callId;
     }
-    set contactToken(contactToken) {
-        this._contactToken = contactToken;
+  }, {
+    key: "connectionId",
+    get: function get() {
+      return this._connectionId;
+    },
+    set: function set(connectionId) {
+      this._connectionId = connectionId;
     }
-    get logger() {
-        return this._logger;
+  }, {
+    key: "wssManager",
+    get: function get() {
+      return this._wssManager;
+    },
+    set: function set(wssManager) {
+      this._wssManager = wssManager;
     }
-    set logger(logger) {
-        this._logger = logger;
+  }, {
+    key: "strategy",
+    get: function get() {
+      return this._strategy;
+    },
+    set: function set(strategy) {
+      this._strategy = strategy;
     }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "isPPCEnabled",
+    get: function get() {
+      return this._isPPCEnabled;
+    },
+    set: function set(isPPCEnabled) {
+      this._isPPCEnabled = isPPCEnabled;
     }
-    set callId(callId) {
-        this._callId = callId;
+  }, {
+    key: "isRTPSAllowlisted",
+    get: function get() {
+      return this._isRTPSAllowlisted;
+    },
+    set: function set(isRTPSAllowlisted) {
+      this._isRTPSAllowlisted = isRTPSAllowlisted;
     }
-    get connectionId() {
-        return this._connectionId;
+  }, {
+    key: "browserId",
+    get: function get() {
+      return this._browserId;
+    },
+    set: function set(browserId) {
+      this._browserId = browserId;
     }
-    set connectionId(connectionId) {
-        this._connectionId = connectionId;
+  }, {
+    key: "peerConnectionId",
+    get: function get() {
+      return this._peerConnectionId;
+    },
+    set: function set(peerConnectionId) {
+      this._peerConnectionId = peerConnectionId;
     }
-    get wssManager() {
-        return this._wssManager;
+  }, {
+    key: "peerConnectionToken",
+    get: function get() {
+      return this._peerConnectionToken;
+    },
+    set: function set(peerConnectionToken) {
+      this._peerConnectionToken = peerConnectionToken;
     }
-    set wssManager(wssManager) {
-        this._wssManager = wssManager;
-    }
-    get strategy() {
-        return this._strategy;
-    }
-    set strategy(strategy) {
-        this._strategy = strategy;
-    }
-    get isPPCEnabled() {
-        return this._isPPCEnabled;
-    }
-    set isPPCEnabled(isPPCEnabled) {
-        this._isPPCEnabled = isPPCEnabled;
-    }
-    get isRTPSAllowlisted() {
-        return this._isRTPSAllowlisted;
-    }
-    set isRTPSAllowlisted(isRTPSAllowlisted) {
-        this._isRTPSAllowlisted = isRTPSAllowlisted;
-    }
-    get browserId() {
-        return this._browserId;
-    }
-    set browserId(browserId) {
-        this._browserId = browserId;
-    }
-    get peerConnectionId() {
-        return this._peerConnectionId;
-    }
-    set peerConnectionId(peerConnectionId) {
-        this._peerConnectionId = peerConnectionId;
-    }
-    get peerConnectionToken() {
-        return this._peerConnectionToken;
-    }
-    set peerConnectionToken(peerConnectionToken) {
-        this._peerConnectionToken = peerConnectionToken;
-    }
-    get inactivityDuration() {
-        return this._inactivityDuration;
-    }
-    set inactivityDuration(inactivityDuration) {
-        this._inactivityDuration = inactivityDuration;
+  }, {
+    key: "inactivityDuration",
+    get: function get() {
+      return this._inactivityDuration;
+    },
+    set: function set(inactivityDuration) {
+      this._inactivityDuration = inactivityDuration;
     }
     /**
      * create a rtcSession object if none exists
      *
      * @return {RtcSession} rtcSession
      */
-    createSession(callId, iceServers, contactToken, connectionId, wssManager, rtcJsStrategy = new StandardStrategy_1.default()) {
-        if (this._isUnhealthyPersistentPeerConnection) {
-            this._rtcSession = null;
-            this._iceServers = null;
-            this.destroy();
-            this._contactToken = null;
-            this._callId = null;
-            this._logger.info("connection health check failed during pre-call verification, tearing down the connection to create a fresh one");
-            this._isUnhealthyPersistentPeerConnection = false;
+  }, {
+    key: "createSession",
+    value: function createSession(callId, iceServers, contactToken, connectionId, wssManager) {
+      var rtcJsStrategy = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : new StandardStrategy_1["default"]();
+      if (this._isUnhealthyPersistentPeerConnection) {
+        this._rtcSession = null;
+        this._iceServers = null;
+        this.destroy();
+        this._contactToken = null;
+        this._callId = null;
+        this._logger.info("connection health check failed during pre-call verification, tearing down the connection to create a fresh one");
+        this._isUnhealthyPersistentPeerConnection = false;
+      }
+      this._callId = callId ? callId : this._callId;
+      this._iceServers = iceServers ? iceServers : this._iceServers;
+      this._contactToken = contactToken ? contactToken : this._contactToken;
+      this._connectionId = connectionId ? connectionId : this._connectionId;
+      this._wssManager = wssManager ? wssManager : this._wssManager;
+      this._strategy = rtcJsStrategy ? rtcJsStrategy : this._strategy;
+      this._logger.info("PeerConnectionManager creates RtcSession");
+      this._logger = (0, utils_1.wrapLogger)(this._originalLogger, this._callId, 'RtcPeerConnectionManager');
+      this._rtcSession = new rtc_session_1["default"](this._signalingUri, this._iceServers, this._contactToken, this._logger, this._callId, this._connectionId, this._wssManager, this._strategy, this);
+      // ontrack event will only be triggered once during the process of establishing the persistent connection.
+      // This event won't be trigger when a call arrives at CCP with persistent connection enabled
+      // So we need to attach remoteAudioElement when we initiate the persistent connection. TODO: We can move this to StreamsJS as a followup CR
+      if (this.isPersistentConnectionEnabled()) {
+        this._rtcSession.remoteAudioElement = document.getElementById('remote-audio') || window.parent.parent.document.getElementById('remote-audio');
+        this._remoteAudioElement = this._rtcSession.remoteAudioElement;
+      }
+      if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getStrategyName === 'function') {
+        var strategyName = this._rtcSession._strategy.getStrategyName();
+        if (strategyName === constants_1.CITRIX_VDI_STRATEGY) {
+          this._rtcSession._sessionReport.citrixVersion = this._rtcSession._strategy.version;
         }
-        this._callId = callId ? callId : this._callId;
-        this._iceServers = iceServers ? iceServers : this._iceServers;
-        this._contactToken = contactToken ? contactToken : this._contactToken;
-        this._connectionId = connectionId ? connectionId : this._connectionId;
-        this._wssManager = wssManager ? wssManager : this._wssManager;
-        this._strategy = rtcJsStrategy ? rtcJsStrategy : this._strategy;
-        this._logger.info("PeerConnectionManager creates RtcSession");
-        this._logger = (0, utils_1.wrapLogger)(this._originalLogger, this._callId, 'RtcPeerConnectionManager');
-        this._rtcSession = new rtc_session_1.default(this._signalingUri, this._iceServers, this._contactToken, this._logger, this._callId, this._connectionId, this._wssManager, this._strategy, this);
-        // ontrack event will only be triggered once during the process of establishing the persistent connection.
-        // This event won't be trigger when a call arrives at CCP with persistent connection enabled
-        // So we need to attach remoteAudioElement when we initiate the persistent connection. TODO: We can move this to StreamsJS as a followup CR
-        if (this.isPersistentConnectionEnabled()) {
-            this._rtcSession.remoteAudioElement = document.getElementById('remote-audio') || window.parent.parent.document.getElementById('remote-audio');
-            this._remoteAudioElement = this._rtcSession.remoteAudioElement;
+      }
+      if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getMetadata === 'function') {
+        try {
+          this._rtcSession._sessionReport.vdiMetadata = this._rtcSession._strategy.getMetadata();
+        } catch (e) {
+          this._logger.warn('Failed to collect VDI metadata', e);
         }
-        if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getStrategyName === 'function') {
-            const strategyName = this._rtcSession._strategy.getStrategyName();
-            if (strategyName === constants_1.CITRIX_VDI_STRATEGY) {
-                this._rtcSession._sessionReport.citrixVersion = this._rtcSession._strategy.version;
-            }
+      }
+      if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getVdiClientVersion === 'function') {
+        try {
+          this._rtcSession._sessionReport.vdiClientVersion = this._rtcSession._strategy.getVdiClientVersion();
+        } catch (e) {
+          this._logger.warn('Failed to collect VDI client version', e);
         }
-        if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getMetadata === 'function') {
-            try {
-                this._rtcSession._sessionReport.vdiMetadata = this._rtcSession._strategy.getMetadata();
-            }
-            catch (e) {
-                this._logger.warn('Failed to collect VDI metadata', e);
-            }
-        }
-        if (this._rtcSession._strategy && typeof this._rtcSession._strategy.getVdiClientVersion === 'function') {
-            try {
-                this._rtcSession._sessionReport.vdiClientVersion = this._rtcSession._strategy.getVdiClientVersion();
-            }
-            catch (e) {
-                this._logger.warn('Failed to collect VDI client version', e);
-            }
-        }
-        return this._rtcSession;
+      }
+      return this._rtcSession;
     }
     /**
      * get rtcSession object
      *
      * @return {RtcSession} rtcSession manages by the peer connection manager
      */
-    getSession() {
-        return this._rtcSession;
+  }, {
+    key: "getSession",
+    value: function getSession() {
+      return this._rtcSession;
     }
     /**
      * This method aims to create a new peer connection or connect to the existing peer connection
@@ -10351,39 +11433,53 @@ class RtcPeerConnectionManager {
      * @param {RTCPeerConnection} pc - An existing peer connection, it could be persistent peer connection
      * or a standby peer connection (optional)
      */
-    connect() {
-        return __awaiter(this, void 0, void 0, function* () {
-            var self = this;
-            // check if the previous rtcSession.connect promise is fulfilled or not
-            if (self._rtcSessionConnectPromise) {
-                try {
-                    yield self._rtcSessionConnectPromise;
-                }
-                catch (e) {
-                    // notify softphoneManger the current rtcSession is failed to trigger the retry strategy on SoftphoneManager side
-                    this._rtcSession._onSessionFailed(this._rtcSession, e.name);
-                    self._rtcSession = null;
-                    self.destroy();
-                    self._contactToken = null;
-                    self._iceServers = null;
-                    self._callId = null;
-                    return;
-                }
-                finally {
-                    self._rtcSessionConnectPromise = null;
-                }
-            }
-            // reset inactivity timer before RTCSession state transition
-            if (self._inactivityTimer) {
+  }, {
+    key: "connect",
+    value: function connect() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee4() {
+        var _this2 = this;
+        var self, onSessionFailedHandler, onSessionCompletedHandler, pc, _t;
+        return _regenerator().w(function (_context4) {
+          while (1) switch (_context4.p = _context4.n) {
+            case 0:
+              self = this; // check if the previous rtcSession.connect promise is fulfilled or not
+              if (!self._rtcSessionConnectPromise) {
+                _context4.n = 5;
+                break;
+              }
+              _context4.p = 1;
+              _context4.n = 2;
+              return self._rtcSessionConnectPromise;
+            case 2:
+              _context4.n = 4;
+              break;
+            case 3:
+              _context4.p = 3;
+              _t = _context4.v;
+              // notify softphoneManger the current rtcSession is failed to trigger the retry strategy on SoftphoneManager side
+              this._rtcSession._onSessionFailed(this._rtcSession, _t.name);
+              self._rtcSession = null;
+              self.destroy();
+              self._contactToken = null;
+              self._iceServers = null;
+              self._callId = null;
+              return _context4.a(2);
+            case 4:
+              _context4.p = 4;
+              self._rtcSessionConnectPromise = null;
+              return _context4.f(4);
+            case 5:
+              // reset inactivity timer before RTCSession state transition
+              if (self._inactivityTimer) {
                 self.clearInactivityTimer();
-            }
-            // add session failed event handler
-            const onSessionFailedHandler = self._rtcSession._onSessionFailed;
-            self._rtcSession.onSessionFailed = function (rtcSession, reason) {
+              }
+              // add session failed event handler
+              onSessionFailedHandler = self._rtcSession._onSessionFailed;
+              self._rtcSession.onSessionFailed = function (rtcSession, reason) {
                 self.logger.error("Peer connection manager detects RtcSession failure: " + reason);
                 // wrap the existing handler which is created in softphone manager
                 if (onSessionFailedHandler) {
-                    onSessionFailedHandler(rtcSession, reason);
+                  onSessionFailedHandler(rtcSession, reason);
                 }
                 // clear local RtcSession
                 self._rtcSession = null;
@@ -10392,104 +11488,133 @@ class RtcPeerConnectionManager {
                 self.destroy(); // call destroy method before clean contactToken and callId
                 self._contactToken = null;
                 self._callId = null;
-            };
-            // add session completed event handler
-            const onSessionCompletedHandler = self._rtcSession._onSessionCompleted;
-            self._rtcSession.onSessionCompleted = function (rtcSession) {
+              };
+              // add session completed event handler
+              onSessionCompletedHandler = self._rtcSession._onSessionCompleted;
+              self._rtcSession.onSessionCompleted = function (rtcSession) {
                 self.logger.info("Peer connection manager detects RtcSession completed. Performing health check to decide if we want to keep the peer connection");
                 // wrap the existing handler which is created in softphone manager
                 if (onSessionCompletedHandler) {
-                    onSessionCompletedHandler(rtcSession);
+                  onSessionCompletedHandler(rtcSession);
                 }
-                if (self._signalingChannel._state.name === "FailedState"
-                    || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.FAILED
-                    || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED
-                    || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.CLOSED) {
-                    self.logger.error("Peer connection manager detected unhealthy connection at call ends, tearing down the connection");
-                    // clear local RtcSession
-                    self._rtcSession = null;
-                    self._iceServers = null;
-                    // close signaling channel and peer connection
-                    self.destroy();
-                    self._contactToken = null;
-                    self._callId = null;
+                if (self._signalingChannel._state.name === "FailedState" || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.FAILED || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED || self._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.CLOSED) {
+                  self.logger.error("Peer connection manager detected unhealthy connection at call ends, tearing down the connection");
+                  // clear local RtcSession
+                  self._rtcSession = null;
+                  self._iceServers = null;
+                  // close signaling channel and peer connection
+                  self.destroy();
+                  self._contactToken = null;
+                  self._callId = null;
                 }
-            };
-            // add signaling remote hangup listener
-            self._rtcSession._signalingRemoteHungup = function () {
+              };
+              // add signaling remote hangup listener
+              self._rtcSession._signalingRemoteHungup = function () {
                 self.hangup();
-            };
-            if (!this._userAgentData) {
-                this._userAgentData = yield (0, utils_1.getUserAgentData)().catch(error => {
-                    self.logger.error("Peer connection manager failed to get user agent data", error);
-                });
-            }
-            // Add useragent to rtcSession report
-            this._rtcSession._sessionReport.userAgentData = JSON.stringify(this._userAgentData);
-            // Collect immediate metrics (non-stream dependent)
-            this._collectAgentSetupMetrics(this._rtcSession._sessionReport);
-            const pc = this.getPeerConnection();
-            this._rtcSession.connect(pc);
-            return new Promise((resolve, reject) => {
+              };
+              if (this._userAgentData) {
+                _context4.n = 7;
+                break;
+              }
+              _context4.n = 6;
+              return (0, utils_1.getUserAgentData)()["catch"](function (error) {
+                self.logger.error("Peer connection manager failed to get user agent data", error);
+              });
+            case 6:
+              this._userAgentData = _context4.v;
+            case 7:
+              // Add useragent to rtcSession report
+              this._rtcSession._sessionReport.userAgentData = JSON.stringify(this._userAgentData);
+              // Collect immediate metrics (non-stream dependent)
+              this._collectAgentSetupMetrics(this._rtcSession._sessionReport);
+              pc = this.getPeerConnection();
+              this._rtcSession.connect(pc);
+              return _context4.a(2, new Promise(function (resolve, reject) {
                 // resolve the Promise when signaling handshake is completed
-                const signalingHandshaked = (0, utils_1.hitch)(self._rtcSession, self._rtcSession._signalingHandshaked);
-                self._rtcSession._signalingHandshaked = () => __awaiter(this, void 0, void 0, function* () {
-                    signalingHandshaked();
-                    resolve();
-                });
+                var signalingHandshaked = (0, utils_1.hitch)(self._rtcSession, self._rtcSession._signalingHandshaked);
+                self._rtcSession._signalingHandshaked = function () {
+                  return __awaiter(_this2, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee2() {
+                    return _regenerator().w(function (_context2) {
+                      while (1) switch (_context2.n) {
+                        case 0:
+                          signalingHandshaked();
+                          resolve();
+                        case 1:
+                          return _context2.a(2);
+                      }
+                    }, _callee2);
+                  }));
+                };
                 // reject the Promise when signaling handshake is failed
-                const signalingFailed = (0, utils_1.hitch)(self._rtcSession, self._rtcSession._signalingFailed);
-                self._rtcSession._signalingFailed = (exception) => __awaiter(this, void 0, void 0, function* () {
-                    signalingFailed(exception);
-                    reject();
-                });
-            });
-        });
+                var signalingFailed = (0, utils_1.hitch)(self._rtcSession, self._rtcSession._signalingFailed);
+                self._rtcSession._signalingFailed = function (exception) {
+                  return __awaiter(_this2, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee3() {
+                    return _regenerator().w(function (_context3) {
+                      while (1) switch (_context3.n) {
+                        case 0:
+                          signalingFailed(exception);
+                          reject();
+                        case 1:
+                          return _context3.a(2);
+                      }
+                    }, _callee3);
+                  }));
+                };
+              }));
+          }
+        }, _callee4, this, [[1, 3, 4, 5]]);
+      }));
     }
     /**
      * Start an inactivity timer for persistent connection
      *
      */
-    startInactivityTimer() {
-        this._logger.info("PeerConnectionManager start inactivity timer");
-        this._inactivityTimer = setTimeout(() => {
-            this._logger.info('Inactivity timer breached, teardown peer connection ');
-            this.destroy();
-        }, this._inactivityDuration);
+  }, {
+    key: "startInactivityTimer",
+    value: function startInactivityTimer() {
+      var _this3 = this;
+      this._logger.info("PeerConnectionManager start inactivity timer");
+      this._inactivityTimer = setTimeout(function () {
+        _this3._logger.info('Inactivity timer breached, teardown peer connection ');
+        _this3.destroy();
+      }, this._inactivityDuration);
     }
     /**
      * Reset inactivity timer for persistent connection
      */
-    clearInactivityTimer() {
-        this._logger.info("PeerConnectionManager clear inactivity timer");
-        clearTimeout(this._inactivityTimer);
-        this._inactivityTimer = null;
+  }, {
+    key: "clearInactivityTimer",
+    value: function clearInactivityTimer() {
+      this._logger.info("PeerConnectionManager clear inactivity timer");
+      clearTimeout(this._inactivityTimer);
+      this._inactivityTimer = null;
     }
     /**
      * Hang up the RtcSession
      */
-    hangup() {
-        this._logger.info("PeerConnectionManager hangs up RtcSession");
-        if (this._rtcSession) {
-            try {
-                this._rtcSession.hangup();
-            }
-            catch (error) {
-                this._logger.error("Error occurred while hanging up RtcSession:", error);
-            }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this._logger.info("PeerConnectionManager hangs up RtcSession");
+      if (this._rtcSession) {
+        try {
+          this._rtcSession.hangup();
+        } catch (error) {
+          this._logger.error("Error occurred while hanging up RtcSession:", error);
         }
-        this._contactToken = null;
-        this._callId = null;
-        this._rtcSession = null;
-        if (!this.isPersistentConnectionEnabled()) {
-            this._signalingChannel = null;
-            this._iceServers = null;
-            this._pc = null;
-            this._peerConnectionId = null;
-            this._peerConnectionToken = null;
-            this._iceRestart = false;
-            this._currentMicDeviceId = null;
-        }
+      }
+      this._contactToken = null;
+      this._callId = null;
+      this._rtcSession = null;
+      if (!this.isPersistentConnectionEnabled()) {
+        this._signalingChannel = null;
+        this._iceServers = null;
+        this._pc = null;
+        this._peerConnectionId = null;
+        this._peerConnectionToken = null;
+        this._iceRestart = false;
+        this._currentMicDeviceId = null;
+      }
     }
     /**
      * Destroys the existing persistent peer connection.
@@ -10512,107 +11637,123 @@ class RtcPeerConnectionManager {
      *       This should be set to false for AZ evacuation and server-side draining scenarios.
      *       In these cases, we receive a PCBYE from the server, so we don't want to send another BYE.
      */
-    destroy(peerConnectionId) {
-        try {
-            if (this._rtcSession && (this._rtcSession._state.name === rtc_const_1.RTC_SESSION_STATE.TALKING_STATE || this._rtcSession._state.name === rtc_const_1.RTC_SESSION_STATE.CONNECT_CONTACT_STATE)) {
-                this._logger.info("Peer connection is in use, PeerConnectionManager can NOT destroy persistent peer connection");
+  }, {
+    key: "destroy",
+    value: function destroy(peerConnectionId) {
+      try {
+        if (this._rtcSession && (this._rtcSession._state.name === rtc_const_1.RTC_SESSION_STATE.TALKING_STATE || this._rtcSession._state.name === rtc_const_1.RTC_SESSION_STATE.CONNECT_CONTACT_STATE)) {
+          this._logger.info("Peer connection is in use, PeerConnectionManager can NOT destroy persistent peer connection");
+        } else if (this._pc) {
+          // if peer connection exists, destroy the persistent peer connection
+          this._logger.info("PeerConnectionManager destroy persistent peer connection");
+          if (!peerConnectionId && this._signalingChannel) {
+            // If peerConnectionId doesn't exist, we need to send a bye to the server. Otherwise, it doesn't need to send a bye since it receives the PCBye from server
+            try {
+              this._signalingChannel.bye();
+            } catch (byeError) {
+              this._logger.error("Error occurred while sending bye:", byeError);
             }
-            else if (this._pc) { // if peer connection exists, destroy the persistent peer connection
-                this._logger.info("PeerConnectionManager destroy persistent peer connection");
-                if (!peerConnectionId && this._signalingChannel) {
-                    // If peerConnectionId doesn't exist, we need to send a bye to the server. Otherwise, it doesn't need to send a bye since it receives the PCBye from server
-                    try {
-                        this._signalingChannel.bye();
-                    }
-                    catch (byeError) {
-                        this._logger.error("Error occurred while sending bye:", byeError);
-                    }
-                }
-                this._signalingChannel = null;
-                this._strategy.close(this._pc);
-                this._pc = null;
-                this._peerConnectionId = null;
-                this._peerConnectionToken = null;
-                this._iceRestart = false;
-                this._currentMicDeviceId = null;
-                // release media stream when existing persistent peer connection is destroyed
-                if (this._mediaStream) {
-                    this._mediaStream.getTracks().forEach((track) => track.stop());
-                    this._mediaStream = null;
-                }
-                // detach remote audio stream
-                if (this._remoteAudioElement) {
-                    this._remoteAudioElement.srcObject = null;
-                    this._remoteAudioStream = null;
-                }
-                this.clearInactivityTimer();
-            }
+          }
+          this._signalingChannel = null;
+          this._strategy.close(this._pc);
+          this._pc = null;
+          this._peerConnectionId = null;
+          this._peerConnectionToken = null;
+          this._iceRestart = false;
+          this._currentMicDeviceId = null;
+          // release media stream when existing persistent peer connection is destroyed
+          if (this._mediaStream) {
+            this._mediaStream.getTracks().forEach(function (track) {
+              return track.stop();
+            });
+            this._mediaStream = null;
+          }
+          // detach remote audio stream
+          if (this._remoteAudioElement) {
+            this._remoteAudioElement.srcObject = null;
+            this._remoteAudioStream = null;
+          }
+          this.clearInactivityTimer();
         }
-        catch (error) {
-            this._logger.error("Error occurred in PeerConnectionManager destroy method:", error);
-        }
+      } catch (error) {
+        this._logger.error("Error occurred in PeerConnectionManager destroy method:", error);
+      }
     }
-    handlePersistentPeerConnectionToggle(isPPCEnabled) {
-        // change PPCEnabled only when agent is not in a call
-        if (this._rtcSession === null && this.isPPCEnabled !== isPPCEnabled && this.isRTPSAllowlisted) {
-            this.isPPCEnabled = isPPCEnabled;
-            // if softphonePersistentConnection changed to true, use rtcPeerConnectionManager to initiate a new persistent peer connection
-            if (this.isPPCEnabled) {
-                this._logger.info("softphonePersistentConnection changed to ture, initiate a persistent peer connection").sendInternalLogToServer();
-                this.activatePersistentPeerConnectionMode();
-            }
-            else {
-                // if softphonePersistentConnection changed to false, use rtcPeerConnectionManager to tear down the currentpersistent peer connection
-                this._logger.info("softphonePersistentConnection changed to false, destroy the existing persistent peer connection").sendInternalLogToServer();
-                this.deactivatePersistentPeerConnectionMode();
-            }
+  }, {
+    key: "handlePersistentPeerConnectionToggle",
+    value: function handlePersistentPeerConnectionToggle(isPPCEnabled) {
+      // change PPCEnabled only when agent is not in a call
+      if (this._rtcSession === null && this.isPPCEnabled !== isPPCEnabled && this.isRTPSAllowlisted) {
+        this.isPPCEnabled = isPPCEnabled;
+        // if softphonePersistentConnection changed to true, use rtcPeerConnectionManager to initiate a new persistent peer connection
+        if (this.isPPCEnabled) {
+          this._logger.info("softphonePersistentConnection changed to ture, initiate a persistent peer connection").sendInternalLogToServer();
+          this.activatePersistentPeerConnectionMode();
+        } else {
+          // if softphonePersistentConnection changed to false, use rtcPeerConnectionManager to tear down the currentpersistent peer connection
+          this._logger.info("softphonePersistentConnection changed to false, destroy the existing persistent peer connection").sendInternalLogToServer();
+          this.deactivatePersistentPeerConnectionMode();
         }
+      }
     }
     // activate persistent connection mode by creating the persistent connection and close standby peer connection
-    activatePersistentPeerConnectionMode() {
-        // this.rtcJsStrategy = this.rtcJsStrategy;
-        this.closeEarlyMediaConnection(); // close standby peer connection
-        this.requestPeerConnection().then(() => {
-            this.createSession();
-            this._rtcSessionConnectPromise = this.connect();
-        });
+  }, {
+    key: "activatePersistentPeerConnectionMode",
+    value: function activatePersistentPeerConnectionMode() {
+      var _this4 = this;
+      // this.rtcJsStrategy = this.rtcJsStrategy;
+      this.closeEarlyMediaConnection(); // close standby peer connection
+      this.requestPeerConnection().then(function () {
+        _this4.createSession();
+        _this4._rtcSessionConnectPromise = _this4.connect();
+      });
     }
     // deactivate persistent connection mode by destroying the existing persistent peer connection and request for standby peer connection
-    deactivatePersistentPeerConnectionMode() {
-        this.destroy();
-        this.requestPeerConnection();
+  }, {
+    key: "deactivatePersistentPeerConnectionMode",
+    value: function deactivatePersistentPeerConnectionMode() {
+      this.destroy();
+      this.requestPeerConnection();
     }
     // function which checks if persistent connection feature is enabled and allowlisted, and browser is NOT Firefox
-    isPersistentConnectionEnabled() {
-        return this._isPPCEnabled && this._isRTPSAllowlisted && !(0, utils_1.isFirefoxBrowser)(this._userAgentData);
+  }, {
+    key: "isPersistentConnectionEnabled",
+    value: function isPersistentConnectionEnabled() {
+      return this._isPPCEnabled && this._isRTPSAllowlisted && !(0, utils_1.isFirefoxBrowser)(this._userAgentData);
     }
     // This function closes the Early media connection and persistent peer connection
-    close() {
-        if (this.isPersistentConnectionEnabled()) {
-            this.destroy();
-        }
-        else {
-            this.closeEarlyMediaConnection();
-        }
+  }, {
+    key: "close",
+    value: function close() {
+      if (this.isPersistentConnectionEnabled()) {
+        this.destroy();
+      } else {
+        this.closeEarlyMediaConnection();
+      }
     }
     /** This function is to listen beforeunload event. When we receive beforeunload
      * we will send a bye from CCP to Amazon Connect, but this is very unstable, we cannot
      * guarantee send bye every time when agent close the browser tab
      *
      */
-    browserTabCloseEventListener() {
-        window.addEventListener('beforeunload', () => {
-            this._logger.info('User leaves the page, destroy peer connection manager');
-            this.destroy();
-        });
+  }, {
+    key: "browserTabCloseEventListener",
+    value: function browserTabCloseEventListener() {
+      var _this5 = this;
+      window.addEventListener('beforeunload', function () {
+        _this5._logger.info('User leaves the page, destroy peer connection manager');
+        _this5.destroy();
+      });
     }
     /** This function is to listen vdi disconnection event. When we receive clean up event
      * we will clean up the connection at next call initiation
      *
      */
-    _handleConnectionCleanup() {
-        this._logger.info("PCM: connection clean up event detected");
-        this._isUnhealthyPersistentPeerConnection = true;
+  }, {
+    key: "_handleConnectionCleanup",
+    value: function _handleConnectionCleanup() {
+      this._logger.info("PCM: connection clean up event detected");
+      this._isUnhealthyPersistentPeerConnection = true;
     }
     /**
      * Set the microphone device on the current peer connection by acquiring a new media stream
@@ -10627,161 +11768,181 @@ class RtcPeerConnectionManager {
      * @param {string} deviceId - The device ID of the microphone to switch to
      * @returns {Promise<void>} Resolves when the device change is complete
      */
-    setMicrophoneDevice(deviceId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var self = this;
-            // Validate peer connection exists
-            if (!self._pc) {
-                self._logger.warn("[setMicrophoneDevice] No active peer connection available").sendInternalLogToServer();
-                return;
-            }
-            // Validate media stream exists
-            if (!self._mediaStream) {
-                self._logger.error("[setMicrophoneDevice] No active media stream available").sendInternalLogToServer();
-                return;
-            }
-            // Idempotent: skip if deviceId matches current.
-            // TODO: If deviceId is "default" and the underlying physical device changed, this no-op
-            // may incorrectly block the switch. Need to address it before this API is more publicly used
-            if (self._currentMicDeviceId === deviceId) {
-                if (deviceId === 'default') {
-                    self._logger.warn("[setMicrophoneDevice] Skipping — deviceId 'default' matches current. " +
-                        "If the underlying physical device changed, this may incorrectly block the switch. " +
-                        "Please use the exact device ID if this is causing a problem.").sendInternalLogToServer();
-                }
-                else {
-                    self._logger.info("[setMicrophoneDevice] Requested deviceId matches current device, no-op. deviceId=" + deviceId).sendInternalLogToServer();
-                }
-                return;
-            }
-            // Log PC state for debugging (standby vs connected)
-            var sessionState = self._rtcSession ? self._rtcSession._state.name : 'no session';
-            var iceState = self._pc.iceConnectionState;
-            var pcId = self._peerConnectionId || 'none';
-            var isPersistent = self.isPersistentConnectionEnabled();
-            self._logger.info("[setMicrophoneDevice] Starting mic device change to deviceId: " + deviceId +
-                ", PC state: iceConnectionState=" + iceState +
-                ", sessionState=" + sessionState +
-                ", peerConnectionId=" + pcId +
-                ", isPersistentConnection=" + isPersistent +
-                ", strategy=" + self._strategy.getStrategyName()).sendInternalLogToServer();
-            if (!self._rtcSession) {
+  }, {
+    key: "setMicrophoneDevice",
+    value: function setMicrophoneDevice(deviceId) {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee5() {
+        var self, sessionState, iceState, pcId, isPersistent, oldTrack, gumPromise, newStream, newTrack, wasEnabled, sender, _t2;
+        return _regenerator().w(function (_context5) {
+          while (1) switch (_context5.p = _context5.n) {
+            case 0:
+              self = this; // Validate peer connection exists
+              if (self._pc) {
+                _context5.n = 1;
+                break;
+              }
+              self._logger.warn("[setMicrophoneDevice] No active peer connection available").sendInternalLogToServer();
+              return _context5.a(2);
+            case 1:
+              if (self._mediaStream) {
+                _context5.n = 2;
+                break;
+              }
+              self._logger.error("[setMicrophoneDevice] No active media stream available").sendInternalLogToServer();
+              return _context5.a(2);
+            case 2:
+              if (!(self._currentMicDeviceId === deviceId)) {
+                _context5.n = 3;
+                break;
+              }
+              if (deviceId === 'default') {
+                self._logger.warn("[setMicrophoneDevice] Skipping — deviceId 'default' matches current. " + "If the underlying physical device changed, this may incorrectly block the switch. " + "Please use the exact device ID if this is causing a problem.").sendInternalLogToServer();
+              } else {
+                self._logger.info("[setMicrophoneDevice] Requested deviceId matches current device, no-op. deviceId=" + deviceId).sendInternalLogToServer();
+              }
+              return _context5.a(2);
+            case 3:
+              // Log PC state for debugging (standby vs connected)
+              sessionState = self._rtcSession ? self._rtcSession._state.name : 'no session';
+              iceState = self._pc.iceConnectionState;
+              pcId = self._peerConnectionId || 'none';
+              isPersistent = self.isPersistentConnectionEnabled();
+              self._logger.info("[setMicrophoneDevice] Starting mic device change to deviceId: " + deviceId + ", PC state: iceConnectionState=" + iceState + ", sessionState=" + sessionState + ", peerConnectionId=" + pcId + ", isPersistentConnection=" + isPersistent + ", strategy=" + self._strategy.getStrategyName()).sendInternalLogToServer();
+              if (!self._rtcSession) {
                 self._logger.warn("[setMicrophoneDevice] No active RTC session, PC may be standby/idle").sendInternalLogToServer();
-            }
-            // Mark as user-provided stream immediately to prevent automatic refreshes during the async operation
-            if (self._rtcSession) {
+              }
+              // Mark as user-provided stream immediately to prevent automatic refreshes during the async operation
+              if (self._rtcSession) {
                 self._rtcSession._isUserProvidedStream = true;
-            }
-            // Get old track reference
-            var oldTrack = self._mediaStream.getAudioTracks()[0];
-            self._logger.info("[setMicrophoneDevice] Old track state: " +
-                (oldTrack ? "id=" + oldTrack.id + ", readyState=" + oldTrack.readyState + ", enabled=" + oldTrack.enabled : "no old track"));
-            try {
-                // Acquire new media stream with GUM timeout
-                self._logger.info("[setMicrophoneDevice] Acquiring new media stream...").sendInternalLogToServer();
-                var gumPromise = self._strategy._gUM({ audio: { deviceId: { exact: deviceId } } });
-                var newStream = yield (0, utils_1.promiseWithTimeout)(gumPromise, rtc_const_1.DEFAULT_GUM_TIMEOUT_MS, new Error('GUM timed out'));
-                var newTrack = newStream.getAudioTracks()[0];
-                self._logger.info("[setMicrophoneDevice] New media stream acquired, track id=" + newTrack.id +
-                    ", settings=" + JSON.stringify(newTrack.getSettings())).sendInternalLogToServer();
-                // Preserve mute state: apply old track's enabled state to new track immediately
-                var wasEnabled = oldTrack ? oldTrack.enabled : true;
-                newTrack.enabled = wasEnabled;
-                self._logger.info("[setMicrophoneDevice] Mute state preserved: wasEnabled=" + wasEnabled).sendInternalLogToServer();
-                // Replace audio track in peer connection sender
-                var sender = self._pc.getSenders()[0];
-                if (!sender) {
-                    throw new Error("[setMicrophoneDevice] No sender found in peer connection");
+              }
+              // Get old track reference
+              oldTrack = self._mediaStream.getAudioTracks()[0];
+              self._logger.info("[setMicrophoneDevice] Old track state: " + (oldTrack ? "id=" + oldTrack.id + ", readyState=" + oldTrack.readyState + ", enabled=" + oldTrack.enabled : "no old track"));
+              _context5.p = 4;
+              // Acquire new media stream with GUM timeout
+              self._logger.info("[setMicrophoneDevice] Acquiring new media stream...").sendInternalLogToServer();
+              gumPromise = self._strategy._gUM({
+                audio: {
+                  deviceId: {
+                    exact: deviceId
+                  }
                 }
-                self._logger.info("[setMicrophoneDevice] Replacing track in peer connection sender...").sendInternalLogToServer();
-                yield sender.replaceTrack(newTrack);
-                self._logger.info("[setMicrophoneDevice] Track replaced in peer connection sender successfully").sendInternalLogToServer();
-                // Replace track in _mediaStream in-place (same object reference StreamsJS holds)
-                if (oldTrack) {
-                    oldTrack.enabled = false;
-                    self._mediaStream.removeTrack(oldTrack);
-                    oldTrack.stop();
-                    self._logger.info("[setMicrophoneDevice] Old track disabled, removed, and stopped").sendInternalLogToServer();
-                }
-                self._mediaStream.addTrack(newTrack);
-                // Note: For VDI environments (e.g., Citrix), the enabled property may take time to propagate
-                // through the audio redirection channel, so the logged value may not reflect the final state.
-                self._logger.info("[setMicrophoneDevice] New track added to local media stream, id=" + newTrack.id + ", enabled=" + newTrack.enabled + ", readyState=" + newTrack.readyState);
-                self._currentMicDeviceId = deviceId;
-                self._logger.info("[setMicrophoneDevice] Mic device change completed successfully").sendInternalLogToServer();
-            }
-            catch (error) {
-                self._logger.error("[setMicrophoneDevice] Failed to change microphone device").withException(error).sendInternalLogToServer();
-            }
-        });
+              });
+              _context5.n = 5;
+              return (0, utils_1.promiseWithTimeout)(gumPromise, rtc_const_1.DEFAULT_GUM_TIMEOUT_MS, new Error('GUM timed out'));
+            case 5:
+              newStream = _context5.v;
+              newTrack = newStream.getAudioTracks()[0];
+              self._logger.info("[setMicrophoneDevice] New media stream acquired, track id=" + newTrack.id + ", settings=" + JSON.stringify(newTrack.getSettings())).sendInternalLogToServer();
+              // Preserve mute state: apply old track's enabled state to new track immediately
+              wasEnabled = oldTrack ? oldTrack.enabled : true;
+              newTrack.enabled = wasEnabled;
+              self._logger.info("[setMicrophoneDevice] Mute state preserved: wasEnabled=" + wasEnabled).sendInternalLogToServer();
+              // Replace audio track in peer connection sender
+              sender = self._pc.getSenders()[0];
+              if (sender) {
+                _context5.n = 6;
+                break;
+              }
+              throw new Error("[setMicrophoneDevice] No sender found in peer connection");
+            case 6:
+              self._logger.info("[setMicrophoneDevice] Replacing track in peer connection sender...").sendInternalLogToServer();
+              _context5.n = 7;
+              return sender.replaceTrack(newTrack);
+            case 7:
+              self._logger.info("[setMicrophoneDevice] Track replaced in peer connection sender successfully").sendInternalLogToServer();
+              // Replace track in _mediaStream in-place (same object reference StreamsJS holds)
+              if (oldTrack) {
+                oldTrack.enabled = false;
+                self._mediaStream.removeTrack(oldTrack);
+                oldTrack.stop();
+                self._logger.info("[setMicrophoneDevice] Old track disabled, removed, and stopped").sendInternalLogToServer();
+              }
+              self._mediaStream.addTrack(newTrack);
+              // Note: For VDI environments (e.g., Citrix), the enabled property may take time to propagate
+              // through the audio redirection channel, so the logged value may not reflect the final state.
+              self._logger.info("[setMicrophoneDevice] New track added to local media stream, id=" + newTrack.id + ", enabled=" + newTrack.enabled + ", readyState=" + newTrack.readyState);
+              self._currentMicDeviceId = deviceId;
+              self._logger.info("[setMicrophoneDevice] Mic device change completed successfully").sendInternalLogToServer();
+              _context5.n = 9;
+              break;
+            case 8:
+              _context5.p = 8;
+              _t2 = _context5.v;
+              self._logger.error("[setMicrophoneDevice] Failed to change microphone device").withException(_t2).sendInternalLogToServer();
+            case 9:
+              return _context5.a(2);
+          }
+        }, _callee5, this, [[4, 8]]);
+      }));
     }
     /**
      * Collect Agent Setup metrics that don't require a media stream
      * @param {SessionReport} sessionReport - The session report to populate
      * @private
      */
-    _collectAgentSetupMetrics(sessionReport) {
-        var self = this;
-        // Microphone permission
-        try {
-            if (navigator.permissions && navigator.permissions.query) {
-                navigator.permissions.query({ name: 'microphone' }).then(function (permissionStatus) {
-                    sessionReport.microphonePermission = permissionStatus.state;
-                }).catch(function (error) {
-                    self._logger.warn("Failed to query microphone permission", error);
-                });
-            }
+  }, {
+    key: "_collectAgentSetupMetrics",
+    value: function _collectAgentSetupMetrics(sessionReport) {
+      var self = this;
+      // Microphone permission
+      try {
+        if (navigator.permissions && navigator.permissions.query) {
+          navigator.permissions.query({
+            name: 'microphone'
+          }).then(function (permissionStatus) {
+            sessionReport.microphonePermission = permissionStatus.state;
+          })["catch"](function (error) {
+            self._logger.warn("Failed to query microphone permission", error);
+          });
         }
-        catch (error) {
-            this._logger.warn("Failed to query microphone permission", error);
+      } catch (error) {
+        this._logger.warn("Failed to query microphone permission", error);
+      }
+      // Device memory
+      try {
+        sessionReport.deviceMemory = navigator.deviceMemory !== undefined ? navigator.deviceMemory : null;
+      } catch (error) {
+        this._logger.warn("Failed to get device memory", error);
+      }
+      // Network metrics
+      try {
+        var connection = navigator.connection;
+        if (connection) {
+          sessionReport.networkEffectiveType = connection.effectiveType;
+          sessionReport.networkRtt = connection.rtt;
         }
-        // Device memory
-        try {
-            sessionReport.deviceMemory = navigator.deviceMemory !== undefined ? navigator.deviceMemory : null;
+      } catch (error) {
+        this._logger.warn("Failed to get network metrics", error);
+      }
+      // Enumerate audio devices
+      try {
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+          navigator.mediaDevices.enumerateDevices().then(function (devices) {
+            var audioInputDevices = [];
+            var audioOutputDevices = [];
+            devices.forEach(function (device) {
+              if (device.kind === 'audioinput') {
+                audioInputDevices.push(device.label);
+              } else if (device.kind === 'audiooutput') {
+                audioOutputDevices.push(device.label);
+              }
+            });
+            sessionReport.audioInputDevices = audioInputDevices;
+            sessionReport.audioOutputDevices = audioOutputDevices;
+          })["catch"](function (error) {
+            self._logger.warn("Failed to enumerate devices", error);
+          });
         }
-        catch (error) {
-            this._logger.warn("Failed to get device memory", error);
-        }
-        // Network metrics
-        try {
-            var connection = navigator.connection;
-            if (connection) {
-                sessionReport.networkEffectiveType = connection.effectiveType;
-                sessionReport.networkRtt = connection.rtt;
-            }
-        }
-        catch (error) {
-            this._logger.warn("Failed to get network metrics", error);
-        }
-        // Enumerate audio devices
-        try {
-            if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-                navigator.mediaDevices.enumerateDevices().then(function (devices) {
-                    var audioInputDevices = [];
-                    var audioOutputDevices = [];
-                    devices.forEach(function (device) {
-                        if (device.kind === 'audioinput') {
-                            audioInputDevices.push(device.label);
-                        }
-                        else if (device.kind === 'audiooutput') {
-                            audioOutputDevices.push(device.label);
-                        }
-                    });
-                    sessionReport.audioInputDevices = audioInputDevices;
-                    sessionReport.audioOutputDevices = audioOutputDevices;
-                }).catch(function (error) {
-                    self._logger.warn("Failed to enumerate devices", error);
-                });
-            }
-        }
-        catch (error) {
-            this._logger.warn("Failed to enumerate devices", error);
-        }
+      } catch (error) {
+        this._logger.warn("Failed to enumerate devices", error);
+      }
     }
-}
-exports.default = RtcPeerConnectionManager;
+  }]);
+}();
+exports["default"] = RtcPeerConnectionManager;
 
-},{"./config/constants":27,"./exceptions":30,"./rtc_const":32,"./rtc_session":36,"./strategies/CCPInitiationStrategyInterface":47,"./strategies/StandardStrategy":52,"./utils":54,"uuid":9}],35:[function(require,module,exports){
+},{"./config/constants":43,"./exceptions":46,"./rtc_const":48,"./rtc_session":52,"./strategies/CCPInitiationStrategyInterface":63,"./strategies/StandardStrategy":68,"./utils":70,"uuid":9}],51:[function(require,module,exports){
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -10793,7 +11954,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const uuid = require("uuid/v4");
+const uuid = require("uuid").v4;
 const StandardStrategy_1 = require("./strategies/StandardStrategy");
 const CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
 const shared_media_session_1 = require("./shared_media_session");
@@ -11354,14 +12515,20 @@ class RtcPeerConnectionManagerV2 {
      */
     _setupPageLoadPersistentConnection() {
         return __awaiter(this, void 0, void 0, function* () {
+            if ((0, utils_1.isLoginPopupWindow)()) {
+                this._logger.info("Skipping page-load persistent connection setup: this context is the CCP login popup").sendInternalLogToServer();
+                return;
+            }
             let ownedPc = null;
             try {
+                this._logger.info("Setting up page-load persistent connection: waiting for strategy to be connected").sendInternalLogToServer();
+                const whenConnectedStartedAt = Date.now();
                 yield this._strategy.whenConnected();
+                this._logger.info(`Page-load PC setup: strategy connected after ${Date.now() - whenConnectedStartedAt}ms`).sendInternalLogToServer();
                 if (this._closed || this._sharedMediaSession) {
-                    this._logger.info("Skipping page-load PC setup (closed or SharedMediaSession exists)").sendInternalLogToServer();
+                    this._logger.info("Skipping page-load PC setup (closed or SharedMediaSession appeared during strategy wait)").sendInternalLogToServer();
                     return;
                 }
-                this._logger.info("Strategy is connected, proceeding with page-load persistent connection setup").sendInternalLogToServer();
                 const pc = yield this._getIdleOrCreatePeerConnection();
                 if (this._closed || this._sharedMediaSession) {
                     this._logger.info("Abandoning page-load PC (closed or SharedMediaSession appeared during ICE fetch)").sendInternalLogToServer();
@@ -11374,6 +12541,7 @@ class RtcPeerConnectionManagerV2 {
                 // iceServers for session reporting, so pass empty.
                 this._initializeSharedMediaSession({ contactToken: null, iceServers: [] });
                 this._sharedMediaSession.connect(this._pc);
+                this._logger.info("Page-load persistent connection setup complete").sendInternalLogToServer();
             }
             catch (error) {
                 this._logger.error("Failed to setup page-load persistent connection").withException(error).sendInternalLogToServer();
@@ -11945,432 +13113,576 @@ class RtcPeerConnectionManagerV2 {
 }
 exports.default = RtcPeerConnectionManagerV2;
 
-},{"./call_session":26,"./config/constants":27,"./credential_resolver":29,"./exceptions":30,"./rtc_const":32,"./shared_media_session":40,"./signaling_channel_manager":44,"./standby_peer_connection_manager":45,"./strategies/CCPInitiationStrategyInterface":47,"./strategies/StandardStrategy":52,"./utils":54,"uuid/v4":13}],36:[function(require,module,exports){
+},{"./call_session":42,"./config/constants":43,"./credential_resolver":45,"./exceptions":46,"./rtc_const":48,"./shared_media_session":56,"./signaling_channel_manager":60,"./standby_peer_connection_manager":61,"./strategies/CCPInitiationStrategyInterface":63,"./strategies/StandardStrategy":68,"./utils":70,"uuid":9}],52:[function(require,module,exports){
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.FailedState = exports.DisconnectedState = exports.CleanUpState = exports.TalkingState = exports.ConnectContactState = exports.AcceptState = exports.InviteAnswerState = exports.ConnectSignalingAndIceCollectionState = exports.SetLocalSessionDescriptionState = exports.CreateOfferState = exports.GrabLocalMediaState = exports.RTCSessionState = void 0;
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-const utils_1 = require("./utils");
-const session_report_1 = require("./session_report");
-const rtc_const_1 = require("./rtc_const");
-const exceptions_1 = require("./exceptions");
-const signaling_1 = require("./signaling");
-const uuid_1 = require("uuid");
-const rtp_stats_1 = require("./rtp-stats");
-const sdp_1 = require("sdp");
-const CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-const rtc_session_talking_substates_1 = require("./rtc_session_talking_substates");
-class RTCSessionState {
-    /**
-     *
-     * @param {RtcSession} rtcSession
-     */
-    constructor(rtcSession) {
-        this._rtcSession = rtcSession;
+var utils_1 = require("./utils");
+var session_report_1 = require("./session_report");
+var rtc_const_1 = require("./rtc_const");
+var exceptions_1 = require("./exceptions");
+var signaling_1 = require("./signaling");
+var uuid_1 = require("uuid");
+var rtp_stats_1 = require("./rtp-stats");
+var sdp_1 = require("sdp");
+var CCPInitiationStrategyInterface_1 = require("./strategies/CCPInitiationStrategyInterface");
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var rtc_session_talking_substates_1 = require("./rtc_session_talking_substates");
+var RTCSessionState = /*#__PURE__*/function () {
+  /**
+   *
+   * @param {RtcSession} rtcSession
+   */
+  function RTCSessionState(rtcSession) {
+    _classCallCheck(this, RTCSessionState);
+    this._rtcSession = rtcSession;
+  }
+  return _createClass(RTCSessionState, [{
+    key: "onEnter",
+    value: function onEnter() {}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "_isCurrentState",
+    value: function _isCurrentState() {
+      return this._rtcSession._state === this;
     }
-    onEnter() {
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      if (this._isCurrentState()) {
+        this._rtcSession.transit(nextState);
+      }
     }
-    onExit() {
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    _isCurrentState() {
-        return this._rtcSession._state === this;
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.transit(new FailedState(this._rtcSession));
     }
-    transit(nextState) {
-        if (this._isCurrentState()) {
-            this._rtcSession.transit(nextState);
-        }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      //ignore candidate by default, ConnectSignalingAndIceCollectionState will override to collect candidates, but collecting process could last much longer than ConnectSignalingAndIceCollectionState
+      //we don't want to spam the console log
     }
-    get logger() {
-        return this._rtcSession._logger;
+  }, {
+    key: "onRemoteHungup",
+    value: function onRemoteHungup() {
+      throw new exceptions_1.UnsupportedOperation('onRemoteHungup not implemented by ' + this.name);
     }
-    hangup() {
-        this.transit(new FailedState(this._rtcSession));
+  }, {
+    key: "name",
+    get: function get() {
+      return "RTCSessionState";
     }
-    onIceCandidate(evt) {
-        //ignore candidate by default, ConnectSignalingAndIceCollectionState will override to collect candidates, but collecting process could last much longer than ConnectSignalingAndIceCollectionState
-        //we don't want to spam the console log
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      throw new exceptions_1.UnsupportedOperation('onSignalingConnected not implemented by ' + this.name);
     }
-    onRemoteHungup() {
-        throw new exceptions_1.UnsupportedOperation('onRemoteHungup not implemented by ' + this.name);
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      throw new exceptions_1.UnsupportedOperation('onSignalingHandshaked not implemented by ' + this.name);
     }
-    get name() {
-        return "RTCSessionState";
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      throw new exceptions_1.UnsupportedOperation('onSignalingFailed not implemented by ' + this.name);
     }
-    onSignalingConnected() {
-        throw new exceptions_1.UnsupportedOperation('onSignalingConnected not implemented by ' + this.name);
-    }
-    onSignalingHandshaked() {
-        throw new exceptions_1.UnsupportedOperation('onSignalingHandshaked not implemented by ' + this.name);
-    }
-    onSignalingFailed(e) {
-        throw new exceptions_1.UnsupportedOperation('onSignalingFailed not implemented by ' + this.name);
-    }
-    onIceStateChange(evt) {
-    }
-}
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {}
+  }]);
+}();
 exports.RTCSessionState = RTCSessionState;
-class GrabLocalMediaState extends RTCSessionState {
-    onEnter() {
-        var self = this;
-        var startTime = Date.now();
-        if (self._rtcSession._isUserProvidedStream) {
-            self.transit(new CreateOfferState(self._rtcSession));
-        }
-        else {
-            var gumTimeoutPromise = new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    reject(new exceptions_1.GumTimeout('Local media has not been initialized yet.'));
-                }, self._rtcSession._gumTimeoutMillis);
-            });
-            const constraints = self._rtcSession._buildMediaConstraints();
-            var sessionGumPromise = self._gUM(constraints);
-            Promise.race([sessionGumPromise, gumTimeoutPromise])
-                .then(stream => {
-                self._rtcSession._sessionReport.gumTimeMillis = Date.now() - startTime;
-                self._rtcSession._onGumSuccess(self._rtcSession);
-                self._rtcSession._localStream = stream;
-                if (self._rtcSession._pcm) {
-                    self._rtcSession._pcm._mediaStream = stream;
-                }
-                self._rtcSession._sessionReport.gumOtherFailure = false;
-                self._rtcSession._sessionReport.gumTimeoutFailure = false;
-                self.transit(new CreateOfferState(self._rtcSession));
-            }).catch(e => {
-                self._rtcSession._sessionReport.gumTimeMillis = Date.now() - startTime;
-                var errorReason;
-                if (e instanceof exceptions_1.GumTimeout) {
-                    errorReason = rtc_const_1.RTC_ERRORS.GUM_TIMEOUT_FAILURE;
-                    self._rtcSession._sessionReport.gumTimeoutFailure = true;
-                    self._rtcSession._sessionReport.gumOtherFailure = false;
-                }
-                else {
-                    errorReason = rtc_const_1.RTC_ERRORS.GUM_OTHER_FAILURE;
-                    self._rtcSession._sessionReport.gumOtherFailure = true;
-                    self._rtcSession._sessionReport.gumTimeoutFailure = false;
-                }
-                const errorLog = self.logger.error('Local media initialization failed', e);
-                if (errorLog && errorLog.sendInternalLogToServer) {
-                    errorLog.withObject({ constraints }).sendInternalLogToServer();
-                }
-                self._rtcSession._onGumError(self._rtcSession);
-                self.transit(new FailedState(self._rtcSession, errorReason));
-            });
-        }
+var GrabLocalMediaState = /*#__PURE__*/function (_RTCSessionState) {
+  function GrabLocalMediaState() {
+    _classCallCheck(this, GrabLocalMediaState);
+    return _callSuper(this, GrabLocalMediaState, arguments);
+  }
+  _inherits(GrabLocalMediaState, _RTCSessionState);
+  return _createClass(GrabLocalMediaState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      var startTime = Date.now();
+      if (self._rtcSession._isUserProvidedStream) {
+        self.transit(new CreateOfferState(self._rtcSession));
+      } else {
+        var gumTimeoutPromise = new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            reject(new exceptions_1.GumTimeout('Local media has not been initialized yet.'));
+          }, self._rtcSession._gumTimeoutMillis);
+        });
+        var constraints = self._rtcSession._buildMediaConstraints();
+        var sessionGumPromise = self._gUM(constraints);
+        Promise.race([sessionGumPromise, gumTimeoutPromise]).then(function (stream) {
+          self._rtcSession._sessionReport.gumTimeMillis = Date.now() - startTime;
+          self._rtcSession._onGumSuccess(self._rtcSession);
+          self._rtcSession._localStream = stream;
+          if (self._rtcSession._pcm) {
+            self._rtcSession._pcm._mediaStream = stream;
+          }
+          self._rtcSession._sessionReport.gumOtherFailure = false;
+          self._rtcSession._sessionReport.gumTimeoutFailure = false;
+          self.transit(new CreateOfferState(self._rtcSession));
+        })["catch"](function (e) {
+          self._rtcSession._sessionReport.gumTimeMillis = Date.now() - startTime;
+          var errorReason;
+          if (e instanceof exceptions_1.GumTimeout) {
+            errorReason = rtc_const_1.RTC_ERRORS.GUM_TIMEOUT_FAILURE;
+            self._rtcSession._sessionReport.gumTimeoutFailure = true;
+            self._rtcSession._sessionReport.gumOtherFailure = false;
+          } else {
+            errorReason = rtc_const_1.RTC_ERRORS.GUM_OTHER_FAILURE;
+            self._rtcSession._sessionReport.gumOtherFailure = true;
+            self._rtcSession._sessionReport.gumTimeoutFailure = false;
+          }
+          var errorLog = self.logger.error('Local media initialization failed', e);
+          if (errorLog && errorLog.sendInternalLogToServer) {
+            errorLog.withObject({
+              constraints: constraints
+            }).sendInternalLogToServer();
+          }
+          self._rtcSession._onGumError(self._rtcSession);
+          self.transit(new FailedState(self._rtcSession, errorReason));
+        });
+      }
     }
-    get name() {
-        return "GrabLocalMediaState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "GrabLocalMediaState";
     }
-    _gUM(constraints) {
-        return this._rtcSession._strategy._gUM(constraints);
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return this._rtcSession._strategy._gUM(constraints);
     }
-}
+  }]);
+}(RTCSessionState);
 exports.GrabLocalMediaState = GrabLocalMediaState;
-class CreateOfferState extends RTCSessionState {
-    onEnter() {
-        var self = this;
-        var stream = self._rtcSession._localStream;
-        self._rtcSession._strategy.addStream(self._rtcSession._pc, stream);
-        self._rtcSession._onLocalStreamAdded(self._rtcSession, stream);
-        self._rtcSession._pc.createOffer().then(rtcSessionDescription => {
-            self._rtcSession._localSessionDescription = rtcSessionDescription;
-            self._rtcSession._sessionReport.createOfferFailure = false;
-            self.transit(new SetLocalSessionDescriptionState(self._rtcSession));
-        }).catch(e => {
-            self.logger.error('CreateOffer failed', e);
-            self._rtcSession._sessionReport.createOfferFailure = true;
-            self.transit(new FailedState(self._rtcSession, rtc_const_1.RTC_ERRORS.CREATE_OFFER_FAILURE));
-        });
+var CreateOfferState = /*#__PURE__*/function (_RTCSessionState2) {
+  function CreateOfferState() {
+    _classCallCheck(this, CreateOfferState);
+    return _callSuper(this, CreateOfferState, arguments);
+  }
+  _inherits(CreateOfferState, _RTCSessionState2);
+  return _createClass(CreateOfferState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      var stream = self._rtcSession._localStream;
+      self._rtcSession._strategy.addStream(self._rtcSession._pc, stream);
+      self._rtcSession._onLocalStreamAdded(self._rtcSession, stream);
+      self._rtcSession._pc.createOffer().then(function (rtcSessionDescription) {
+        self._rtcSession._localSessionDescription = rtcSessionDescription;
+        self._rtcSession._sessionReport.createOfferFailure = false;
+        self.transit(new SetLocalSessionDescriptionState(self._rtcSession));
+      })["catch"](function (e) {
+        self.logger.error('CreateOffer failed', e);
+        self._rtcSession._sessionReport.createOfferFailure = true;
+        self.transit(new FailedState(self._rtcSession, rtc_const_1.RTC_ERRORS.CREATE_OFFER_FAILURE));
+      });
     }
-    get name() {
-        return "CreateOfferState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "CreateOfferState";
     }
-}
+  }]);
+}(RTCSessionState);
 exports.CreateOfferState = CreateOfferState;
-class SetLocalSessionDescriptionState extends RTCSessionState {
-    onEnter() {
-        var self = this;
-        // fix/modify SDP as needed here, before setLocalDescription
-        var localDescription = self._rtcSession._localSessionDescription;
-        var sdpOptions = new utils_1.SdpOptions();
-        // Set audio codec.
-        if (self._rtcSession._forceAudioCodec) {
-            sdpOptions.forceCodec['audio'] = self._rtcSession._forceAudioCodec;
-        }
-        // Set video codec.
-        if (self._rtcSession._forceVideoCodec) {
-            sdpOptions.forceCodec['video'] = self._rtcSession._forceVideoCodec;
-        }
-        sdpOptions.enableOpusDtx = self._rtcSession._enableOpusDtx;
-        var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
-        localDescription.sdp = transformedSdp.sdp;
-        localDescription.sdp += 'a=ptime:20\r\n';
-        localDescription.sdp += 'a=maxptime:20\r\n';
-        localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
-        self.logger.info('LocalSD', self._rtcSession._localSessionDescription);
-        self._rtcSession._pc.setLocalDescription(self._rtcSession._localSessionDescription).then(() => {
-            var initializationTime = Date.now() - self._rtcSession._connectTimeStamp;
-            self._rtcSession._sessionReport.initializationTimeMillis = initializationTime;
-            self._rtcSession._onSessionInitialized(self._rtcSession, initializationTime);
-            self._rtcSession._sessionReport.setLocalDescriptionFailure = false;
-            self.transit(new ConnectSignalingAndIceCollectionState(self._rtcSession, transformedSdp.mLines));
-        }).catch(e => {
-            self.logger.error('SetLocalDescription failed', e);
-            self._rtcSession._sessionReport.setLocalDescriptionFailure = true;
-            self.transit(new FailedState(self._rtcSession, rtc_const_1.RTC_ERRORS.SET_LOCAL_DESCRIPTION_FAILURE));
-        });
+var SetLocalSessionDescriptionState = /*#__PURE__*/function (_RTCSessionState3) {
+  function SetLocalSessionDescriptionState() {
+    _classCallCheck(this, SetLocalSessionDescriptionState);
+    return _callSuper(this, SetLocalSessionDescriptionState, arguments);
+  }
+  _inherits(SetLocalSessionDescriptionState, _RTCSessionState3);
+  return _createClass(SetLocalSessionDescriptionState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      // fix/modify SDP as needed here, before setLocalDescription
+      var localDescription = self._rtcSession._localSessionDescription;
+      var sdpOptions = new utils_1.SdpOptions();
+      // Set audio codec.
+      if (self._rtcSession._forceAudioCodec) {
+        sdpOptions.forceCodec['audio'] = self._rtcSession._forceAudioCodec;
+      }
+      // Set video codec.
+      if (self._rtcSession._forceVideoCodec) {
+        sdpOptions.forceCodec['video'] = self._rtcSession._forceVideoCodec;
+      }
+      sdpOptions.enableOpusDtx = self._rtcSession._enableOpusDtx;
+      var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
+      localDescription.sdp = transformedSdp.sdp;
+      localDescription.sdp += 'a=ptime:20\r\n';
+      localDescription.sdp += 'a=maxptime:20\r\n';
+      localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
+      self.logger.info('LocalSD', self._rtcSession._localSessionDescription);
+      self._rtcSession._pc.setLocalDescription(self._rtcSession._localSessionDescription).then(function () {
+        var initializationTime = Date.now() - self._rtcSession._connectTimeStamp;
+        self._rtcSession._sessionReport.initializationTimeMillis = initializationTime;
+        self._rtcSession._onSessionInitialized(self._rtcSession, initializationTime);
+        self._rtcSession._sessionReport.setLocalDescriptionFailure = false;
+        self.transit(new ConnectSignalingAndIceCollectionState(self._rtcSession, transformedSdp.mLines));
+      })["catch"](function (e) {
+        self.logger.error('SetLocalDescription failed', e);
+        self._rtcSession._sessionReport.setLocalDescriptionFailure = true;
+        self.transit(new FailedState(self._rtcSession, rtc_const_1.RTC_ERRORS.SET_LOCAL_DESCRIPTION_FAILURE));
+      });
     }
-    get name() {
-        return "SetLocalSessionDescriptionState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "SetLocalSessionDescriptionState";
     }
-}
+  }]);
+}(RTCSessionState);
 exports.SetLocalSessionDescriptionState = SetLocalSessionDescriptionState;
 /**
  * Kick off signaling connection. Wait until signaling connects and ICE collection (which already started in previous state) completes.
  * ICE collection times out after user specified amount of time (default to DEFAULT_ICE_TIMEOUT_MS) in case user has complex network environment that blackholes STUN/TURN requests. In this case at least one candidate is required to move forward.
  * ICE collection could also wrap up before timeout if it's determined that RTP candidates from same TURN server have been collected for all m lines.
  */
-class ConnectSignalingAndIceCollectionState extends RTCSessionState {
-    /**
-     * Create ConnectSignalingAndIceCollectionState object.
-     * @param {RtcSession} rtcSession
-     * @param {number} mLines Number of m lines in SDP
-     */
-    constructor(rtcSession, mLines) {
-        super(rtcSession);
-        this._iceCandidates = [];
-        this._iceCandidateFoundationsMap = {};
-        this._mLines = mLines;
-    }
-    onEnter() {
-        var self = this;
-        self._startTime = Date.now();
-        setTimeout(() => {
-            if (self._isCurrentState() && !self._iceCompleted) {
-                self.logger.warn('ICE collection timed out');
-                self._reportIceCompleted(true);
-            }
-        }, self._rtcSession._iceTimeoutMillis);
-        //if peer connection manager or signalingChannel doesn't exist, create a new signaling channel
-        if (!self._rtcSession._pcm || !self._rtcSession._pcm._signalingChannel) {
-            self._rtcSession._createSignalingChannel().connect();
+var ConnectSignalingAndIceCollectionState = /*#__PURE__*/function (_RTCSessionState4) {
+  /**
+   * Create ConnectSignalingAndIceCollectionState object.
+   * @param {RtcSession} rtcSession
+   * @param {number} mLines Number of m lines in SDP
+   */
+  function ConnectSignalingAndIceCollectionState(rtcSession, mLines) {
+    var _this;
+    _classCallCheck(this, ConnectSignalingAndIceCollectionState);
+    _this = _callSuper(this, ConnectSignalingAndIceCollectionState, [rtcSession]);
+    _this._iceCandidates = [];
+    _this._iceCandidateFoundationsMap = {};
+    _this._mLines = mLines;
+    return _this;
+  }
+  _inherits(ConnectSignalingAndIceCollectionState, _RTCSessionState4);
+  return _createClass(ConnectSignalingAndIceCollectionState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      self._startTime = Date.now();
+      setTimeout(function () {
+        if (self._isCurrentState() && !self._iceCompleted) {
+          self.logger.warn('ICE collection timed out');
+          self._reportIceCompleted(true);
         }
-        else { // if signalingChannel exists, reset the contact id, connectionid and contact token
-            self._rtcSession._bindSignalingChannel(); // binding the existing signaling channel
-            self._rtcSession._pcm._signalingChannel._wss._connnectionId = self._rtcSession._connectionId;
-            self._rtcSession._pcm._signalingChannel._contactToken = self._rtcSession._contactToken;
-            self._rtcSession._pcm._signalingChannel._callId = self._rtcSession._callId;
-        }
+      }, self._rtcSession._iceTimeoutMillis);
+      //if peer connection manager or signalingChannel doesn't exist, create a new signaling channel
+      if (!self._rtcSession._pcm || !self._rtcSession._pcm._signalingChannel) {
+        self._rtcSession._createSignalingChannel().connect();
+      } else {
+        // if signalingChannel exists, reset the contact id, connectionid and contact token
+        self._rtcSession._bindSignalingChannel(); // binding the existing signaling channel
+        self._rtcSession._pcm._signalingChannel._wss._connnectionId = self._rtcSession._connectionId;
+        self._rtcSession._pcm._signalingChannel._contactToken = self._rtcSession._contactToken;
+        self._rtcSession._pcm._signalingChannel._callId = self._rtcSession._callId;
+      }
     }
-    onSignalingConnected() {
-        this._rtcSession._signallingConnectTimestamp = Date.now();
-        this._rtcSession._sessionReport.signallingConnectTimeMillis = this._rtcSession._signallingConnectTimestamp - this._startTime;
-        this._signalingConnected = true;
-        this._rtcSession._onSignalingConnected(this._rtcSession);
-        this._rtcSession._sessionReport.signallingConnectionFailure = false;
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      this._rtcSession._signallingConnectTimestamp = Date.now();
+      this._rtcSession._sessionReport.signallingConnectTimeMillis = this._rtcSession._signallingConnectTimestamp - this._startTime;
+      this._signalingConnected = true;
+      this._rtcSession._onSignalingConnected(this._rtcSession);
+      this._rtcSession._sessionReport.signallingConnectionFailure = false;
+      this._checkAndTransit();
+    }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      this._rtcSession._sessionReport.signallingConnectTimeMillis = Date.now() - this._startTime;
+      this.logger.error('Failed connecting to signaling server', e);
+      this._rtcSession._sessionReport.signallingConnectionFailure = true;
+      this.transit(new FailedState(this._rtcSession, rtc_const_1.RTC_ERRORS.SIGNALLING_CONNECTION_FAILURE));
+    }
+  }, {
+    key: "_createLocalCandidate",
+    value: function _createLocalCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
+    }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      var candidate = evt.candidate;
+      this.logger.log('onicecandidate ' + JSON.stringify(candidate));
+      if (candidate) {
+        if (candidate.candidate) {
+          this._iceCandidates.push(this._createLocalCandidate(candidate));
+          if (!this._iceCompleted) {
+            this._checkCandidatesSufficient(candidate);
+          }
+        }
+      } else {
+        this._reportIceCompleted(false);
+      }
+    }
+  }, {
+    key: "_checkCandidatesSufficient",
+    value: function _checkCandidatesSufficient(candidate) {
+      //check if we collected sufficient candidates from single media server to start the call
+      var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
+      if (candidateObj.component != 1) {
+        return;
+      }
+      var candidateFoundation = candidateObj.foundation;
+      var candidateMLineIndex = candidate.sdpMLineIndex;
+      if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
+        var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
+        if (!mIndexList.includes(candidateMLineIndex)) {
+          mIndexList.push(candidateMLineIndex);
+        }
+        this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
+        if (this._mLines == mIndexList.length) {
+          this._reportIceCompleted(false);
+        }
+      }
+    }
+  }, {
+    key: "_reportIceCompleted",
+    value: function _reportIceCompleted(isTimeout) {
+      this._rtcSession._sessionReport.iceCollectionTimeMillis = Date.now() - this._startTime;
+      this._iceCompleted = true;
+      this._rtcSession._onIceCollectionComplete(this._rtcSession, isTimeout, this._iceCandidates.length);
+      if (this._iceCandidates.length > 0) {
+        this._rtcSession._sessionReport.iceCollectionFailure = false;
         this._checkAndTransit();
+      } else {
+        this.logger.error('No ICE candidate');
+        this._rtcSession._sessionReport.iceCollectionFailure = true;
+        this.transit(new FailedState(this._rtcSession, rtc_const_1.RTC_ERRORS.ICE_COLLECTION_TIMEOUT));
+      }
     }
-    onSignalingFailed(e) {
-        this._rtcSession._sessionReport.signallingConnectTimeMillis = Date.now() - this._startTime;
-        this.logger.error('Failed connecting to signaling server', e);
-        this._rtcSession._sessionReport.signallingConnectionFailure = true;
-        this.transit(new FailedState(this._rtcSession, rtc_const_1.RTC_ERRORS.SIGNALLING_CONNECTION_FAILURE));
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._iceCompleted && this._signalingConnected) {
+        this.transit(new InviteAnswerState(this._rtcSession, this._iceCandidates));
+      } else if (!this._iceCompleted) {
+        this.logger.log('Pending ICE collection');
+      } else {
+        //implies _signalingConnected == false
+        this.logger.log('Pending signaling connection');
+      }
     }
-    _createLocalCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectSignalingAndIceCollectionState";
     }
-    onIceCandidate(evt) {
-        var candidate = evt.candidate;
-        this.logger.log('onicecandidate ' + JSON.stringify(candidate));
-        if (candidate) {
-            if (candidate.candidate) {
-                this._iceCandidates.push(this._createLocalCandidate(candidate));
-                if (!this._iceCompleted) {
-                    this._checkCandidatesSufficient(candidate);
-                }
-            }
-        }
-        else {
-            this._reportIceCompleted(false);
-        }
-    }
-    _checkCandidatesSufficient(candidate) {
-        //check if we collected sufficient candidates from single media server to start the call
-        var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
-        if (candidateObj.component != 1) {
-            return;
-        }
-        var candidateFoundation = candidateObj.foundation;
-        var candidateMLineIndex = candidate.sdpMLineIndex;
-        if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
-            var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
-            if (!mIndexList.includes(candidateMLineIndex)) {
-                mIndexList.push(candidateMLineIndex);
-            }
-            this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
-            if (this._mLines == mIndexList.length) {
-                this._reportIceCompleted(false);
-            }
-        }
-    }
-    _reportIceCompleted(isTimeout) {
-        this._rtcSession._sessionReport.iceCollectionTimeMillis = Date.now() - this._startTime;
-        this._iceCompleted = true;
-        this._rtcSession._onIceCollectionComplete(this._rtcSession, isTimeout, this._iceCandidates.length);
-        if (this._iceCandidates.length > 0) {
-            this._rtcSession._sessionReport.iceCollectionFailure = false;
-            this._checkAndTransit();
-        }
-        else {
-            this.logger.error('No ICE candidate');
-            this._rtcSession._sessionReport.iceCollectionFailure = true;
-            this.transit(new FailedState(this._rtcSession, rtc_const_1.RTC_ERRORS.ICE_COLLECTION_TIMEOUT));
-        }
-    }
-    _checkAndTransit() {
-        if (this._iceCompleted && this._signalingConnected) {
-            this.transit(new InviteAnswerState(this._rtcSession, this._iceCandidates));
-        }
-        else if (!this._iceCompleted) {
-            this.logger.log('Pending ICE collection');
-        }
-        else { //implies _signalingConnected == false
-            this.logger.log('Pending signaling connection');
-        }
-    }
-    get name() {
-        return "ConnectSignalingAndIceCollectionState";
-    }
-}
+  }]);
+}(RTCSessionState);
 exports.ConnectSignalingAndIceCollectionState = ConnectSignalingAndIceCollectionState;
-class InviteAnswerState extends RTCSessionState {
-    constructor(rtcSession, iceCandidates) {
-        super(rtcSession);
-        this._iceCandidates = iceCandidates;
+var InviteAnswerState = /*#__PURE__*/function (_RTCSessionState5) {
+  function InviteAnswerState(rtcSession, iceCandidates) {
+    var _this2;
+    _classCallCheck(this, InviteAnswerState);
+    _this2 = _callSuper(this, InviteAnswerState, [rtcSession]);
+    _this2._iceCandidates = iceCandidates;
+    return _this2;
+  }
+  _inherits(InviteAnswerState, _RTCSessionState5);
+  return _createClass(InviteAnswerState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var rtcSession = this._rtcSession;
+      rtcSession._onSignalingStarted(rtcSession);
+      rtcSession._signalingChannel.invite(rtcSession._localSessionDescription.sdp, this._iceCandidates);
     }
-    onEnter() {
-        var rtcSession = this._rtcSession;
-        rtcSession._onSignalingStarted(rtcSession);
-        rtcSession._signalingChannel.invite(rtcSession._localSessionDescription.sdp, this._iceCandidates);
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+      this._rtcSession._sessionReport.userBusyFailure = false;
+      this._rtcSession._sessionReport.handshakingFailure = false;
+      // signaling answered, set the inactivityDuration, peerConnectionId and peerConnectionToken
+      if (this._rtcSession._pcm) {
+        this._rtcSession._pcm.inactivityDuration = inactivityDuration;
+        this._rtcSession._pcm.peerConnectionId = peerConnectionId;
+        this._rtcSession._pcm.peerConnectionToken = peerConnectionToken;
+      }
+      this.transit(new AcceptState(this._rtcSession, sdp, candidates));
     }
-    onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      var reason;
+      if (e.name == exceptions_1.BusyExceptionName) {
+        this.logger.error('User Busy, possibly multiple CCP windows open', e);
+        this._rtcSession._sessionReport.userBusyFailure = true;
+        this._rtcSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.USER_BUSY;
+      } else if (e.name == exceptions_1.CallNotFoundExceptionName) {
+        this.logger.error('Call not found. One of the participant probably hungup.', e);
+        reason = rtc_const_1.RTC_ERRORS.CALL_NOT_FOUND;
+        this._rtcSession._sessionReport.handshakingFailure = true;
+      } else {
+        this.logger.error('Failed handshaking with signaling server', e);
         this._rtcSession._sessionReport.userBusyFailure = false;
-        this._rtcSession._sessionReport.handshakingFailure = false;
-        // signaling answered, set the inactivityDuration, peerConnectionId and peerConnectionToken
-        if (this._rtcSession._pcm) {
-            this._rtcSession._pcm.inactivityDuration = inactivityDuration;
-            this._rtcSession._pcm.peerConnectionId = peerConnectionId;
-            this._rtcSession._pcm.peerConnectionToken = peerConnectionToken;
-        }
-        this.transit(new AcceptState(this._rtcSession, sdp, candidates));
+        this._rtcSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
+      }
+      this.transit(new FailedState(this._rtcSession, reason));
     }
-    onSignalingFailed(e) {
-        var reason;
-        if (e.name == exceptions_1.BusyExceptionName) {
-            this.logger.error('User Busy, possibly multiple CCP windows open', e);
-            this._rtcSession._sessionReport.userBusyFailure = true;
-            this._rtcSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.USER_BUSY;
-        }
-        else if (e.name == exceptions_1.CallNotFoundExceptionName) {
-            this.logger.error('Call not found. One of the participant probably hungup.', e);
-            reason = rtc_const_1.RTC_ERRORS.CALL_NOT_FOUND;
-            this._rtcSession._sessionReport.handshakingFailure = true;
-        }
-        else {
-            this.logger.error('Failed handshaking with signaling server', e);
-            this._rtcSession._sessionReport.userBusyFailure = false;
-            this._rtcSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
-        }
-        this.transit(new FailedState(this._rtcSession, reason));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      if (this._rtcSession._pcm) {
+        this.transit(new FailedState(this._rtcSession, "Agent clicks hangs up"));
+      }
     }
-    hangup() {
-        if (this._rtcSession._pcm) {
-            this.transit(new FailedState(this._rtcSession, "Agent clicks hangs up"));
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "InviteAnswerState";
     }
-    get name() {
-        return "InviteAnswerState";
-    }
-}
+  }]);
+}(RTCSessionState);
 exports.InviteAnswerState = InviteAnswerState;
-class AcceptState extends RTCSessionState {
-    constructor(rtcSession, sdp, candidates) {
-        super(rtcSession);
-        this._sdp = sdp;
-        this._candidates = candidates;
+var AcceptState = /*#__PURE__*/function (_RTCSessionState6) {
+  function AcceptState(rtcSession, sdp, candidates) {
+    var _this3;
+    _classCallCheck(this, AcceptState);
+    _this3 = _callSuper(this, AcceptState, [rtcSession]);
+    _this3._sdp = sdp;
+    _this3._candidates = candidates;
+    return _this3;
+  }
+  _inherits(AcceptState, _RTCSessionState6);
+  return _createClass(AcceptState, [{
+    key: "_createSessionDescription",
+    value: function _createSessionDescription(initDict) {
+      return new RTCSessionDescription(initDict);
     }
-    _createSessionDescription(initDict) {
-        return new RTCSessionDescription(initDict);
+  }, {
+    key: "_createRemoteCandidate",
+    value: function _createRemoteCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _createRemoteCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      var rtcSession = self._rtcSession;
+      if (!self._sdp) {
+        self.logger.error('Invalid remote SDP');
+        rtcSession._stopSession();
+        rtcSession._sessionReport.invalidRemoteSDPFailure = true;
+        self.transit(new FailedState(rtcSession, rtc_const_1.RTC_ERRORS.INVALID_REMOTE_SDP));
+        return;
+      } else if (!self._candidates || self._candidates.length < 1) {
+        self.logger.error('No remote ICE candidate');
+        rtcSession._stopSession();
+        rtcSession._sessionReport.noRemoteIceCandidateFailure = true;
+        self.transit(new FailedState(rtcSession, rtc_const_1.RTC_ERRORS.NO_REMOTE_ICE_CANDIDATE));
+        return;
+      }
+      rtcSession._sessionReport.invalidRemoteSDPFailure = false;
+      rtcSession._sessionReport.noRemoteIceCandidateFailure = false;
+      self._rtcSession._strategy.setRemoteDescription(self, rtcSession);
     }
-    onEnter() {
-        var self = this;
-        var rtcSession = self._rtcSession;
-        if (!self._sdp) {
-            self.logger.error('Invalid remote SDP');
-            rtcSession._stopSession();
-            rtcSession._sessionReport.invalidRemoteSDPFailure = true;
-            self.transit(new FailedState(rtcSession, rtc_const_1.RTC_ERRORS.INVALID_REMOTE_SDP));
-            return;
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      this._rtcSession._sessionReport.handshakingTimeMillis = Date.now() - this._rtcSession._signallingConnectTimestamp;
+      this._signalingHandshaked = true;
+      this._checkAndTransit();
+    }
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._signalingHandshaked && this._remoteDescriptionSet) {
+        // when peerConnectionManager initialized and contactToken doesn't exist, rtcSession will move to DisconnectedState
+        if (this._rtcSession._pcm && !this._rtcSession._contactToken) {
+          this._rtcSession._pcm._rtcSession = null;
+          this.transit(new DisconnectedState(this._rtcSession));
+        } else {
+          this.transit(new TalkingState(this._rtcSession));
         }
-        else if (!self._candidates || self._candidates.length < 1) {
-            self.logger.error('No remote ICE candidate');
-            rtcSession._stopSession();
-            rtcSession._sessionReport.noRemoteIceCandidateFailure = true;
-            self.transit(new FailedState(rtcSession, rtc_const_1.RTC_ERRORS.NO_REMOTE_ICE_CANDIDATE));
-            return;
-        }
-        rtcSession._sessionReport.invalidRemoteSDPFailure = false;
-        rtcSession._sessionReport.noRemoteIceCandidateFailure = false;
-        self._rtcSession._strategy.setRemoteDescription(self, rtcSession);
+      } else if (!this._signalingHandshaked) {
+        this.logger.log('Pending handshaking');
+      } else {
+        //implies _remoteDescriptionSet == false
+        this.logger.log('Pending setting remote description');
+      }
     }
-    onSignalingHandshaked() {
-        this._rtcSession._sessionReport.handshakingTimeMillis = Date.now() - this._rtcSession._signallingConnectTimestamp;
-        this._signalingHandshaked = true;
-        this._checkAndTransit();
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      // do nothing
     }
-    _checkAndTransit() {
-        if (this._signalingHandshaked && this._remoteDescriptionSet) {
-            // when peerConnectionManager initialized and contactToken doesn't exist, rtcSession will move to DisconnectedState
-            if (this._rtcSession._pcm && !this._rtcSession._contactToken) {
-                this._rtcSession._pcm._rtcSession = null;
-                this.transit(new DisconnectedState(this._rtcSession));
-            }
-            else {
-                this.transit(new TalkingState(this._rtcSession));
-            }
-        }
-        else if (!this._signalingHandshaked) {
-            this.logger.log('Pending handshaking');
-        }
-        else { //implies _remoteDescriptionSet == false
-            this.logger.log('Pending setting remote description');
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "AcceptState";
     }
-    onPeerConnectionStateChange() {
-        // do nothing
-    }
-    get name() {
-        return "AcceptState";
-    }
-}
+  }]);
+}(RTCSessionState);
 exports.AcceptState = AcceptState;
 /**
  * ConnectContactState
@@ -12378,406 +13690,514 @@ exports.AcceptState = AcceptState;
  * ConnectContact request to AmazonConnect and connects the call.
  *
  */
-class ConnectContactState extends RTCSessionState {
-    constructor(rtcSession) {
-        super(rtcSession);
-    }
-    onEnter() {
-        var rtcSession = this._rtcSession;
-        var logger = this.logger;
-        var self = this;
-        rtcSession._sessionReport.isExistingPersistentPeerConnection = true;
-        rtcSession._pcm._signalingChannel.connectContact();
-        try {
-            rtcSession._pcm._mediaStream = self._createMediaStream(rtcSession._pc.getSenders()[0].track);
-            rtcSession._onLocalStreamAdded(rtcSession, rtcSession._pcm._mediaStream);
-        }
-        catch (error) {
-            logger.error("[connectContact] Failed to get audio track from existing peer connection").withException(error);
-        }
-        this.transit(new TalkingState(this._rtcSession));
-        // if the rtcSession is using UserProvidedStream, we do not override it
-        if (rtcSession._isUserProvidedStream) {
-            logger.log("Not resetting media stream as user provided stream is being used");
-        }
-        else {
-            var sessionGumPromise = this._gUM(rtcSession._buildMediaConstraints());
-            sessionGumPromise.then(function (newMicrophoneStream) {
-                try {
-                    var newMicrophoneTrack = newMicrophoneStream.getAudioTracks()[0];
-                    // Replace the audio track in the RtcPeerConnection
-                    if (rtcSession._isUserProvidedStream) {
-                        logger.log("Not resetting media stream as user provided stream was set after rtcJs GUM");
-                    }
-                    else {
-                        rtcSession._pc.getSenders()[0].replaceTrack(newMicrophoneTrack).then(function () {
-                            rtcSession._pcm._mediaStream = self._createMediaStream(rtcSession._pc.getSenders()[0].track);
-                            rtcSession._onLocalStreamAdded(rtcSession, rtcSession._pcm._mediaStream);
-                            logger.log("[connectContact] Audio device set successfully and _onLocalStreamAdded triggered");
-                            logger.info(`[connectContact] Audio track settings: ${JSON.stringify(newMicrophoneTrack.getSettings())}`).sendInternalLogToServer();
-                        });
-                    }
-                }
-                catch (e) {
-                    logger.error("[connectContact] Failed to update audio track for the peer connection").withException(e);
-                    return;
-                }
-            }).catch(function (e) {
-                logger.error("[connectContact] Failed to get microphone stream from getUserMedia").withException(e);
-                return;
-            });
-        }
-    }
-    _gUM(constraints) {
-        return this._rtcSession._strategy._gUM(constraints);
-    }
-    _createMediaStream(track) {
-        return this._rtcSession._strategy._createMediaStream(track);
-    }
-    onSignalingHandshaked() {
-        // do nothing
-    }
-    get name() {
-        return "ConnectContactState";
-    }
-}
-exports.ConnectContactState = ConnectContactState;
-class TalkingState extends RTCSessionState {
-    onEnter() {
-        this._startTime = Date.now();
-        this._rtcSession._sessionReport.preTalkingTimeMillis = this._startTime - this._rtcSession._connectTimeStamp;
-        this._rtcSession._sessionReport.isMediaClusterPath = this._rtcSession._signalingChannel._isMediaClusterPath;
-        this._rtcSession._sessionReport.isPersistentPeerConnection = !!(this._rtcSession._pcm && this._rtcSession._pcm.isPersistentConnectionEnabled());
-        if (this._rtcSession._pcm) {
-            // For persistnet connection, resume the local audio which was paused when the previous RtcSession was destroyed
-            this._rtcSession.resumeLocalAudio();
-        }
-        this._rtcSession._onSessionConnected(this._rtcSession);
-        // Calculate time taken to receive the first RTP packet
-        let interval;
-        let timeout;
-        const getSynchronizationSourcesAndProcess = () => __awaiter(this, void 0, void 0, function* () {
-            if (this._rtcSession && this._rtcSession._pc && this._rtcSession._pc.getReceivers().length !== 0) {
-                const rtcRtpReceiver = this._rtcSession._pc.getReceivers()[0];
-                if (rtcRtpReceiver instanceof RTCRtpReceiver) {
-                    const synchronizationSources = rtcRtpReceiver.getSynchronizationSources();
-                    synchronizationSources.forEach((source) => {
-                        const firstRTPTimeMillis = source.timestamp - this._rtcSession._connectTimeStamp;
-                        if (firstRTPTimeMillis > 0) {
-                            this._rtcSession._sessionReport.firstRTPTimeMillis = firstRTPTimeMillis;
-                        }
-                        // We break out and stop checking for RTP packets as soon as we receive the first packet.
-                        clearInterval(interval);
-                        clearTimeout(timeout);
-                    });
-                }
+var ConnectContactState = /*#__PURE__*/function (_RTCSessionState7) {
+  function ConnectContactState(rtcSession) {
+    _classCallCheck(this, ConnectContactState);
+    return _callSuper(this, ConnectContactState, [rtcSession]);
+  }
+  _inherits(ConnectContactState, _RTCSessionState7);
+  return _createClass(ConnectContactState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var rtcSession = this._rtcSession;
+      var logger = this.logger;
+      var self = this;
+      rtcSession._sessionReport.isExistingPersistentPeerConnection = true;
+      rtcSession._pcm._signalingChannel.connectContact();
+      try {
+        rtcSession._pcm._mediaStream = self._createMediaStream(rtcSession._pc.getSenders()[0].track);
+        rtcSession._onLocalStreamAdded(rtcSession, rtcSession._pcm._mediaStream);
+      } catch (error) {
+        logger.error("[connectContact] Failed to get audio track from existing peer connection").withException(error);
+      }
+      this.transit(new TalkingState(this._rtcSession));
+      // if the rtcSession is using UserProvidedStream, we do not override it
+      if (rtcSession._isUserProvidedStream) {
+        logger.log("Not resetting media stream as user provided stream is being used");
+      } else {
+        var sessionGumPromise = this._gUM(rtcSession._buildMediaConstraints());
+        sessionGumPromise.then(function (newMicrophoneStream) {
+          try {
+            var newMicrophoneTrack = newMicrophoneStream.getAudioTracks()[0];
+            // Replace the audio track in the RtcPeerConnection
+            if (rtcSession._isUserProvidedStream) {
+              logger.log("Not resetting media stream as user provided stream was set after rtcJs GUM");
+            } else {
+              rtcSession._pc.getSenders()[0].replaceTrack(newMicrophoneTrack).then(function () {
+                rtcSession._pcm._mediaStream = self._createMediaStream(rtcSession._pc.getSenders()[0].track);
+                rtcSession._onLocalStreamAdded(rtcSession, rtcSession._pcm._mediaStream);
+                logger.log("[connectContact] Audio device set successfully and _onLocalStreamAdded triggered");
+                logger.info("[connectContact] Audio track settings: ".concat(JSON.stringify(newMicrophoneTrack.getSettings()))).sendInternalLogToServer();
+              });
             }
+          } catch (e) {
+            logger.error("[connectContact] Failed to update audio track for the peer connection").withException(e);
+            return;
+          }
+        })["catch"](function (e) {
+          logger.error("[connectContact] Failed to get microphone stream from getUserMedia").withException(e);
+          return;
         });
-        // Set up timeout to stop the interval after 1 seconds
-        timeout = setTimeout(() => {
-            clearInterval(interval);
-            console.log('Timeout reached, stopping the interval');
-        }, 1000);
-        interval = setInterval(getSynchronizationSourcesAndProcess, 20);
-        this.setSubState(new rtc_session_talking_substates_1.ConnectedSubstate(this._rtcSession));
+      }
     }
-    onSignalingReconnected() {
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return this._rtcSession._strategy._gUM(constraints);
+    }
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream(track) {
+      return this._rtcSession._strategy._createMediaStream(track);
+    }
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      // do nothing
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectContactState";
+    }
+  }]);
+}(RTCSessionState);
+exports.ConnectContactState = ConnectContactState;
+var TalkingState = /*#__PURE__*/function (_RTCSessionState8) {
+  function TalkingState() {
+    _classCallCheck(this, TalkingState);
+    return _callSuper(this, TalkingState, arguments);
+  }
+  _inherits(TalkingState, _RTCSessionState8);
+  return _createClass(TalkingState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var _this4 = this;
+      this._startTime = Date.now();
+      this._rtcSession._sessionReport.preTalkingTimeMillis = this._startTime - this._rtcSession._connectTimeStamp;
+      this._rtcSession._sessionReport.isMediaClusterPath = this._rtcSession._signalingChannel._isMediaClusterPath;
+      this._rtcSession._sessionReport.isPersistentPeerConnection = !!(this._rtcSession._pcm && this._rtcSession._pcm.isPersistentConnectionEnabled());
+      if (this._rtcSession._pcm) {
+        // For persistnet connection, resume the local audio which was paused when the previous RtcSession was destroyed
+        this._rtcSession.resumeLocalAudio();
+      }
+      this._rtcSession._onSessionConnected(this._rtcSession);
+      // Calculate time taken to receive the first RTP packet
+      var interval;
+      var timeout;
+      var getSynchronizationSourcesAndProcess = function getSynchronizationSourcesAndProcess() {
+        return __awaiter(_this4, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+          var _this5 = this;
+          var rtcRtpReceiver, synchronizationSources;
+          return _regenerator().w(function (_context) {
+            while (1) switch (_context.n) {
+              case 0:
+                if (this._rtcSession && this._rtcSession._pc && this._rtcSession._pc.getReceivers().length !== 0) {
+                  rtcRtpReceiver = this._rtcSession._pc.getReceivers()[0];
+                  if (rtcRtpReceiver instanceof RTCRtpReceiver) {
+                    synchronizationSources = rtcRtpReceiver.getSynchronizationSources();
+                    synchronizationSources.forEach(function (source) {
+                      var firstRTPTimeMillis = source.timestamp - _this5._rtcSession._connectTimeStamp;
+                      if (firstRTPTimeMillis > 0) {
+                        _this5._rtcSession._sessionReport.firstRTPTimeMillis = firstRTPTimeMillis;
+                      }
+                      // We break out and stop checking for RTP packets as soon as we receive the first packet.
+                      clearInterval(interval);
+                      clearTimeout(timeout);
+                    });
+                  }
+                }
+              case 1:
+                return _context.a(2);
+            }
+          }, _callee, this);
+        }));
+      };
+      // Set up timeout to stop the interval after 1 seconds
+      timeout = setTimeout(function () {
+        clearInterval(interval);
+        console.log('Timeout reached, stopping the interval');
+      }, 1000);
+      interval = setInterval(getSynchronizationSourcesAndProcess, 20);
+      this.setSubState(new rtc_session_talking_substates_1.ConnectedSubstate(this._rtcSession));
+    }
+  }, {
+    key: "onSignalingReconnected",
+    value: function onSignalingReconnected() {}
+    /**
+     * TODO: after upgrading eslint, use optional chaining
+     *  const signalingChannel = this._rtcSession._pcm?._signalingChannel || this._rtcSession._signalingChannel;
+     *         signalingChannel.hangup();
+     */
+  }, {
+    key: "onRemoteHungup",
+    value: function onRemoteHungup() {
+      if (this._rtcSession._pcm) {
+        //Unreachable code.
+        this._rtcSession._pcm._signalingChannel.hangup();
+      } else {
+        this._rtcSession._signalingChannel.hangup();
+      }
+      this.transit(new DisconnectedState(this._rtcSession));
     }
     /**
      * TODO: after upgrading eslint, use optional chaining
      *  const signalingChannel = this._rtcSession._pcm?._signalingChannel || this._rtcSession._signalingChannel;
      *         signalingChannel.hangup();
      */
-    onRemoteHungup() {
-        if (this._rtcSession._pcm) {
-            //Unreachable code.
-            this._rtcSession._pcm._signalingChannel.hangup();
-        }
-        else {
-            this._rtcSession._signalingChannel.hangup();
-        }
-        this.transit(new DisconnectedState(this._rtcSession));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      if (this._rtcSession._pcm) {
+        this._rtcSession._pcm._signalingChannel.hangup();
+      } else {
+        this._rtcSession._signalingChannel.hangup();
+      }
+      this.transit(new DisconnectedState(this._rtcSession));
     }
-    /**
-     * TODO: after upgrading eslint, use optional chaining
-     *  const signalingChannel = this._rtcSession._pcm?._signalingChannel || this._rtcSession._signalingChannel;
-     *         signalingChannel.hangup();
-     */
-    hangup() {
-        if (this._rtcSession._pcm) {
-            this._rtcSession._pcm._signalingChannel.hangup();
-        }
-        else {
-            this._rtcSession._signalingChannel.hangup();
-        }
-        this.transit(new DisconnectedState(this._rtcSession));
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {
+      var iceState = this._rtcSession._strategy.onIceStateChange(evt, this._rtcSession._pc);
+      this.logger.info('ICE Connection State: ', iceState);
+      if (this._subState && typeof this._subState.onIceStateChange === 'function') {
+        this._subState.onIceStateChange(evt);
+      }
+      if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
+        this.logger.info('Lost ICE connection');
+        this._rtcSession._sessionReport.iceConnectionsLost += 1;
+      }
+      if (iceState == rtc_const_1.ICE_CONNECTION_STATE.FAILED) {
+        this._rtcSession._sessionReport.iceConnectionsFailed = true;
+      }
     }
-    onIceStateChange(evt) {
-        var iceState = this._rtcSession._strategy.onIceStateChange(evt, this._rtcSession._pc);
-        this.logger.info('ICE Connection State: ', iceState);
-        if (this._subState && typeof this._subState.onIceStateChange === 'function') {
-            this._subState.onIceStateChange(evt);
-        }
-        if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
-            this.logger.info('Lost ICE connection');
-            this._rtcSession._sessionReport.iceConnectionsLost += 1;
-        }
-        if (iceState == rtc_const_1.ICE_CONNECTION_STATE.FAILED) {
-            this._rtcSession._sessionReport.iceConnectionsFailed = true;
-        }
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      if (this._subState && typeof this._subState.onSignalingConnected === 'function') {
+        this._subState.onSignalingConnected();
+      }
     }
-    onSignalingConnected() {
-        if (this._subState && typeof this._subState.onSignalingConnected === 'function') {
-            this._subState.onSignalingConnected();
-        }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      if (this._subState && typeof this._subState.onSignalingFailed === 'function') {
+        this._subState.onSignalingFailed(e);
+      }
+      var reason;
+      if (e.name == exceptions_1.AccessDeniedExceptionName) {
+        this.logger.error('[TalkingState] Access Denied by server', e);
+        this._rtcSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
+        this.transit(new FailedState(this._rtcSession, reason));
+      } else {
+        this.logger.error('[TalkingState] Failed handshaking with signaling server', e);
+      }
     }
-    onSignalingFailed(e) {
-        if (this._subState && typeof this._subState.onSignalingFailed === 'function') {
-            this._subState.onSignalingFailed(e);
-        }
-        var reason;
-        if (e.name == exceptions_1.AccessDeniedExceptionName) {
-            this.logger.error('[TalkingState] Access Denied by server', e);
-            this._rtcSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
-            this.transit(new FailedState(this._rtcSession, reason));
-        }
-        else {
-            this.logger.error('[TalkingState] Failed handshaking with signaling server', e);
-        }
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates) {
+      if (this._subState && typeof this._subState.onSignalingAnswered === 'function') {
+        this._subState.onSignalingAnswered(sdp, candidates);
+      }
     }
-    onSignalingAnswered(sdp, candidates) {
-        if (this._subState && typeof this._subState.onSignalingAnswered === 'function') {
-            this._subState.onSignalingAnswered(sdp, candidates);
-        }
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      if (this._subState && typeof this._subState.onSignalingHandshaked === 'function') {
+        this._subState.onSignalingHandshaked();
+      }
     }
-    onSignalingHandshaked() {
-        if (this._subState && typeof this._subState.onSignalingHandshaked === 'function') {
-            this._subState.onSignalingHandshaked();
-        }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      if (this._subState && typeof this._subState.onIceCandidate === 'function') {
+        this._subState.onIceCandidate(evt);
+      }
     }
-    onIceCandidate(evt) {
-        if (this._subState && typeof this._subState.onIceCandidate === 'function') {
-            this._subState.onIceCandidate(evt);
-        }
+  }, {
+    key: "onIceRestartFailure",
+    value: function onIceRestartFailure() {
+      if (this._subState && typeof this._subState.onIceRestartFailure === 'function') {
+        this._subState.onIceRestartFailure();
+      }
     }
-    onIceRestartFailure() {
-        if (this._subState && typeof this._subState.onIceRestartFailure === 'function') {
-            this._subState.onIceRestartFailure();
-        }
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._subState && typeof this._subState._checkAndTransit === 'function') {
+        this._subState._checkAndTransit();
+      }
     }
-    _checkAndTransit() {
-        if (this._subState && typeof this._subState._checkAndTransit === 'function') {
-            this._subState._checkAndTransit();
-        }
+  }, {
+    key: "setSubState",
+    value: function setSubState(nextState) {
+      this.logger.info('Substate: ' + (this._subState ? this._subState.name : 'null') + ' => ' + nextState.name);
+      if (this._subState) {
+        this._subState.onExit();
+      }
+      this._subState = nextState;
+      this._subState.onEnter();
     }
-    setSubState(nextState) {
-        this.logger.info('Substate: ' + (this._subState ? this._subState.name : 'null') + ' => ' + nextState.name);
-        if (this._subState) {
-            this._subState.onExit();
-        }
-        this._subState = nextState;
-        this._subState.onEnter();
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      var peerConnectionState = this._rtcSession._strategy.onPeerConnectionStateChange(this._rtcSession._pc);
+      this.logger.info('Peer Connection State: ', peerConnectionState);
+      if (peerConnectionState == rtc_const_1.PEER_CONNECTION_STATE.FAILED) {
+        this._rtcSession._sessionReport.peerConnectionFailed = true;
+      }
     }
-    onPeerConnectionStateChange() {
-        var peerConnectionState = this._rtcSession._strategy.onPeerConnectionStateChange(this._rtcSession._pc);
-        this.logger.info('Peer Connection State: ', peerConnectionState);
-        if (peerConnectionState == rtc_const_1.PEER_CONNECTION_STATE.FAILED) {
-            this._rtcSession._sessionReport.peerConnectionFailed = true;
-        }
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      this._rtcSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
+      if (!this._rtcSession._pcm || !this._rtcSession._pcm.isPersistentConnectionEnabled()) {
+        this._rtcSession._detachMedia();
+      }
+      this._rtcSession._sessionReport.sessionEndTime = new Date();
+      this._rtcSession._onSessionCompleted(this._rtcSession);
+      if (this._subState) {
+        this._subState.onExit();
+      }
     }
-    onExit() {
-        this._rtcSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
-        if (!this._rtcSession._pcm || !this._rtcSession._pcm.isPersistentConnectionEnabled()) {
-            this._rtcSession._detachMedia();
-        }
-        this._rtcSession._sessionReport.sessionEndTime = new Date();
-        this._rtcSession._onSessionCompleted(this._rtcSession);
-        if (this._subState) {
-            this._subState.onExit();
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "TalkingState";
     }
-    get name() {
-        return "TalkingState";
-    }
-}
+  }]);
+}(RTCSessionState);
 exports.TalkingState = TalkingState;
-class CleanUpState extends RTCSessionState {
-    onEnter() {
-        if (this._rtcSession._pcm) {
-            try {
-                // rtcSession._pcm._mediaStream would be out of sync if the audio device changed during the call
-                this._rtcSession._pcm._mediaStream = this._rtcSession._strategy._createMediaStream(this._rtcSession._pc.getSenders()[0].track);
-            }
-            catch (error) {
-                this.logger.error("Creating MediaStream error: ", error);
-            }
-            // For persistent connection, pause the local audio when we destroy the RtcSession, because we don't want to transmit any audio when agent is idle
-            this._rtcSession.pauseLocalAudio();
+var CleanUpState = /*#__PURE__*/function (_RTCSessionState9) {
+  function CleanUpState() {
+    _classCallCheck(this, CleanUpState);
+    return _callSuper(this, CleanUpState, arguments);
+  }
+  _inherits(CleanUpState, _RTCSessionState9);
+  return _createClass(CleanUpState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      if (this._rtcSession._pcm) {
+        try {
+          // rtcSession._pcm._mediaStream would be out of sync if the audio device changed during the call
+          this._rtcSession._pcm._mediaStream = this._rtcSession._strategy._createMediaStream(this._rtcSession._pc.getSenders()[0].track);
+        } catch (error) {
+          this.logger.error("Creating MediaStream error: ", error);
         }
-        this._startTime = Date.now();
-        this._rtcSession._stopSession();
-        this._rtcSession._sessionReport.cleanupTimeMillis = Date.now() - this._startTime;
-        this._rtcSession._onSessionDestroyed(this._rtcSession, this._rtcSession._sessionReport);
+        // For persistent connection, pause the local audio when we destroy the RtcSession, because we don't want to transmit any audio when agent is idle
+        this._rtcSession.pauseLocalAudio();
+      }
+      this._startTime = Date.now();
+      this._rtcSession._stopSession();
+      this._rtcSession._sessionReport.cleanupTimeMillis = Date.now() - this._startTime;
+      this._rtcSession._onSessionDestroyed(this._rtcSession, this._rtcSession._sessionReport);
     }
-    get name() {
-        return "CleanUpState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "CleanUpState";
     }
-    hangup() {
-        //do nothing, already at the end of lifecycle
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      //do nothing, already at the end of lifecycle
     }
-}
+  }]);
+}(RTCSessionState);
 exports.CleanUpState = CleanUpState;
-class DisconnectedState extends CleanUpState {
-    onSignalingHandshaked() {
-        // do nothing
+var DisconnectedState = /*#__PURE__*/function (_CleanUpState) {
+  function DisconnectedState() {
+    _classCallCheck(this, DisconnectedState);
+    return _callSuper(this, DisconnectedState, arguments);
+  }
+  _inherits(DisconnectedState, _CleanUpState);
+  return _createClass(DisconnectedState, [{
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      // do nothing
     }
-    onPeerConnectionStateChange() {
-        // do nothing
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      // do nothing
     }
-    get name() {
-        return "DisconnectedState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "DisconnectedState";
     }
-}
+  }]);
+}(CleanUpState);
 exports.DisconnectedState = DisconnectedState;
-class FailedState extends CleanUpState {
-    constructor(rtcSession, failureReason) {
-        super(rtcSession);
-        this._failureReason = failureReason;
+var FailedState = /*#__PURE__*/function (_CleanUpState2) {
+  function FailedState(rtcSession, failureReason) {
+    var _this6;
+    _classCallCheck(this, FailedState);
+    _this6 = _callSuper(this, FailedState, [rtcSession]);
+    _this6._failureReason = failureReason;
+    return _this6;
+  }
+  _inherits(FailedState, _CleanUpState2);
+  return _createClass(FailedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this._rtcSession._sessionReport.sessionEndTime = new Date();
+      this._rtcSession._onSessionFailed(this._rtcSession, this._failureReason);
+      if (this._rtcSession._pcm) {
+        this._rtcSession._pcm.destroy();
+      }
+      _superPropGet(FailedState, "onEnter", this, 3)([]);
     }
-    onEnter() {
-        this._rtcSession._sessionReport.sessionEndTime = new Date();
-        this._rtcSession._onSessionFailed(this._rtcSession, this._failureReason);
-        if (this._rtcSession._pcm) {
-            this._rtcSession._pcm.destroy();
-        }
-        super.onEnter();
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailedState";
     }
-    get name() {
-        return "FailedState";
-    }
-}
+  }]);
+}(CleanUpState);
 exports.FailedState = FailedState;
-class RtcSession {
+var RtcSession = /*#__PURE__*/function () {
+  /**
+   * Build an AmazonConnect RTC session.
+   * @param {string} signalingUri (optional, applies to CCPv1)
+   * @param {*} iceServers Array of ice servers
+   * @param {string} contactToken A string representing the contact token (optional)
+   * @param {object} logger An object provides logging functions, such as console
+   * @param {string} contactId Must be UUID, uniquely identifies the session.
+   * @param {string} connectionId Refers to media leg id
+   * @param {string} wssManager - websocket manager
+   * @param {object} strategy - VDI strategy indicates which WebRTC SDK to use: standard, Citrix, WorkSpace
+   * @param {Object} peerConnectionManager - refers to the peerConnectionManager object which manages rtcSession and peer connection
+   */
+  function RtcSession(signalingUri, iceServers, contactToken, logger, contactId, connectionId, wssManager) {
+    var strategy = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : new StandardStrategy_1["default"]();
+    var peerConnectionManager = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : null;
+    _classCallCheck(this, RtcSession);
+    if (!(strategy instanceof CCPInitiationStrategyInterface_1["default"])) {
+      throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
+    }
+    // throw IllegalParameters error when signalingUri is missing and peer connection manager is not defined
+    if (!peerConnectionManager && typeof signalingUri !== 'string' || signalingUri && signalingUri.trim().length === 0) {
+      throw new exceptions_1.IllegalParameters('signalingUri required');
+    }
+    if (!iceServers) {
+      throw new exceptions_1.IllegalParameters('iceServers required');
+    }
+    if (_typeof(logger) !== 'object') {
+      throw new exceptions_1.IllegalParameters('logger required');
+    }
+    if (!contactId) {
+      this._callId = (0, uuid_1.v4)();
+    } else {
+      this._callId = contactId;
+    }
+    this._strategy = strategy;
+    this._connectionId = connectionId;
+    this._wssManager = wssManager;
+    this._sessionReport = new session_report_1.SessionReport();
+    this._signalingUri = signalingUri;
+    this._iceServers = iceServers;
+    this._contactToken = contactToken;
+    this._originalLogger = logger;
+    this._logger = (0, utils_1.wrapLogger)(this._originalLogger, this._callId, 'SESSION');
+    this._pcm = peerConnectionManager;
+    this._iceTimeoutMillis = rtc_const_1.DEFAULT_ICE_TIMEOUT_MS;
+    this._gumTimeoutMillis = rtc_const_1.DEFAULT_GUM_TIMEOUT_MS;
+    this._enableAudio = true;
+    this._enableVideo = false;
+    this._facingMode = 'user';
+    this._legacyStatsReportSupport = false;
     /**
-     * Build an AmazonConnect RTC session.
-     * @param {string} signalingUri (optional, applies to CCPv1)
-     * @param {*} iceServers Array of ice servers
-     * @param {string} contactToken A string representing the contact token (optional)
-     * @param {object} logger An object provides logging functions, such as console
-     * @param {string} contactId Must be UUID, uniquely identifies the session.
-     * @param {string} connectionId Refers to media leg id
-     * @param {string} wssManager - websocket manager
-     * @param {object} strategy - VDI strategy indicates which WebRTC SDK to use: standard, Citrix, WorkSpace
-     * @param {Object} peerConnectionManager - refers to the peerConnectionManager object which manages rtcSession and peer connection
+     * user may provide the stream to the RtcSession directly to connect to the other end.
+     * user may also acquire the stream from the local device.
+     * This flag is used to track where the stream is acquired.
+     * If it's acquired from local devices, then we must close the stream when the session ends.
+     * If it's provided by user (rather than local camera/microphone), then we should leave it open when the
+     * session ends.
      */
-    constructor(signalingUri, iceServers, contactToken, logger, contactId, connectionId, wssManager, strategy = new StandardStrategy_1.default(), peerConnectionManager = null) {
-        if (!(strategy instanceof CCPInitiationStrategyInterface_1.default)) {
-            throw new Error('Expected a strategy of type CCPInitiationStrategyInterface');
-        }
-        // throw IllegalParameters error when signalingUri is missing and peer connection manager is not defined
-        if (!peerConnectionManager && typeof signalingUri !== 'string' || (signalingUri && signalingUri.trim().length === 0)) {
-            throw new exceptions_1.IllegalParameters('signalingUri required');
-        }
-        if (!iceServers) {
-            throw new exceptions_1.IllegalParameters('iceServers required');
-        }
-        if (typeof logger !== 'object') {
-            throw new exceptions_1.IllegalParameters('logger required');
-        }
-        if (!contactId) {
-            this._callId = (0, uuid_1.v4)();
-        }
-        else {
-            this._callId = contactId;
-        }
-        this._strategy = strategy;
-        this._connectionId = connectionId;
-        this._wssManager = wssManager;
-        this._sessionReport = new session_report_1.SessionReport();
-        this._signalingUri = signalingUri;
-        this._iceServers = iceServers;
-        this._contactToken = contactToken;
-        this._originalLogger = logger;
-        this._logger = (0, utils_1.wrapLogger)(this._originalLogger, this._callId, 'SESSION');
-        this._pcm = peerConnectionManager;
-        this._iceTimeoutMillis = rtc_const_1.DEFAULT_ICE_TIMEOUT_MS;
-        this._gumTimeoutMillis = rtc_const_1.DEFAULT_GUM_TIMEOUT_MS;
-        this._enableAudio = true;
-        this._enableVideo = false;
-        this._facingMode = 'user';
-        this._legacyStatsReportSupport = false;
-        /**
-         * user may provide the stream to the RtcSession directly to connect to the other end.
-         * user may also acquire the stream from the local device.
-         * This flag is used to track where the stream is acquired.
-         * If it's acquired from local devices, then we must close the stream when the session ends.
-         * If it's provided by user (rather than local camera/microphone), then we should leave it open when the
-         * session ends.
-         */
-        this._isUserProvidedStream = false;
-        this._onGumError =
-            this._onGumSuccess =
-                this._onLocalStreamAdded =
-                    this._onSessionFailed =
-                        this._onSessionInitialized =
-                            this._onSignalingConnected =
-                                this._onIceCollectionComplete =
-                                    this._onSignalingStarted =
-                                        this._onSessionConnected =
-                                            this._onRemoteStreamAdded =
-                                                this._onSessionCompleted =
-                                                    this._onSessionDestroyed = () => {
-                                                    };
+    this._isUserProvidedStream = false;
+    this._onGumError = this._onGumSuccess = this._onLocalStreamAdded = this._onSessionFailed = this._onSessionInitialized = this._onSignalingConnected = this._onIceCollectionComplete = this._onSignalingStarted = this._onSessionConnected = this._onRemoteStreamAdded = this._onSessionCompleted = this._onSessionDestroyed = function () {};
+  }
+  return _createClass(RtcSession, [{
+    key: "sessionReport",
+    get: function get() {
+      return this._sessionReport;
     }
-    get sessionReport() {
-        return this._sessionReport;
-    }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "callId",
+    get: function get() {
+      return this._callId;
     }
     /**
      * getMediaStream returns the local stream, which may be acquired from local device or from user provided stream.
      * Rather than getting a stream by calling getUserMedia (which gets a stream from local device such as camera),
      * user could also provide the stream to the RtcSession directly to connect to the other end.
      */
-    get mediaStream() {
-        return this._localStream;
+  }, {
+    key: "mediaStream",
+    get: function get() {
+      return this._localStream;
+    },
+    set:
+    /**
+     * Optional. RtcSession will grab input device if this is not specified.
+     * Please note: this RtcSession class only support single audio track and/or single video track.
+     */
+    function set(input) {
+      this._localStream = input;
+      if (this._pcm) {
+        this._pcm._mediaStream = input;
+      }
+      this._isUserProvidedStream = true;
     }
-    get remoteVideoStream() {
-        return this._remoteVideoStream;
+    /**
+     * Needed, expect an audio element that can be used to play remote audio stream.
+     */
+  }, {
+    key: "remoteVideoStream",
+    get: function get() {
+      return this._remoteVideoStream;
     }
-    pauseLocalVideo() {
-        if (this._localStream) {
-            var videoTrack = this._localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = false;
-            }
+  }, {
+    key: "pauseLocalVideo",
+    value: function pauseLocalVideo() {
+      if (this._localStream) {
+        var videoTrack = this._localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = false;
         }
+      }
     }
-    resumeLocalVideo() {
-        if (this._localStream) {
-            var videoTrack = this._localStream.getVideoTracks()[0];
-            if (videoTrack) {
-                videoTrack.enabled = true;
-            }
+  }, {
+    key: "resumeLocalVideo",
+    value: function resumeLocalVideo() {
+      if (this._localStream) {
+        var videoTrack = this._localStream.getVideoTracks()[0];
+        if (videoTrack) {
+          videoTrack.enabled = true;
         }
+      }
     }
-    pauseRemoteVideo() {
-        if (this._remoteVideoStream) {
-            var videoTrack = this._remoteVideoStream.getTracks()[1];
-            if (videoTrack) {
-                videoTrack.enabled = false;
-            }
+  }, {
+    key: "pauseRemoteVideo",
+    value: function pauseRemoteVideo() {
+      if (this._remoteVideoStream) {
+        var videoTrack = this._remoteVideoStream.getTracks()[1];
+        if (videoTrack) {
+          videoTrack.enabled = false;
         }
+      }
     }
-    resumeRemoteVideo() {
-        if (this._remoteVideoStream) {
-            var videoTrack = this._remoteVideoStream.getTracks()[1];
-            if (videoTrack) {
-                videoTrack.enabled = true;
-            }
+  }, {
+    key: "resumeRemoteVideo",
+    value: function resumeRemoteVideo() {
+      if (this._remoteVideoStream) {
+        var videoTrack = this._remoteVideoStream.getTracks()[1];
+        if (videoTrack) {
+          videoTrack.enabled = true;
         }
+      }
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -12786,24 +14206,25 @@ class RtcSession {
      *         audioTrack.enabled = false;
      *     }
      */
-    pauseLocalAudio() {
-        var audioTrack;
-        if (this._pcm) {
-            if (this._pcm._mediaStream) {
-                audioTrack = this._pcm._mediaStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = false;
-                }
-            }
+  }, {
+    key: "pauseLocalAudio",
+    value: function pauseLocalAudio() {
+      var audioTrack;
+      if (this._pcm) {
+        if (this._pcm._mediaStream) {
+          audioTrack = this._pcm._mediaStream.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = false;
+          }
         }
-        else {
-            if (this._localStream) {
-                audioTrack = this._localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = false;
-                }
-            }
+      } else {
+        if (this._localStream) {
+          audioTrack = this._localStream.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = false;
+          }
         }
+      }
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -12812,77 +14233,92 @@ class RtcSession {
      *         audioTrack.enabled = true;
      *     }
      */
-    resumeLocalAudio() {
-        var audioTrack;
-        if (this._pcm) {
-            if (this._pcm._mediaStream) {
-                audioTrack = this._pcm._mediaStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = true;
-                }
-            }
+  }, {
+    key: "resumeLocalAudio",
+    value: function resumeLocalAudio() {
+      var audioTrack;
+      if (this._pcm) {
+        if (this._pcm._mediaStream) {
+          audioTrack = this._pcm._mediaStream.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = true;
+          }
         }
-        else {
-            if (this._localStream) {
-                audioTrack = this._localStream.getAudioTracks()[0];
-                if (audioTrack) {
-                    audioTrack.enabled = true;
-                }
-            }
+      } else {
+        if (this._localStream) {
+          audioTrack = this._localStream.getAudioTracks()[0];
+          if (audioTrack) {
+            audioTrack.enabled = true;
+          }
         }
+      }
     }
-    pauseRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = false;
-            }
+  }, {
+    key: "pauseRemoteAudio",
+    value: function pauseRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
+      }
     }
-    resumeRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = true;
-            }
+  }, {
+    key: "resumeRemoteAudio",
+    value: function resumeRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = true;
         }
+      }
     }
     /**
      * Callback when gUM succeeds.
      * First param is RtcSession object.
      */
-    set onGumSuccess(handler) {
-        this._onGumSuccess = handler;
+  }, {
+    key: "onGumSuccess",
+    set: function set(handler) {
+      this._onGumSuccess = handler;
     }
     /**
      * Callback when gUM fails.
      * First param is RtcSession object.
      * Second param is the error.
      */
-    set onGumError(handler) {
-        this._onGumError = handler;
+  }, {
+    key: "onGumError",
+    set: function set(handler) {
+      this._onGumError = handler;
     }
     /**
      * Callback if failed initializing local resources
      * First param is RtcSession object.
      */
-    set onSessionFailed(handler) {
-        this._onSessionFailed = handler;
+  }, {
+    key: "onSessionFailed",
+    set: function set(handler) {
+      this._onSessionFailed = handler;
     }
     /**
      * Callback after local user media stream is added to the session.
      * First param is RtcSession object.
      * Second param is media stream
      */
-    set onLocalStreamAdded(handler) {
-        this._onLocalStreamAdded = handler;
+  }, {
+    key: "onLocalStreamAdded",
+    set: function set(handler) {
+      this._onLocalStreamAdded = handler;
     }
     /**
      * Callback when all local resources are ready. Establishing signaling chanel and ICE collection happens at the same time after this.
      * First param is RtcSession object.
      */
-    set onSessionInitialized(handler) {
-        this._onSessionInitialized = handler;
+  }, {
+    key: "onSessionInitialized",
+    set: function set(handler) {
+      this._onSessionInitialized = handler;
     }
     /**
      * Callback when signaling channel is established.
@@ -12890,8 +14326,10 @@ class RtcSession {
      *
      * First param is RtcSession object.
      */
-    set onSignalingConnected(handler) {
-        this._onSignalingConnected = handler;
+  }, {
+    key: "onSignalingConnected",
+    set: function set(handler) {
+      this._onSignalingConnected = handler;
     }
     /**
      * Callback when ICE collection completes either because there is no more candidate or collection timed out.
@@ -12901,22 +14339,28 @@ class RtcSession {
      * Second param is boolean, TRUE - ICE collection timed out.
      * Third param is number of candidates collected.
      */
-    set onIceCollectionComplete(handler) {
-        this._onIceCollectionComplete = handler;
+  }, {
+    key: "onIceCollectionComplete",
+    set: function set(handler) {
+      this._onIceCollectionComplete = handler;
     }
     /**
      * Callback when signaling channel is established and ICE collection completed with at least one candidate.
      * First param is RtcSession object.
      */
-    set onSignalingStarted(handler) {
-        this._onSignalingStarted = handler;
+  }, {
+    key: "onSignalingStarted",
+    set: function set(handler) {
+      this._onSignalingStarted = handler;
     }
     /**
      * Callback when the call is established (handshaked and media stream should be flowing)
      * First param is RtcSession object.
      */
-    set onSessionConnected(handler) {
-        this._onSessionConnected = handler;
+  }, {
+    key: "onSessionConnected",
+    set: function set(handler) {
+      this._onSessionConnected = handler;
     }
     /**
      * Callback after remote media stream is added to the session.
@@ -12925,100 +14369,128 @@ class RtcSession {
      * First param is RtcSession object.
      * Second param is media stream track.
      */
-    set onRemoteStreamAdded(handler) {
-        this._onRemoteStreamAdded = handler;
+  }, {
+    key: "onRemoteStreamAdded",
+    set: function set(handler) {
+      this._onRemoteStreamAdded = handler;
     }
     /**
      * Callback when the hangup is initiated (implies the call was successfully established).
      * First param is RtcSession object.
      */
-    set onSessionCompleted(handler) {
-        this._onSessionCompleted = handler;
+  }, {
+    key: "onSessionCompleted",
+    set: function set(handler) {
+      this._onSessionCompleted = handler;
     }
     /**
      * Callback after session is cleaned up, no matter if the call was successfully established or not.
      * First param is RtcSession object.
      * Second param is SessionReport object.
      */
-    set onSessionDestroyed(handler) {
-        this._onSessionDestroyed = handler;
+  }, {
+    key: "onSessionDestroyed",
+    set: function set(handler) {
+      this._onSessionDestroyed = handler;
     }
-    set enableAudio(flag) {
-        this._enableAudio = flag;
+  }, {
+    key: "enableAudio",
+    set: function set(flag) {
+      this._enableAudio = flag;
     }
-    set echoCancellation(flag) {
-        this._echoCancellation = flag;
+  }, {
+    key: "echoCancellation",
+    set: function set(flag) {
+      this._echoCancellation = flag;
     }
-    set enableVideo(flag) {
-        this._enableVideo = flag;
+  }, {
+    key: "enableVideo",
+    set: function set(flag) {
+      this._enableVideo = flag;
     }
-    set maxVideoFrameRate(frameRate) {
-        this._maxVideoFrameRate = frameRate;
+  }, {
+    key: "maxVideoFrameRate",
+    set: function set(frameRate) {
+      this._maxVideoFrameRate = frameRate;
     }
-    set minVideoFrameRate(frameRate) {
-        this._minVideoFrameRate = frameRate;
+  }, {
+    key: "minVideoFrameRate",
+    set: function set(frameRate) {
+      this._minVideoFrameRate = frameRate;
     }
-    set videoFrameRate(frameRate) {
-        this._videoFrameRate = frameRate;
+  }, {
+    key: "videoFrameRate",
+    set: function set(frameRate) {
+      this._videoFrameRate = frameRate;
     }
-    set maxVideoWidth(width) {
-        this._maxVideoWidth = width;
+  }, {
+    key: "maxVideoWidth",
+    set: function set(width) {
+      this._maxVideoWidth = width;
     }
-    set minVideoWidth(width) {
-        this._minVideoWidth = width;
+  }, {
+    key: "minVideoWidth",
+    set: function set(width) {
+      this._minVideoWidth = width;
     }
-    set idealVideoWidth(width) {
-        this._idealVideoWidth = width;
+  }, {
+    key: "idealVideoWidth",
+    set: function set(width) {
+      this._idealVideoWidth = width;
     }
-    set maxVideoHeight(height) {
-        this._maxVideoHeight = height;
+  }, {
+    key: "maxVideoHeight",
+    set: function set(height) {
+      this._maxVideoHeight = height;
     }
-    set minVideoHeight(height) {
-        this._minVideoHeight = height;
+  }, {
+    key: "minVideoHeight",
+    set: function set(height) {
+      this._minVideoHeight = height;
     }
-    set idealVideoHeight(height) {
-        this._idealVideoHeight = height;
+  }, {
+    key: "idealVideoHeight",
+    set: function set(height) {
+      this._idealVideoHeight = height;
     }
-    set facingMode(mode) {
-        this._facingMode = mode;
+  }, {
+    key: "facingMode",
+    set: function set(mode) {
+      this._facingMode = mode;
     }
-    /**
-     * Optional. RtcSession will grab input device if this is not specified.
-     * Please note: this RtcSession class only support single audio track and/or single video track.
-     */
-    set mediaStream(input) {
-        this._localStream = input;
-        if (this._pcm) {
-            this._pcm._mediaStream = input;
-        }
-        this._isUserProvidedStream = true;
+  }, {
+    key: "remoteAudioElement",
+    set: function set(element) {
+      this._remoteAudioElement = element;
     }
-    /**
-     * Needed, expect an audio element that can be used to play remote audio stream.
-     */
-    set remoteAudioElement(element) {
-        this._remoteAudioElement = element;
-    }
-    set remoteVideoElement(element) {
-        this._remoteVideoElement = element;
+  }, {
+    key: "remoteVideoElement",
+    set: function set(element) {
+      this._remoteVideoElement = element;
     }
     /**
      * Override the default signaling connect time out.
      */
-    set signalingConnectTimeout(ms) {
-        this._signalingConnectTimeout = ms;
+  }, {
+    key: "signalingConnectTimeout",
+    set: function set(ms) {
+      this._signalingConnectTimeout = ms;
     }
     /**
      * Override the default ICE collection time limit.
      */
-    set iceTimeoutMillis(timeoutMillis) {
-        this._iceTimeoutMillis = timeoutMillis;
+  }, {
+    key: "iceTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._iceTimeoutMillis = timeoutMillis;
     }
     /**
      * Override the default GUM timeout time limit.
      */
-    set gumTimeoutMillis(timeoutMillis) {
-        this._gumTimeoutMillis = timeoutMillis;
+  }, {
+    key: "gumTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._gumTimeoutMillis = timeoutMillis;
     }
     /**
      * connect-rtc-js initiate the handshaking with all browser supported codec by default, Amazon Connect service will choose the codec according to its preference setting.
@@ -13026,8 +14498,10 @@ class RtcSession {
      * WARNING: Setting this to unsupported codec will cause the failure of handshaking.
      * Supported audio codecs: opus.
      */
-    set forceAudioCodec(audioCodec) {
-        this._forceAudioCodec = audioCodec;
+  }, {
+    key: "forceAudioCodec",
+    set: function set(audioCodec) {
+      this._forceAudioCodec = audioCodec;
     }
     /**
      * connect-rtc-js initiate the handshaking with all browser supported codec by default, Amazon Connect service will choose the codec according to its preference setting.
@@ -13035,396 +14509,481 @@ class RtcSession {
      * WARNING: Setting this to unsupported codec will cause the failure of handshaking.
      * Supported video codecs: VP8, VP9, H264.
      */
-    set forceVideoCodec(videoCodec) {
-        this._forceVideoCodec = videoCodec;
+  }, {
+    key: "forceVideoCodec",
+    set: function set(videoCodec) {
+      this._forceVideoCodec = videoCodec;
     }
     /**
      * connect-rtc-js disables OPUS DTX by default because it harms audio quality.
      * @param flag boolean
      */
-    set enableOpusDtx(flag) {
-        this._enableOpusDtx = flag;
+  }, {
+    key: "enableOpusDtx",
+    set: function set(flag) {
+      this._enableOpusDtx = flag;
     }
-    transit(nextState) {
-        try {
-            this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
-            if (this._state && this._state.onExit) {
-                this._state.onExit();
-            }
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      try {
+        this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
+        if (this._state && this._state.onExit) {
+          this._state.onExit();
         }
-        finally {
-            this._state = nextState;
-            if (nextState.onEnter) {
-                try {
-                    nextState.onEnter();
-                }
-                catch (e) {
-                    this._logger.warn(nextState.name + '#onEnter failed', e);
-                    throw e; // eslint-disable-line no-unsafe-finally
-                }
-            }
+      } finally {
+        this._state = nextState;
+        if (nextState.onEnter) {
+          try {
+            nextState.onEnter();
+          } catch (e) {
+            this._logger.warn(nextState.name + '#onEnter failed', e);
+            throw e; // eslint-disable-line no-unsafe-finally
+          }
         }
+      }
     }
-    _createSignalingChannel() {
-        var signalingChannel = new signaling_1.default(this._callId, this._signalingUri, this._contactToken, this._originalLogger, this._signalingConnectTimeout, this._connectionId, this._wssManager, this._iceRestart, this._pcm);
-        signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
-        signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
-        signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
-        signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
-        signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
-        signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
-        this._signalingChannel = signalingChannel;
-        if (this._pcm) {
-            this._pcm._signalingChannel = signalingChannel;
+  }, {
+    key: "_createSignalingChannel",
+    value: function _createSignalingChannel() {
+      var signalingChannel = new signaling_1["default"](this._callId, this._signalingUri, this._contactToken, this._originalLogger, this._signalingConnectTimeout, this._connectionId, this._wssManager, this._iceRestart, this._pcm);
+      signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
+      signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
+      signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
+      signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
+      signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
+      signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
+      this._signalingChannel = signalingChannel;
+      if (this._pcm) {
+        this._pcm._signalingChannel = signalingChannel;
+      }
+      return signalingChannel;
+    }
+  }, {
+    key: "_bindSignalingChannel",
+    value: function _bindSignalingChannel() {
+      var signalingChannel = this._pcm._signalingChannel;
+      signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
+      signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
+      signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
+      signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
+      signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
+      signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
+      this._signalingChannel = signalingChannel;
+      return signalingChannel;
+    }
+  }, {
+    key: "_signalingConnected",
+    value: function _signalingConnected() {
+      this._state.onSignalingConnected();
+    }
+  }, {
+    key: "_signalingAnswered",
+    value: function _signalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+      this._state.onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken);
+    }
+  }, {
+    key: "_signalingHandshaked",
+    value: function _signalingHandshaked() {
+      this._state.onSignalingHandshaked();
+    }
+  }, {
+    key: "_signalingRemoteHungup",
+    value: function _signalingRemoteHungup() {
+      this._state.onRemoteHungup();
+    }
+  }, {
+    key: "_signalingFailed",
+    value: function _signalingFailed(e) {
+      this._state.onSignalingFailed(e);
+    }
+  }, {
+    key: "_signalingDisconnected",
+    value: function _signalingDisconnected() {}
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      return this._strategy._createPeerConnection(configuration, optionalConfiguration);
+    }
+  }, {
+    key: "connect",
+    value: function connect(pc) {
+      var self = this;
+      var now = new Date();
+      self._sessionReport.sessionStartTime = now;
+      self._connectTimeStamp = now.getTime();
+      if (pc && pc.signalingState != 'closed') {
+        self._pc = pc;
+      } else {
+        if (pc) {
+          self._strategy.close(pc);
+          pc = null;
         }
-        return signalingChannel;
+        rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceServers = self._iceServers;
+        rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+        self._pc = self._createPeerConnection(rtc_const_1.RTC_PEER_CONNECTION_CONFIG, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
+      }
+      self._pc.ontrack = (0, utils_1.hitch)(self, self._ontrack);
+      self._pc.onicecandidate = (0, utils_1.hitch)(self, self._onIceCandidate);
+      self._pc.onconnectionstatechange = (0, utils_1.hitch)(self, self._onPeerConnectionStateChange);
+      self._pc.oniceconnectionstatechange = (0, utils_1.hitch)(self, self._onIceStateChange);
+      // PersistentConnection enabled transit to ConnectContactState
+      if (self._pcm && self._pcm.isPersistentConnectionEnabled() && self._pcm._signalingChannel) {
+        self._bindSignalingChannel(); // binding the existing signaling channel
+        self.transit(new ConnectContactState(self));
+      } else {
+        self.transit(new GrabLocalMediaState(self));
+      }
     }
-    _bindSignalingChannel() {
-        var signalingChannel = this._pcm._signalingChannel;
-        signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
-        signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
-        signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
-        signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
-        signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
-        signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
-        this._signalingChannel = signalingChannel;
-        return signalingChannel;
+  }, {
+    key: "accept",
+    value: function accept() {
+      throw new exceptions_1.UnsupportedOperation('accept does not go through signaling channel at this moment');
     }
-    _signalingConnected() {
-        this._state.onSignalingConnected();
-    }
-    _signalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
-        this._state.onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken);
-    }
-    _signalingHandshaked() {
-        this._state.onSignalingHandshaked();
-    }
-    _signalingRemoteHungup() {
-        this._state.onRemoteHungup();
-    }
-    _signalingFailed(e) {
-        this._state.onSignalingFailed(e);
-    }
-    _signalingDisconnected() {
-    }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        return this._strategy._createPeerConnection(configuration, optionalConfiguration);
-    }
-    connect(pc) {
-        var self = this;
-        var now = new Date();
-        self._sessionReport.sessionStartTime = now;
-        self._connectTimeStamp = now.getTime();
-        if (pc && pc.signalingState != 'closed') {
-            self._pc = pc;
-        }
-        else {
-            if (pc) {
-                self._strategy.close(pc);
-                pc = null;
-            }
-            rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceServers = self._iceServers;
-            rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-            self._pc = self._createPeerConnection(rtc_const_1.RTC_PEER_CONNECTION_CONFIG, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
-        }
-        self._pc.ontrack = (0, utils_1.hitch)(self, self._ontrack);
-        self._pc.onicecandidate = (0, utils_1.hitch)(self, self._onIceCandidate);
-        self._pc.onconnectionstatechange = (0, utils_1.hitch)(self, self._onPeerConnectionStateChange);
-        self._pc.oniceconnectionstatechange = (0, utils_1.hitch)(self, self._onIceStateChange);
-        // PersistentConnection enabled transit to ConnectContactState
-        if (self._pcm && self._pcm.isPersistentConnectionEnabled() && self._pcm._signalingChannel) {
-            self._bindSignalingChannel(); // binding the existing signaling channel
-            self.transit(new ConnectContactState(self));
-        }
-        else {
-            self.transit(new GrabLocalMediaState(self));
-        }
-    }
-    accept() {
-        throw new exceptions_1.UnsupportedOperation('accept does not go through signaling channel at this moment');
-    }
-    hangup() {
-        this._state.hangup();
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this._state.hangup();
     }
     /**
      * Get a promise containing an object with two named lists of audio stats, one for each channel on each
      * media type of 'video' and 'audio'.
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      */
-    getStats() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const timestamp = new Date();
-            const getStatsForType = (streamType) => __awaiter(this, void 0, void 0, function* () {
-                const rawStats = yield this._pc.getStats();
-                return (0, rtp_stats_1.extractMediaStatsFromStats)(timestamp, rawStats, streamType);
-            });
-            if (this._pc && this._pc.signalingState === 'stable') {
-                const audioInputStats = yield getStatsForType('audio_input');
-                const audioOutputStats = yield getStatsForType('audio_output');
-                // For consistency's sake, coalesce One-Way Metrics into both Audio Streams
-                if (audioInputStats && audioInputStats.jitterBufferEmittedCount !== null) {
-                    audioOutputStats._jitterBufferEmittedCount = audioInputStats.jitterBufferEmittedCount;
-                }
-                if (audioInputStats && audioInputStats.jbMilliseconds !== null) {
-                    audioOutputStats._jbMilliseconds = audioInputStats.jbMilliseconds;
-                }
-                if (audioOutputStats && audioOutputStats.rttMilliseconds !== null) {
-                    audioInputStats._rttMilliseconds = audioOutputStats.rttMilliseconds;
-                }
-                if (audioOutputStats && audioOutputStats.echoReturnLoss !== null) {
-                    audioInputStats._echoReturnLoss = audioOutputStats.echoReturnLoss;
-                }
-                if (audioOutputStats && audioOutputStats.echoReturnLossEnhancement !== null) {
-                    audioInputStats._echoReturnLossEnhancement = audioOutputStats.echoReturnLossEnhancement;
-                }
-                return {
-                    audioInputStats,
-                    audioOutputStats,
-                };
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
+  }, {
+    key: "getStats",
+    value: function getStats() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee3() {
+        var _this7 = this;
+        var timestamp, getStatsForType, audioInputStats, audioOutputStats;
+        return _regenerator().w(function (_context3) {
+          while (1) switch (_context3.n) {
+            case 0:
+              timestamp = new Date();
+              getStatsForType = function getStatsForType(streamType) {
+                return __awaiter(_this7, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee2() {
+                  var rawStats;
+                  return _regenerator().w(function (_context2) {
+                    while (1) switch (_context2.n) {
+                      case 0:
+                        _context2.n = 1;
+                        return this._pc.getStats();
+                      case 1:
+                        rawStats = _context2.v;
+                        return _context2.a(2, (0, rtp_stats_1.extractMediaStatsFromStats)(timestamp, rawStats, streamType));
+                    }
+                  }, _callee2, this);
+                }));
+              };
+              if (!(this._pc && this._pc.signalingState === 'stable')) {
+                _context3.n = 3;
+                break;
+              }
+              _context3.n = 1;
+              return getStatsForType('audio_input');
+            case 1:
+              audioInputStats = _context3.v;
+              _context3.n = 2;
+              return getStatsForType('audio_output');
+            case 2:
+              audioOutputStats = _context3.v;
+              // For consistency's sake, coalesce One-Way Metrics into both Audio Streams
+              if (audioInputStats && audioInputStats.jitterBufferEmittedCount !== null) {
+                audioOutputStats._jitterBufferEmittedCount = audioInputStats.jitterBufferEmittedCount;
+              }
+              if (audioInputStats && audioInputStats.jbMilliseconds !== null) {
+                audioOutputStats._jbMilliseconds = audioInputStats.jbMilliseconds;
+              }
+              if (audioOutputStats && audioOutputStats.rttMilliseconds !== null) {
+                audioInputStats._rttMilliseconds = audioOutputStats.rttMilliseconds;
+              }
+              if (audioOutputStats && audioOutputStats.echoReturnLoss !== null) {
+                audioInputStats._echoReturnLoss = audioOutputStats.echoReturnLoss;
+              }
+              if (audioOutputStats && audioOutputStats.echoReturnLossEnhancement !== null) {
+                audioInputStats._echoReturnLossEnhancement = audioOutputStats.echoReturnLossEnhancement;
+              }
+              return _context3.a(2, {
+                audioInputStats: audioInputStats,
+                audioOutputStats: audioOutputStats
+              });
+            case 3:
+              return _context3.a(2, Promise.reject(new exceptions_1.IllegalState()));
+            case 4:
+              return _context3.a(2);
+          }
+        }, _callee3, this);
+      }));
     }
     /**
      * Get a promise of MediaRtpStats object for remote audio (from Amazon Connect to client).
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      * @deprecated in favor of getStats()
      */
-    getRemoteAudioStats() {
-        return this.getStats().then((stats) => {
-            if (stats.audioOutputStats) {
-                return stats.audioOutputStats;
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
+  }, {
+    key: "getRemoteAudioStats",
+    value: function getRemoteAudioStats() {
+      return this.getStats().then(function (stats) {
+        if (stats.audioOutputStats) {
+          return stats.audioOutputStats;
+        } else {
+          return Promise.reject(new exceptions_1.IllegalState());
+        }
+      });
     }
     /**
      * Get a promise of MediaRtpStats object for user audio (from client to Amazon Connect).
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      * @deprecated in favor of getStats()
      */
-    getUserAudioStats() {
-        return this.getStats().then((stats) => {
-            if (stats.audioInputStats) {
-                return stats.audioInputStats;
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
+  }, {
+    key: "getUserAudioStats",
+    value: function getUserAudioStats() {
+      return this.getStats().then(function (stats) {
+        if (stats.audioInputStats) {
+          return stats.audioInputStats;
+        } else {
+          return Promise.reject(new exceptions_1.IllegalState());
+        }
+      });
     }
-    _onIceCandidate(evt) {
-        this._state.onIceCandidate(evt);
+  }, {
+    key: "_onIceCandidate",
+    value: function _onIceCandidate(evt) {
+      this._state.onIceCandidate(evt);
     }
-    _onPeerConnectionStateChange() {
-        this._state.onPeerConnectionStateChange();
+  }, {
+    key: "_onPeerConnectionStateChange",
+    value: function _onPeerConnectionStateChange() {
+      this._state.onPeerConnectionStateChange();
     }
-    _onIceStateChange(evt) {
-        this._state.onIceStateChange(evt);
+  }, {
+    key: "_onIceStateChange",
+    value: function _onIceStateChange(evt) {
+      this._state.onIceStateChange(evt);
     }
     /**
      * Attach remote media stream to web element.
      */
-    _ontrack(evt) {
-        this._strategy._ontrack(this, evt);
-        this._onRemoteStreamAdded(this, evt.streams[0]);
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(evt) {
+      this._strategy._ontrack(this, evt);
+      this._onRemoteStreamAdded(this, evt.streams[0]);
     }
-    _detachMedia() {
-        if (this._remoteVideoElement) {
-            this._remoteVideoElement.srcObject = null;
-        }
-        if (this._remoteAudioElement) {
-            this._remoteAudioElement.srcObject = null;
-            this._remoteAudioStream = null;
-        }
+  }, {
+    key: "_detachMedia",
+    value: function _detachMedia() {
+      if (this._remoteVideoElement) {
+        this._remoteVideoElement.srcObject = null;
+      }
+      if (this._remoteAudioElement) {
+        this._remoteAudioElement.srcObject = null;
+        this._remoteAudioStream = null;
+      }
     }
-    _stopSession() {
-        // When peerConnectionManager does not exist or PersistentConnection flag if false, we will close local  media stream
-        if (!this._pcm || !this._pcm.isPersistentConnectionEnabled()) {
-            try {
-                if (this._localStream && !this._isUserProvidedStream) {
-                    (0, utils_1.closeStream)(this._localStream);
-                    this._localStream = null;
-                    this._isUserProvidedStream = false;
-                }
+  }, {
+    key: "_stopSession",
+    value: function _stopSession() {
+      // When peerConnectionManager does not exist or PersistentConnection flag if false, we will close local  media stream
+      if (!this._pcm || !this._pcm.isPersistentConnectionEnabled()) {
+        try {
+          if (this._localStream && !this._isUserProvidedStream) {
+            (0, utils_1.closeStream)(this._localStream);
+            this._localStream = null;
+            this._isUserProvidedStream = false;
+          }
+        } finally {
+          try {
+            if (this._pc) {
+              this._strategy.close(this._pc);
             }
-            finally {
-                try {
-                    if (this._pc) {
-                        this._strategy.close(this._pc);
-                    }
-                }
-                catch (e) {
-                    // eat exception
-                }
-                finally {
-                    this._pc = null;
-                }
-            }
+          } catch (e) {
+            // eat exception
+          } finally {
+            this._pc = null;
+          }
         }
+      }
     }
-    _buildMediaConstraints(newDeviceId) {
-        var self = this;
-        var mediaConstraints = {};
-        if (self._enableAudio) {
-            var audioConstraints = {};
-            if (typeof self._echoCancellation !== 'undefined') {
-                audioConstraints.echoCancellation = !!self._echoCancellation;
-            }
-            if (newDeviceId != undefined && newDeviceId != 'default') {
-                audioConstraints.deviceId = newDeviceId;
-            }
-            // This is required to handle behaviour in published sample code.
-            if (window && window.audio_input) {
-                audioConstraints.deviceId = window.audio_input;
-                if (newDeviceId != window.audio_input) {
-                    this._logger.warn('window.audio_input does not match requested device id');
-                }
-            }
-            if (Object.keys(audioConstraints).length > 0) {
-                mediaConstraints.audio = audioConstraints;
-            }
-            else {
-                mediaConstraints.audio = true;
-            }
+  }, {
+    key: "_buildMediaConstraints",
+    value: function _buildMediaConstraints(newDeviceId) {
+      var self = this;
+      var mediaConstraints = {};
+      if (self._enableAudio) {
+        var audioConstraints = {};
+        if (typeof self._echoCancellation !== 'undefined') {
+          audioConstraints.echoCancellation = !!self._echoCancellation;
         }
-        else {
-            mediaConstraints.audio = false;
+        if (newDeviceId != undefined && newDeviceId != 'default') {
+          audioConstraints.deviceId = newDeviceId;
         }
-        if (self._enableVideo) {
-            var videoConstraints = {};
-            var widthConstraints = {};
-            var heightConstraints = {};
-            var frameRateConstraints = {};
-            //build video width constraints
-            if (typeof self._idealVideoWidth !== 'undefined') {
-                widthConstraints.ideal = self._idealVideoWidth;
-            }
-            if (typeof self._maxVideoWidth !== 'undefined') {
-                widthConstraints.max = self._maxVideoWidth;
-            }
-            if (typeof self._minVideoWidth !== 'undefined') {
-                widthConstraints.min = self._minVideoWidth;
-            }
-            // build video height constraints
-            if (typeof self._idealVideoHeight !== 'undefined') {
-                heightConstraints.ideal = self._idealVideoHeight;
-            }
-            if (typeof self._maxVideoHeight !== 'undefined') {
-                heightConstraints.max = self._maxVideoHeight;
-            }
-            if (typeof self._minVideoHeight !== 'undefined') {
-                heightConstraints.min = self._minVideoHeight;
-            }
-            if (Object.keys(widthConstraints).length > 0 && Object.keys(heightConstraints).length > 0) {
-                videoConstraints.width = widthConstraints;
-                videoConstraints.height = heightConstraints;
-            }
-            // build frame rate constraints
-            if (typeof self._videoFrameRate !== 'undefined') {
-                frameRateConstraints.ideal = self._videoFrameRate;
-            }
-            if (typeof self._minVideoFrameRate !== 'undefined') {
-                frameRateConstraints.min = self._minVideoFrameRate;
-            }
-            if (typeof self._maxVideoFrameRate !== 'undefined') {
-                frameRateConstraints.max = self._maxVideoFrameRate;
-            }
-            if (Object.keys(frameRateConstraints).length > 0) {
-                videoConstraints.frameRate = frameRateConstraints;
-            }
-            // build facing mode constraints
-            if (self._facingMode !== 'user' && self._facingMode !== "environment") {
-                self._facingMode = 'user';
-            }
-            videoConstraints.facingMode = self._facingMode;
-            // set video constraints
-            if (Object.keys(videoConstraints).length > 0) {
-                mediaConstraints.video = videoConstraints;
-            }
-            else {
-                mediaConstraints.video = true;
-            }
+        // This is required to handle behaviour in published sample code.
+        if (window && window.audio_input) {
+          audioConstraints.deviceId = window.audio_input;
+          if (newDeviceId != window.audio_input) {
+            this._logger.warn('window.audio_input does not match requested device id');
+          }
         }
-        return mediaConstraints;
+        if (Object.keys(audioConstraints).length > 0) {
+          mediaConstraints.audio = audioConstraints;
+        } else {
+          mediaConstraints.audio = true;
+        }
+      } else {
+        mediaConstraints.audio = false;
+      }
+      if (self._enableVideo) {
+        var videoConstraints = {};
+        var widthConstraints = {};
+        var heightConstraints = {};
+        var frameRateConstraints = {};
+        //build video width constraints
+        if (typeof self._idealVideoWidth !== 'undefined') {
+          widthConstraints.ideal = self._idealVideoWidth;
+        }
+        if (typeof self._maxVideoWidth !== 'undefined') {
+          widthConstraints.max = self._maxVideoWidth;
+        }
+        if (typeof self._minVideoWidth !== 'undefined') {
+          widthConstraints.min = self._minVideoWidth;
+        }
+        // build video height constraints
+        if (typeof self._idealVideoHeight !== 'undefined') {
+          heightConstraints.ideal = self._idealVideoHeight;
+        }
+        if (typeof self._maxVideoHeight !== 'undefined') {
+          heightConstraints.max = self._maxVideoHeight;
+        }
+        if (typeof self._minVideoHeight !== 'undefined') {
+          heightConstraints.min = self._minVideoHeight;
+        }
+        if (Object.keys(widthConstraints).length > 0 && Object.keys(heightConstraints).length > 0) {
+          videoConstraints.width = widthConstraints;
+          videoConstraints.height = heightConstraints;
+        }
+        // build frame rate constraints
+        if (typeof self._videoFrameRate !== 'undefined') {
+          frameRateConstraints.ideal = self._videoFrameRate;
+        }
+        if (typeof self._minVideoFrameRate !== 'undefined') {
+          frameRateConstraints.min = self._minVideoFrameRate;
+        }
+        if (typeof self._maxVideoFrameRate !== 'undefined') {
+          frameRateConstraints.max = self._maxVideoFrameRate;
+        }
+        if (Object.keys(frameRateConstraints).length > 0) {
+          videoConstraints.frameRate = frameRateConstraints;
+        }
+        // build facing mode constraints
+        if (self._facingMode !== 'user' && self._facingMode !== "environment") {
+          self._facingMode = 'user';
+        }
+        videoConstraints.facingMode = self._facingMode;
+        // set video constraints
+        if (Object.keys(videoConstraints).length > 0) {
+          mediaConstraints.video = videoConstraints;
+        } else {
+          mediaConstraints.video = true;
+        }
+      }
+      return mediaConstraints;
     }
-}
-exports.default = RtcSession;
+  }]);
+}();
+exports["default"] = RtcSession;
 
-},{"./exceptions":30,"./rtc_const":32,"./rtc_session_talking_substates":37,"./rtp-stats":38,"./session_report":39,"./signaling":43,"./strategies/CCPInitiationStrategyInterface":47,"./strategies/StandardStrategy":52,"./utils":54,"sdp":7,"uuid":9}],37:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./rtc_session_talking_substates":53,"./rtp-stats":54,"./session_report":55,"./signaling":59,"./strategies/CCPInitiationStrategyInterface":63,"./strategies/StandardStrategy":68,"./utils":70,"sdp":7,"uuid":9}],53:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.AcceptSubstate = exports.InviteAnswerSubstate = exports.ConnectSignalingAndIceCollectionSubstate = exports.SetLocalSessionDescriptionSubstate = exports.IceRestartSubstate = exports.ConnectedSubstate = void 0;
-const rtc_const_1 = require("./rtc_const");
-const utils_1 = require("./utils");
-const exceptions_1 = require("./exceptions");
-const sdp_1 = require("sdp");
-const signaling_1 = require("./signaling");
+var rtc_const_1 = require("./rtc_const");
+var utils_1 = require("./utils");
+var exceptions_1 = require("./exceptions");
+var sdp_1 = require("sdp");
+var signaling_1 = require("./signaling");
 /**
  * ConnectedSubstate is the default substate of the rtcSession talking state
  * It monitors the peer connection ICE connection state and attempts to reconnect if disconnected.
  * If the ICE connection state changes to 'DISCONNECTED' more than 3 seconds, it triggers an ICE restart.
  */
-class ConnectedSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var ConnectedSubstate = /*#__PURE__*/function () {
+  function ConnectedSubstate(rtcSession) {
+    _classCallCheck(this, ConnectedSubstate);
+    this._rtcSession = rtcSession;
+    this.retryInterval = 3000; // Retry interval set to 3 seconds
+  }
+  return _createClass(ConnectedSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession) {
-        this._rtcSession = rtcSession;
-        this.retryInterval = 3000; // Retry interval set to 3 seconds
-    }
-    onEnter() {
-    }
+  }, {
+    key: "onEnter",
+    value: function onEnter() {}
     // onIceStateChange will be invoked when peer connection Ice Connection state change
-    onIceStateChange(evt) {
-        const iceState = this._rtcSession._strategy.onIceStateChange(evt, this._rtcSession._pc);
-        this.logger.info('ICE Connection State: ', iceState);
-        if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
-            // Check if the rtcSession supports ICE restart
-            if (this._rtcSession._pcm && this._rtcSession._pcm._peerConnectionToken) {
-                this.logger.info('Detected Lost ICE connection, pending IceRestart');
-                this.IceRestartTimeoutId = setTimeout(() => {
-                    if (this._rtcSession._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
-                        this.logger.info('Trying to restart ICE connection');
-                        this._rtcSession._sessionReport.iceRestartAttempts += 1;
-                        this._rtcSession._state.setSubState(new IceRestartSubstate(this._rtcSession));
-                    }
-                    else {
-                        this.logger.info('The network recovered, IceRestart cancelled');
-                    }
-                }, this.retryInterval);
-            }
-            else {
-                this.logger.info('Detected Lost ICE connection, IceRestart not supported');
-            }
-        }
-    }
-    onSignalingFailed(e) {
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {
+      var _this = this;
+      var iceState = this._rtcSession._strategy.onIceStateChange(evt, this._rtcSession._pc);
+      this.logger.info('ICE Connection State: ', iceState);
+      if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
+        // Check if the rtcSession supports ICE restart
         if (this._rtcSession._pcm && this._rtcSession._pcm._peerConnectionToken) {
-            if (e.name === exceptions_1.BadRequestExceptionName && e.message.includes("Stale Peer Connection")) {
-                this.logger.error('Server detect peer connection being unhealthy, performing IceRestart', e);
-                this._rtcSession._sessionReport.iceRestartAttempts += 1;
-                this._rtcSession._state.setSubState(new IceRestartSubstate(this._rtcSession));
+          this.logger.info('Detected Lost ICE connection, pending IceRestart');
+          this.IceRestartTimeoutId = setTimeout(function () {
+            if (_this._rtcSession._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
+              _this.logger.info('Trying to restart ICE connection');
+              _this._rtcSession._sessionReport.iceRestartAttempts += 1;
+              _this._rtcSession._state.setSubState(new IceRestartSubstate(_this._rtcSession));
+            } else {
+              _this.logger.info('The network recovered, IceRestart cancelled');
             }
+          }, this.retryInterval);
+        } else {
+          this.logger.info('Detected Lost ICE connection, IceRestart not supported');
         }
-        else {
-            this.logger.info('Server detect peer connection being unhealthy, IceRestart not supported');
+      }
+    }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      if (this._rtcSession._pcm && this._rtcSession._pcm._peerConnectionToken) {
+        if (e.name === exceptions_1.BadRequestExceptionName && e.message.includes("Stale Peer Connection")) {
+          this.logger.error('Server detect peer connection being unhealthy, performing IceRestart', e);
+          this._rtcSession._sessionReport.iceRestartAttempts += 1;
+          this._rtcSession._state.setSubState(new IceRestartSubstate(this._rtcSession));
         }
+      } else {
+        this.logger.info('Server detect peer connection being unhealthy, IceRestart not supported');
+      }
     }
-    onExit() {
-        if (this.IceRestartTimeoutId) {
-            this.logger.info('Exiting, cleaning up IceRestart timeout');
-            clearTimeout(this.IceRestartTimeoutId);
-        }
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      if (this.IceRestartTimeoutId) {
+        this.logger.info('Exiting, cleaning up IceRestart timeout');
+        clearTimeout(this.IceRestartTimeoutId);
+      }
     }
-    get name() {
-        return "ConnectedSubstate";
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectedSubstate";
     }
-}
+  }]);
+}();
 exports.ConnectedSubstate = ConnectedSubstate;
 /**
  * IceRestartSubstate manages the process of requesting ICE access and initiating an ICE restart.
@@ -13440,71 +14999,95 @@ exports.ConnectedSubstate = ConnectedSubstate;
  *
  * In case of failure, the ICE restart process is not retried, and the state transitions back to connected sub state
  */
-class IceRestartSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var IceRestartSubstate = /*#__PURE__*/function () {
+  function IceRestartSubstate(rtcSession) {
+    _classCallCheck(this, IceRestartSubstate);
+    this._rtcSession = rtcSession;
+  }
+  return _createClass(IceRestartSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession) {
-        this._rtcSession = rtcSession;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      this.performIceRestart();
     }
-    onEnter() {
-        this.performIceRestart();
-    }
-    performIceRestart() {
-        this._rtcSession._pcm._iceRestart = true;
-        this._rtcSession._pcm._requestIceAccess().then((response) => {
-            var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
-            rtcPeerConnectionConfig.iceServers = response;
-            rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-            this._rtcSession._pc.setConfiguration(rtcPeerConnectionConfig);
-            return this._rtcSession._pc.createOffer({ iceRestart: true });
-        }).then((rtcSessionDescription) => {
-            this._rtcSession._localSessionDescription = rtcSessionDescription;
-            this.logger.info("ICE restart offer created and set as local description");
-            this._rtcSession._state.setSubState(new SetLocalSessionDescriptionSubstate(this._rtcSession));
-        }).catch((error) => {
-            this.logger.error("ICE restart failed", error);
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+  }, {
+    key: "performIceRestart",
+    value: function performIceRestart() {
+      var _this2 = this;
+      this._rtcSession._pcm._iceRestart = true;
+      this._rtcSession._pcm._requestIceAccess().then(function (response) {
+        var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
+        rtcPeerConnectionConfig.iceServers = response;
+        rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+        _this2._rtcSession._pc.setConfiguration(rtcPeerConnectionConfig);
+        return _this2._rtcSession._pc.createOffer({
+          iceRestart: true
         });
+      }).then(function (rtcSessionDescription) {
+        _this2._rtcSession._localSessionDescription = rtcSessionDescription;
+        _this2.logger.info("ICE restart offer created and set as local description");
+        _this2._rtcSession._state.setSubState(new SetLocalSessionDescriptionSubstate(_this2._rtcSession));
+      })["catch"](function (error) {
+        _this2.logger.error("ICE restart failed", error);
+        _this2._rtcSession._state.setSubState(new ConnectedSubstate(_this2._rtcSession));
+      });
     }
-    onExit() {
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "IceRestartSubstate";
     }
-    get name() {
-        return "IceRestartSubstate";
-    }
-}
+  }]);
+}();
 exports.IceRestartSubstate = IceRestartSubstate;
-class SetLocalSessionDescriptionSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var SetLocalSessionDescriptionSubstate = /*#__PURE__*/function () {
+  function SetLocalSessionDescriptionSubstate(rtcSession) {
+    _classCallCheck(this, SetLocalSessionDescriptionSubstate);
+    this._rtcSession = rtcSession;
+  }
+  return _createClass(SetLocalSessionDescriptionSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession) {
-        this._rtcSession = rtcSession;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var _this3 = this;
+      var localDescription = this._rtcSession._localSessionDescription;
+      var sdpOptions = new utils_1.SdpOptions();
+      sdpOptions.enableOpusDtx = this._rtcSession._enableOpusDtx;
+      var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
+      localDescription.sdp = transformedSdp.sdp;
+      localDescription.sdp += 'a=ptime:20\r\n';
+      localDescription.sdp += 'a=maxptime:20\r\n';
+      localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
+      this.logger.info('LocalSD', this._rtcSession._localSessionDescription);
+      this._rtcSession._pc.setLocalDescription(this._rtcSession._localSessionDescription).then(function () {
+        _this3.logger.info("Local description set successfully");
+        _this3._rtcSession._state.setSubState(new ConnectSignalingAndIceCollectionSubstate(_this3._rtcSession, transformedSdp.mLines));
+      })["catch"](function (error) {
+        _this3.logger.error("Failed to set local description", error);
+        _this3._rtcSession._state.setSubState(new ConnectedSubstate(_this3._rtcSession));
+      });
     }
-    onEnter() {
-        const localDescription = this._rtcSession._localSessionDescription;
-        const sdpOptions = new utils_1.SdpOptions();
-        sdpOptions.enableOpusDtx = this._rtcSession._enableOpusDtx;
-        var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
-        localDescription.sdp = transformedSdp.sdp;
-        localDescription.sdp += 'a=ptime:20\r\n';
-        localDescription.sdp += 'a=maxptime:20\r\n';
-        localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
-        this.logger.info('LocalSD', this._rtcSession._localSessionDescription);
-        this._rtcSession._pc.setLocalDescription(this._rtcSession._localSessionDescription).then(() => {
-            this.logger.info("Local description set successfully");
-            this._rtcSession._state.setSubState(new ConnectSignalingAndIceCollectionSubstate(this._rtcSession, transformedSdp.mLines));
-        }).catch(error => {
-            this.logger.error("Failed to set local description", error);
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        });
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "SetLocalSessionDescriptionSubstate";
     }
-    onExit() {
-    }
-    get name() {
-        return "SetLocalSessionDescriptionSubstate";
-    }
-}
+  }]);
+}();
 exports.SetLocalSessionDescriptionSubstate = SetLocalSessionDescriptionSubstate;
 /**
  * ConnectSignalingAndIceCollectionSubstate manages the signaling connection and ICE candidate collection.
@@ -13520,1725 +15103,2196 @@ exports.SetLocalSessionDescriptionSubstate = SetLocalSessionDescriptionSubstate;
  *
  * 4. Sets a timeout for ICE collection to handle cases where the ICE gathering process gets stuck.
  */
-class ConnectSignalingAndIceCollectionSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var ConnectSignalingAndIceCollectionSubstate = /*#__PURE__*/function () {
+  function ConnectSignalingAndIceCollectionSubstate(rtcSession, mLines) {
+    _classCallCheck(this, ConnectSignalingAndIceCollectionSubstate);
+    this._rtcSession = rtcSession;
+    this._iceCandidates = [];
+    this._iceCandidateFoundationsMap = {};
+    this._mLines = mLines;
+    this._iceCompletedForIceRestart = false;
+    // As the peer connection manager is enabled, the RTCSession is created without a signaling channel.
+    // To utilize the existing signaling state machine for SDP exchange, the RTCSession's signaling channel
+    // is bound to the peer connection manager's signaling channel.
+    this._rtcSession._bindSignalingChannel();
+  }
+  return _createClass(ConnectSignalingAndIceCollectionSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession, mLines) {
-        this._rtcSession = rtcSession;
-        this._iceCandidates = [];
-        this._iceCandidateFoundationsMap = {};
-        this._mLines = mLines;
-        this._iceCompletedForIceRestart = false;
-        // As the peer connection manager is enabled, the RTCSession is created without a signaling channel.
-        // To utilize the existing signaling state machine for SDP exchange, the RTCSession's signaling channel
-        // is bound to the peer connection manager's signaling channel.
-        this._rtcSession._bindSignalingChannel();
-    }
-    onEnter() {
-        setTimeout(() => {
-            if (this._isCurrentState() && !this._iceCompletedForIceRestart) {
-                this.logger.warn('ICE collection timed out');
-                this._reportIceCompleted(true);
-            }
-        }, this._rtcSession._iceTimeoutMillis);
-    }
-    _isCurrentState() {
-        return this._rtcSession._state._subState === this;
-    }
-    _createLocalCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
-    }
-    onIceCandidate(evt) {
-        const candidate = evt.candidate;
-        this.logger.log('onicecandidate ' + JSON.stringify(candidate));
-        if (candidate) {
-            if (candidate.candidate) {
-                this._iceCandidates.push(this._createLocalCandidate(candidate));
-                if (!this._iceCompletedForIceRestart) {
-                    this._checkCandidatesSufficient(candidate);
-                }
-            }
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var _this4 = this;
+      setTimeout(function () {
+        if (_this4._isCurrentState() && !_this4._iceCompletedForIceRestart) {
+          _this4.logger.warn('ICE collection timed out');
+          _this4._reportIceCompleted(true);
         }
-        else {
-            this._reportIceCompleted(false);
-        }
+      }, this._rtcSession._iceTimeoutMillis);
     }
-    _checkCandidatesSufficient(candidate) {
-        //check if we collected sufficient candidates from single media server to restart the call
-        var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
-        if (candidateObj.component != 1) {
-            return;
-        }
-        var candidateFoundation = candidateObj.foundation;
-        var candidateMLineIndex = candidate.sdpMLineIndex;
-        if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
-            var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
-            if (!mIndexList.includes(candidateMLineIndex)) {
-                mIndexList.push(candidateMLineIndex);
-            }
-            this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
-            if (this._mLines == mIndexList.length) {
-                this._reportIceCompleted(false);
-            }
-        }
+  }, {
+    key: "_isCurrentState",
+    value: function _isCurrentState() {
+      return this._rtcSession._state._subState === this;
     }
-    _reportIceCompleted(isTimeout) {
-        this._iceCompletedForIceRestart = true;
-        this._rtcSession._onIceCollectionComplete(this._rtcSession, isTimeout, this._iceCandidates.length);
-        if (this._iceCandidates.length > 0) {
-            this._checkAndTransit();
-        }
-        else {
-            this.logger.error('No ICE candidate');
-            this._rtcSession._sessionReport.iceCollectionFailure = true;
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
+  }, {
+    key: "_createLocalCandidate",
+    value: function _createLocalCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _checkAndTransit() {
-        if (this._iceCompletedForIceRestart) {
-            this._rtcSession._state.setSubState(new InviteAnswerSubstate(this._rtcSession, this._iceCandidates));
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      var candidate = evt.candidate;
+      this.logger.log('onicecandidate ' + JSON.stringify(candidate));
+      if (candidate) {
+        if (candidate.candidate) {
+          this._iceCandidates.push(this._createLocalCandidate(candidate));
+          if (!this._iceCompletedForIceRestart) {
+            this._checkCandidatesSufficient(candidate);
+          }
         }
-        else if (!this._iceCompletedForIceRestart) {
-            this.logger.log('Pending ICE collection');
+      } else {
+        this._reportIceCompleted(false);
+      }
+    }
+  }, {
+    key: "_checkCandidatesSufficient",
+    value: function _checkCandidatesSufficient(candidate) {
+      //check if we collected sufficient candidates from single media server to restart the call
+      var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
+      if (candidateObj.component != 1) {
+        return;
+      }
+      var candidateFoundation = candidateObj.foundation;
+      var candidateMLineIndex = candidate.sdpMLineIndex;
+      if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
+        var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
+        if (!mIndexList.includes(candidateMLineIndex)) {
+          mIndexList.push(candidateMLineIndex);
         }
+        this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
+        if (this._mLines == mIndexList.length) {
+          this._reportIceCompleted(false);
+        }
+      }
     }
-    onExit() {
+  }, {
+    key: "_reportIceCompleted",
+    value: function _reportIceCompleted(isTimeout) {
+      this._iceCompletedForIceRestart = true;
+      this._rtcSession._onIceCollectionComplete(this._rtcSession, isTimeout, this._iceCandidates.length);
+      if (this._iceCandidates.length > 0) {
+        this._checkAndTransit();
+      } else {
+        this.logger.error('No ICE candidate');
+        this._rtcSession._sessionReport.iceCollectionFailure = true;
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      }
     }
-    get name() {
-        return "ConnectSignalingAndIceCollectionSubstate";
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._iceCompletedForIceRestart) {
+        this._rtcSession._state.setSubState(new InviteAnswerSubstate(this._rtcSession, this._iceCandidates));
+      } else if (!this._iceCompletedForIceRestart) {
+        this.logger.log('Pending ICE collection');
+      }
     }
-}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectSignalingAndIceCollectionSubstate";
+    }
+  }]);
+}();
 exports.ConnectSignalingAndIceCollectionSubstate = ConnectSignalingAndIceCollectionSubstate;
 /**
  * InviteAnswerSubstate handles the invitation and response during signaling.
  * It retries the invite process if it fails due to certain errors.
  */
-class InviteAnswerSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var InviteAnswerSubstate = /*#__PURE__*/function () {
+  function InviteAnswerSubstate(rtcSession, iceCandidates) {
+    _classCallCheck(this, InviteAnswerSubstate);
+    this._rtcSession = rtcSession;
+    this._iceCandidates = iceCandidates;
+    this.retryCount = 0;
+    this.maxRetries = 3; // Maximum number of retries for the invite process
+    // The retry interval is set to 1 second. The actual interval between each invite attempt
+    // will be the sum of the MAX_INVITE_DELAY_MS (5 seconds) and the retry interval (1 second).
+    // For example, the timing for the three invite attempts would be:
+    // 1. First invite: 0 seconds
+    // 2. Second invite (after the first invite timeout): 6 seconds
+    // 3. Third invite (after the second invite timeout): 12 seconds
+    this.retryInterval = 1000;
+  }
+  return _createClass(InviteAnswerSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession, iceCandidates) {
-        this._rtcSession = rtcSession;
-        this._iceCandidates = iceCandidates;
-        this.retryCount = 0;
-        this.maxRetries = 3; // Maximum number of retries for the invite process
-        // The retry interval is set to 1 second. The actual interval between each invite attempt
-        // will be the sum of the MAX_INVITE_DELAY_MS (5 seconds) and the retry interval (1 second).
-        // For example, the timing for the three invite attempts would be:
-        // 1. First invite: 0 seconds
-        // 2. Second invite (after the first invite timeout): 6 seconds
-        // 3. Third invite (after the second invite timeout): 12 seconds
-        this.retryInterval = 1000;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      this.attemptInvite();
     }
-    onEnter() {
-        this.attemptInvite();
+  }, {
+    key: "attemptInvite",
+    value: function attemptInvite() {
+      // Attempt to send an invite, as we do not know if the signaling (websocket connection) is down or not
+      this._rtcSession._createSignalingChannel().connect();
+      this._rtcSession._pcm._signalingChannel.transit(new signaling_1.PendingInviteState(this._rtcSession._pcm._signalingChannel));
+      this._rtcSession._pcm._signalingChannel.invite(this._rtcSession._localSessionDescription.sdp, this._iceCandidates);
     }
-    attemptInvite() {
-        // Attempt to send an invite, as we do not know if the signaling (websocket connection) is down or not
-        this._rtcSession._createSignalingChannel().connect();
-        this._rtcSession._pcm._signalingChannel.transit(new signaling_1.PendingInviteState(this._rtcSession._pcm._signalingChannel));
-        this._rtcSession._pcm._signalingChannel.invite(this._rtcSession._localSessionDescription.sdp, this._iceCandidates);
+  }, {
+    key: "retryInvite",
+    value: function retryInvite() {
+      var _this5 = this;
+      // Retry logic for invite attempts
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++;
+        this.logger.info("Retrying invite in ".concat(this.retryInterval / 1000, " seconds. Attempt ").concat(this.retryCount));
+        this.signalingRetryTimeoutId = setTimeout(function () {
+          return _this5.attemptInvite();
+        }, this.retryInterval);
+      } else {
+        this.logger.error("Max invite attempts reached. Returning to ConnectedSubstate.");
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      }
     }
-    retryInvite() {
-        // Retry logic for invite attempts
-        if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            this.logger.info(`Retrying invite in ${this.retryInterval / 1000} seconds. Attempt ${this.retryCount}`);
-            this.signalingRetryTimeoutId = setTimeout(() => this.attemptInvite(), this.retryInterval);
-        }
-        else {
-            this.logger.error("Max invite attempts reached. Returning to ConnectedSubstate.");
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      // Handle signaling failures
+      if (e.name === exceptions_1.BusyExceptionName) {
+        this.logger.error('User Busy, possibly multiple CCP windows open', e);
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      } else if (e.name === exceptions_1.CallNotFoundExceptionName) {
+        this.logger.error('Call not found. One of the participant probably hung up.', e);
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      } else {
+        this.logger.error('Failed handshaking with signaling server', e);
+        this.retryInvite();
+      }
     }
-    onSignalingFailed(e) {
-        // Handle signaling failures
-        if (e.name === exceptions_1.BusyExceptionName) {
-            this.logger.error('User Busy, possibly multiple CCP windows open', e);
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
-        else if (e.name === exceptions_1.CallNotFoundExceptionName) {
-            this.logger.error('Call not found. One of the participant probably hung up.', e);
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
-        else {
-            this.logger.error('Failed handshaking with signaling server', e);
-            this.retryInvite();
-        }
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates) {
+      this._rtcSession._state.setSubState(new AcceptSubstate(this._rtcSession, sdp, candidates));
     }
-    onSignalingAnswered(sdp, candidates) {
-        this._rtcSession._state.setSubState(new AcceptSubstate(this._rtcSession, sdp, candidates));
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      if (this.signalingRetryTimeoutId) {
+        this.logger.info('Exiting, cleaning up invite retry timeout');
+        clearTimeout(this.signalingRetryTimeoutId);
+      }
     }
-    onExit() {
-        if (this.signalingRetryTimeoutId) {
-            this.logger.info('Exiting, cleaning up invite retry timeout');
-            clearTimeout(this.signalingRetryTimeoutId);
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "InviteAnswerSubstate";
     }
-    get name() {
-        return "InviteAnswerSubstate";
-    }
-}
+  }]);
+}();
 exports.InviteAnswerSubstate = InviteAnswerSubstate;
 /**
  * AcceptSubstate handles the remote SDP and remote ICE candidates.
  * It verifies the remote SDP and ICE candidates before proceeding.
  */
-class AcceptSubstate {
-    get logger() {
-        return this._rtcSession._logger;
+var AcceptSubstate = /*#__PURE__*/function () {
+  function AcceptSubstate(rtcSession, sdp, candidates) {
+    _classCallCheck(this, AcceptSubstate);
+    this._rtcSession = rtcSession;
+    this._sdp = sdp;
+    this._candidates = candidates;
+  }
+  return _createClass(AcceptSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._rtcSession._logger;
     }
-    constructor(rtcSession, sdp, candidates) {
-        this._rtcSession = rtcSession;
-        this._sdp = sdp;
-        this._candidates = candidates;
+  }, {
+    key: "_createSessionDescription",
+    value: function _createSessionDescription(initDict) {
+      return new RTCSessionDescription(initDict);
     }
-    _createSessionDescription(initDict) {
-        return new RTCSessionDescription(initDict);
+  }, {
+    key: "_createRemoteCandidate",
+    value: function _createRemoteCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _createRemoteCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
-    }
-    onEnter() {
-        if (!this._sdp) {
-            this.logger.error('Invalid remote SDP');
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
-        else if (!this._candidates || this._candidates.length < 1) {
-            this.logger.error('No remote ICE candidate');
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
-        this._rtcSession._strategy.setRemoteDescriptionForIceRestart(this, this._rtcSession);
-    }
-    onSignalingHandshaked() {
-        this._signalingHandshakedForIceRestart = true;
-        this._checkAndTransit();
-    }
-    onIceRestartFailure() {
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      if (!this._sdp) {
+        this.logger.error('Invalid remote SDP');
         this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      } else if (!this._candidates || this._candidates.length < 1) {
+        this.logger.error('No remote ICE candidate');
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      }
+      this._rtcSession._strategy.setRemoteDescriptionForIceRestart(this, this._rtcSession);
     }
-    _checkAndTransit() {
-        if (this._signalingHandshakedForIceRestart && this._remoteDescriptionSetForIceRestart) {
-            this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
-        }
-        else if (!this._signalingHandshakedForIceRestart) {
-            this.logger.log('Pending handshaking');
-        }
-        else { //implies _remoteDescriptionSet == false
-            this.logger.log('Pending setting remote description');
-        }
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      this._signalingHandshakedForIceRestart = true;
+      this._checkAndTransit();
     }
-    onExit() {
+  }, {
+    key: "onIceRestartFailure",
+    value: function onIceRestartFailure() {
+      this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
     }
-    get name() {
-        return "AcceptSubstate";
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._signalingHandshakedForIceRestart && this._remoteDescriptionSetForIceRestart) {
+        this._rtcSession._state.setSubState(new ConnectedSubstate(this._rtcSession));
+      } else if (!this._signalingHandshakedForIceRestart) {
+        this.logger.log('Pending handshaking');
+      } else {
+        //implies _remoteDescriptionSet == false
+        this.logger.log('Pending setting remote description');
+      }
     }
-}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "AcceptSubstate";
+    }
+  }]);
+}();
 exports.AcceptSubstate = AcceptSubstate;
 
-},{"./exceptions":30,"./rtc_const":32,"./signaling":43,"./utils":54,"sdp":7}],38:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./signaling":59,"./utils":70,"sdp":7}],54:[function(require,module,exports){
 "use strict";
+
 /**
  * Extract rtp stats of specified stream from RTCStatsReport
  * Chrome reports all stream stats in statsReports whereas firefox reports only single stream stats in report
  * StreamType is passed only to pull right stream stats audio_input or audio_output.
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.extractMediaStatsFromStats = extractMediaStatsFromStats;
-const utils_1 = require("./utils");
+var utils_1 = require("./utils");
 function extractMediaStatsFromStats(timestamp, stats, streamType) {
-    var extractedStats = null;
-    var reportType = null;
-    stats.forEach(statsReport => {
-        if (statsReport) {
-            if (statsReport.type === 'inbound-rtp' && streamType === 'audio_input') {
-                // inbound-rtp: Stats for stream from Server to CCP, as seen on the browser
-                reportType = statsReport.type;
-                extractedStats = {
-                    timestamp: timestamp,
-                    packetsLost: statsReport.packetsLost,
-                    // packetsCount: number of packet received by CCP, as seen on the browser
-                    packetsCount: statsReport.packetsReceived,
-                    // jitter: statistical variance of RTP data packet inter-arrival time
-                    jitterMilliseconds: Math.floor((0, utils_1.when_defined)(statsReport.jitter, 0) * 1000),
-                    // jitterBufferDelay: cumulative time in ms (for per-second delta calculation)
-                    jbMilliseconds: Math.floor((0, utils_1.when_defined)(statsReport.jitterBufferDelay, 0) * 1000),
-                    // jitterBufferEmittedCount: cumulative count (for per-second delta calculation)
-                    jitterBufferEmittedCount: (0, utils_1.when_defined)(statsReport.jitterBufferEmittedCount, 0),
-                    // Multiplying audioLevel by 32768 aligns its value with the legacy getStats API.
-                    audioLevel: (0, utils_1.is_defined)(statsReport.audioLevel) ? Math.floor(statsReport.audioLevel * 32768) : null,
-                    concealmentEvents: statsReport.concealmentEvents
-                };
-            }
-            else if (statsReport.type === 'outbound-rtp' && streamType === 'audio_output') {
-                // outbound-rtp: Stats for stream from CCP to Server, as seen on the browser
-                extractedStats = extractedStats || {};
-                // packetsCount: number of packet sent by CCP, as seen on the browser
-                extractedStats.packetsCount = statsReport.packetsSent;
-            }
-            else if (statsReport.type === 'media-source' && streamType === 'audio_output') {
-                extractedStats = extractedStats || {};
-                // Multiplying audioLevel by 32768 aligns its value with the legacy getStats API.
-                extractedStats.audioLevel = (0, utils_1.is_defined)(statsReport.audioLevel) ? Math.floor(statsReport.audioLevel * 32768) : null;
-                // Echo cancellation metrics
-                extractedStats.echoReturnLoss = (0, utils_1.when_defined)(statsReport.echoReturnLoss);
-                extractedStats.echoReturnLossEnhancement = (0, utils_1.when_defined)(statsReport.echoReturnLossEnhancement);
-            }
-            else if (statsReport.type === 'remote-inbound-rtp' && streamType === 'audio_output') {
-                // remote-inbound-rtp: Stats for stream from CCP to Server, as seen on Server side
-                reportType = statsReport.type;
-                extractedStats = extractedStats || {};
-                extractedStats.timestamp = timestamp;
-                extractedStats.packetsLost = statsReport.packetsLost;
-                extractedStats.rttMilliseconds = (0, utils_1.is_defined)(statsReport.roundTripTime) ? Math.floor(statsReport.roundTripTime * 1000) : null;
-                // jitter: statistical variance of RTP data packet inter-arrival time
-                extractedStats.jitterMilliseconds = Math.floor((0, utils_1.when_defined)(statsReport.jitter, 0) * 1000);
-            }
-        }
-    });
-    return extractedStats ? new MediaRtpStats(extractedStats, reportType, streamType) : null;
+  var extractedStats = null;
+  var reportType = null;
+  stats.forEach(function (statsReport) {
+    if (statsReport) {
+      if (statsReport.type === 'inbound-rtp' && streamType === 'audio_input') {
+        // inbound-rtp: Stats for stream from Server to CCP, as seen on the browser
+        reportType = statsReport.type;
+        extractedStats = {
+          timestamp: timestamp,
+          packetsLost: statsReport.packetsLost,
+          // packetsCount: number of packet received by CCP, as seen on the browser
+          packetsCount: statsReport.packetsReceived,
+          // jitter: statistical variance of RTP data packet inter-arrival time
+          jitterMilliseconds: Math.floor((0, utils_1.when_defined)(statsReport.jitter, 0) * 1000),
+          // jitterBufferDelay: cumulative time in ms (for per-second delta calculation)
+          jbMilliseconds: Math.floor((0, utils_1.when_defined)(statsReport.jitterBufferDelay, 0) * 1000),
+          // jitterBufferEmittedCount: cumulative count (for per-second delta calculation)
+          jitterBufferEmittedCount: (0, utils_1.when_defined)(statsReport.jitterBufferEmittedCount, 0),
+          // Multiplying audioLevel by 32768 aligns its value with the legacy getStats API.
+          audioLevel: (0, utils_1.is_defined)(statsReport.audioLevel) ? Math.floor(statsReport.audioLevel * 32768) : null,
+          concealmentEvents: statsReport.concealmentEvents
+        };
+      } else if (statsReport.type === 'outbound-rtp' && streamType === 'audio_output') {
+        // outbound-rtp: Stats for stream from CCP to Server, as seen on the browser
+        extractedStats = extractedStats || {};
+        // packetsCount: number of packet sent by CCP, as seen on the browser
+        extractedStats.packetsCount = statsReport.packetsSent;
+      } else if (statsReport.type === 'media-source' && streamType === 'audio_output') {
+        extractedStats = extractedStats || {};
+        // Multiplying audioLevel by 32768 aligns its value with the legacy getStats API.
+        extractedStats.audioLevel = (0, utils_1.is_defined)(statsReport.audioLevel) ? Math.floor(statsReport.audioLevel * 32768) : null;
+        // Echo cancellation metrics
+        extractedStats.echoReturnLoss = (0, utils_1.when_defined)(statsReport.echoReturnLoss);
+        extractedStats.echoReturnLossEnhancement = (0, utils_1.when_defined)(statsReport.echoReturnLossEnhancement);
+      } else if (statsReport.type === 'remote-inbound-rtp' && streamType === 'audio_output') {
+        // remote-inbound-rtp: Stats for stream from CCP to Server, as seen on Server side
+        reportType = statsReport.type;
+        extractedStats = extractedStats || {};
+        extractedStats.timestamp = timestamp;
+        extractedStats.packetsLost = statsReport.packetsLost;
+        extractedStats.rttMilliseconds = (0, utils_1.is_defined)(statsReport.roundTripTime) ? Math.floor(statsReport.roundTripTime * 1000) : null;
+        // jitter: statistical variance of RTP data packet inter-arrival time
+        extractedStats.jitterMilliseconds = Math.floor((0, utils_1.when_defined)(statsReport.jitter, 0) * 1000);
+      }
+    }
+  });
+  return extractedStats ? new MediaRtpStats(extractedStats, reportType, streamType) : null;
 }
 /**
  * Basic RTP statistics object, represents statistics of an audio or video stream.
  */
-class MediaRtpStats {
-    constructor(paramsIn, statsReportType, streamType) {
-        var params = paramsIn || {};
-        this._timestamp = params.timestamp || new Date().getTime();
-        this._packetsLost = (0, utils_1.when_defined)(params.packetsLost);
-        this._packetsCount = (0, utils_1.when_defined)(params.packetsCount);
-        this._audioLevel = (0, utils_1.when_defined)(params.audioLevel);
-        this._procMilliseconds = (0, utils_1.when_defined)(params.procMilliseconds);
-        this._rttMilliseconds = (0, utils_1.when_defined)(params.rttMilliseconds);
-        this._jitterMilliseconds = (0, utils_1.when_defined)(params.jitterMilliseconds);
-        this._jbMilliseconds = (0, utils_1.when_defined)(params.jbMilliseconds);
-        this._jitterBufferEmittedCount = (0, utils_1.when_defined)(params.jitterBufferEmittedCount);
-        this._echoReturnLoss = (0, utils_1.when_defined)(params.echoReturnLoss);
-        this._echoReturnLossEnhancement = (0, utils_1.when_defined)(params.echoReturnLossEnhancement);
-        this._bytesSent = (0, utils_1.when_defined)(params.bytesSent);
-        this._bytesReceived = (0, utils_1.when_defined)(params.bytesReceived);
-        this._framesEncoded = (0, utils_1.when_defined)(params.framesEncoded);
-        this._framesDecoded = (0, utils_1.when_defined)(params.framesDecoded);
-        this._frameRateSent = (0, utils_1.when_defined)(params.frameRateSent);
-        this._frameRateReceived = (0, utils_1.when_defined)(params.frameRateReceived);
-        this._statsReportType = statsReportType || params._statsReportType || "unknown";
-        this._streamType = streamType || params.streamType || "unknown";
-        this._concealmentEvents = (0, utils_1.when_defined)(params.concealmentEvents);
-    }
-    /** {number} number of packets sent to the channel */
-    get packetsCount() {
-        return this._packetsCount;
+var MediaRtpStats = /*#__PURE__*/function () {
+  function MediaRtpStats(paramsIn, statsReportType, streamType) {
+    _classCallCheck(this, MediaRtpStats);
+    var params = paramsIn || {};
+    this._timestamp = params.timestamp || new Date().getTime();
+    this._packetsLost = (0, utils_1.when_defined)(params.packetsLost);
+    this._packetsCount = (0, utils_1.when_defined)(params.packetsCount);
+    this._audioLevel = (0, utils_1.when_defined)(params.audioLevel);
+    this._procMilliseconds = (0, utils_1.when_defined)(params.procMilliseconds);
+    this._rttMilliseconds = (0, utils_1.when_defined)(params.rttMilliseconds);
+    this._jitterMilliseconds = (0, utils_1.when_defined)(params.jitterMilliseconds);
+    this._jbMilliseconds = (0, utils_1.when_defined)(params.jbMilliseconds);
+    this._jitterBufferEmittedCount = (0, utils_1.when_defined)(params.jitterBufferEmittedCount);
+    this._echoReturnLoss = (0, utils_1.when_defined)(params.echoReturnLoss);
+    this._echoReturnLossEnhancement = (0, utils_1.when_defined)(params.echoReturnLossEnhancement);
+    this._bytesSent = (0, utils_1.when_defined)(params.bytesSent);
+    this._bytesReceived = (0, utils_1.when_defined)(params.bytesReceived);
+    this._framesEncoded = (0, utils_1.when_defined)(params.framesEncoded);
+    this._framesDecoded = (0, utils_1.when_defined)(params.framesDecoded);
+    this._frameRateSent = (0, utils_1.when_defined)(params.frameRateSent);
+    this._frameRateReceived = (0, utils_1.when_defined)(params.frameRateReceived);
+    this._statsReportType = statsReportType || params._statsReportType || "unknown";
+    this._streamType = streamType || params.streamType || "unknown";
+    this._concealmentEvents = (0, utils_1.when_defined)(params.concealmentEvents);
+  }
+  /** {number} number of packets sent to the channel */
+  return _createClass(MediaRtpStats, [{
+    key: "packetsCount",
+    get: function get() {
+      return this._packetsCount;
     }
     /** {number} number of packets lost after travelling through the channel */
-    get packetsLost() {
-        return this._packetsLost;
+  }, {
+    key: "packetsLost",
+    get: function get() {
+      return this._packetsLost;
     }
     /** {number} number of packets lost after travelling through the channel */
-    get packetLossPercentage() {
-        return this._packetsCount > 0 ? this._packetsLost / this._packetsCount : 0;
+  }, {
+    key: "packetLossPercentage",
+    get: function get() {
+      return this._packetsCount > 0 ? this._packetsLost / this._packetsCount : 0;
     }
     /** Audio volume level
      * Currently firefox doesn't provide audio level in rtp stats.
      */
-    get audioLevel() {
-        return this._audioLevel;
+  }, {
+    key: "audioLevel",
+    get: function get() {
+      return this._audioLevel;
     }
     /** Timestamp when stats are collected. */
-    get timestamp() {
-        return this._timestamp;
+  }, {
+    key: "timestamp",
+    get: function get() {
+      return this._timestamp;
     }
     /** {number} Processing delay calculated by time to process packet header */
-    get procMilliseconds() {
-        return this._procMilliseconds;
+  }, {
+    key: "procMilliseconds",
+    get: function get() {
+      return this._procMilliseconds;
     }
     /** {number} Round trip time calculated with RTCP reports */
-    get rttMilliseconds() {
-        return this._rttMilliseconds;
+  }, {
+    key: "rttMilliseconds",
+    get: function get() {
+      return this._rttMilliseconds;
     }
     /** {number} Statistical variance of RTP data packet inter-arrival time (jitter) */
-    get jitterMilliseconds() {
-        return this._jitterMilliseconds;
+  }, {
+    key: "jitterMilliseconds",
+    get: function get() {
+      return this._jitterMilliseconds;
     }
     /** {number} Cumulative jitter buffer delay in milliseconds (for per-second delta calculation) */
-    get jbMilliseconds() {
-        return this._jbMilliseconds;
+  }, {
+    key: "jbMilliseconds",
+    get: function get() {
+      return this._jbMilliseconds;
     }
     /** {number} Cumulative count of samples emitted from jitter buffer (for per-second delta calculation) */
-    get jitterBufferEmittedCount() {
-        return this._jitterBufferEmittedCount;
+  }, {
+    key: "jitterBufferEmittedCount",
+    get: function get() {
+      return this._jitterBufferEmittedCount;
     }
     /** {number} Echo return loss in dB */
-    get echoReturnLoss() {
-        return this._echoReturnLoss;
+  }, {
+    key: "echoReturnLoss",
+    get: function get() {
+      return this._echoReturnLoss;
     }
     /** {number} Echo return loss enhancement in dB */
-    get echoReturnLossEnhancement() {
-        return this._echoReturnLossEnhancement;
+  }, {
+    key: "echoReturnLossEnhancement",
+    get: function get() {
+      return this._echoReturnLossEnhancement;
     }
     /** {number} number of bytes sent to the channel*/
-    get bytesSent() {
-        return this._bytesSent;
+  }, {
+    key: "bytesSent",
+    get: function get() {
+      return this._bytesSent;
     }
     /** {number} number of bytes received from the channel*/
-    get bytesReceived() {
-        return this._bytesReceived;
+  }, {
+    key: "bytesReceived",
+    get: function get() {
+      return this._bytesReceived;
     }
     /** {number} number of video frames encoded*/
-    get framesEncoded() {
-        return this._framesEncoded;
+  }, {
+    key: "framesEncoded",
+    get: function get() {
+      return this._framesEncoded;
     }
     /** {number} number of video frames decoded*/
-    get framesDecoded() {
-        return this._framesDecoded;
+  }, {
+    key: "framesDecoded",
+    get: function get() {
+      return this._framesDecoded;
     }
     /** {number} frames per second sent to the channel*/
-    get frameRateSent() {
-        return this._frameRateSent;
+  }, {
+    key: "frameRateSent",
+    get: function get() {
+      return this._frameRateSent;
     }
     /** {number} frames per second received from the channel*/
-    get frameRateReceived() {
-        return this._frameRateReceived;
+  }, {
+    key: "frameRateReceived",
+    get: function get() {
+      return this._frameRateReceived;
     }
     /** {string} the type of the stats report */
-    get statsReportType() {
-        return this._statsReportType;
+  }, {
+    key: "statsReportType",
+    get: function get() {
+      return this._statsReportType;
     }
     /** {string} the type of the stream */
-    get streamType() {
-        return this._streamType;
+  }, {
+    key: "streamType",
+    get: function get() {
+      return this._streamType;
     }
     /** {number} number of concealment events (audio samples synthesized to fill gaps) */
-    get concealmentEvents() {
-        return this._concealmentEvents;
+  }, {
+    key: "concealmentEvents",
+    get: function get() {
+      return this._concealmentEvents;
     }
-}
+  }]);
+}();
 
-},{"./utils":54}],39:[function(require,module,exports){
+},{"./utils":70}],55:[function(require,module,exports){
 "use strict";
+
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-Object.defineProperty(exports, "__esModule", { value: true });
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.SessionReport = void 0;
-class SessionReport {
-    /**
-     * @class Prototype for tracking various RTC session report
-     * @constructs
-     */
-    constructor() {
-        this._sessionStartTime = null;
-        this._sessionEndTime = null;
-        this._gumTimeMillis = null;
-        this._initializationTimeMillis = null;
-        this._iceCollectionTimeMillis = null;
-        this._signallingConnectTimeMillis = null;
-        this._handshakingTimeMillis = null;
-        this._preTalkingTimeMillis = null;
-        this._talkingTimeMillis = null;
-        this._firstRTPTimeMillis = null;
-        this._isPCMv2Path = null;
-        this._isExistingPersistentPeerConnection = null;
-        this._iceCredentialSource = null;
-        this._isContactCredentialsDifferentRegion = null;
-        this._isPersistentPeerConnection = null;
-        this._iceConnectionsLost = 0;
-        this._iceConnectionsFailed = null;
-        this._peerConnectionFailed = null;
-        this._iceRestartAttempts = 0;
-        this._iceRestartSuccesses = 0;
-        this._iceRestartInviteRetries = 0;
-        this._iceRestartTimeMillis = null;
-        this._iceRestartFailed = null;
-        this._cleanupTimeMillis = null;
-        this._iceCollectionFailure = null;
-        this._signallingConnectionFailure = null;
-        this._handshakingFailure = null;
-        this._gumOtherFailure = null;
-        this._gumTimeoutFailure = null;
-        this._createOfferFailure = null;
-        this._setLocalDescriptionFailure = null;
-        this._userBusyFailure = null;
-        this._invalidRemoteSDPFailure = null;
-        this._noRemoteIceCandidateFailure = null;
-        this._setRemoteDescriptionFailure = null;
-        this._streamStats = [];
-        this._rtcJsVersion = "1.3.2";
-        this._userAgentData = null;
-        // Device metrics
-        this._microphonePermission = null;
-        this._deviceMemory = null;
-        // Audio track settings
-        this._noiseSuppression = null;
-        this._autoGainControl = null;
-        this._echoCancellation = null;
-        this._voiceIsolation = null;
-        // Network metrics
-        this._networkEffectiveType = null;
-        this._networkRtt = null;
-        // Browser info
-        this._browserBrand = null;
-        this._browserVersion = null;
-        this._platform = null;
-        this._platformVersion = null;
-        // Audio devices
-        this._audioInputDevices = null;
-        this._audioOutputDevices = null;
-        this._timeSinceLastCallSeconds = null;
-        this._pcmCreationToFirstCallSeconds = null;
-        this._vdiMetadata = null;
-        this._vdiClientVersion = null;
-    }
-    /**
-     *Timestamp when RTCSession started.
-     */
-    get sessionStartTime() {
-        return this._sessionStartTime;
+var SessionReport = /*#__PURE__*/function () {
+  /**
+   * @class Prototype for tracking various RTC session report
+   * @constructs
+   */
+  function SessionReport() {
+    _classCallCheck(this, SessionReport);
+    this._sessionStartTime = null;
+    this._sessionEndTime = null;
+    this._gumTimeMillis = null;
+    this._initializationTimeMillis = null;
+    this._iceCollectionTimeMillis = null;
+    this._signallingConnectTimeMillis = null;
+    this._handshakingTimeMillis = null;
+    this._preTalkingTimeMillis = null;
+    this._talkingTimeMillis = null;
+    this._firstRTPTimeMillis = null;
+    this._isPCMv2Path = null;
+    this._isExistingPersistentPeerConnection = null;
+    this._iceCredentialSource = null;
+    this._isContactCredentialsDifferentRegion = null;
+    this._isPersistentPeerConnection = null;
+    this._iceConnectionsLost = 0;
+    this._iceConnectionsFailed = null;
+    this._peerConnectionFailed = null;
+    this._iceRestartAttempts = 0;
+    this._iceRestartSuccesses = 0;
+    this._iceRestartInviteRetries = 0;
+    this._iceRestartTimeMillis = null;
+    this._iceRestartFailed = null;
+    this._cleanupTimeMillis = null;
+    this._iceCollectionFailure = null;
+    this._signallingConnectionFailure = null;
+    this._handshakingFailure = null;
+    this._gumOtherFailure = null;
+    this._gumTimeoutFailure = null;
+    this._vdiDisconnectedFailure = null;
+    this._createOfferFailure = null;
+    this._setLocalDescriptionFailure = null;
+    this._userBusyFailure = null;
+    this._invalidRemoteSDPFailure = null;
+    this._noRemoteIceCandidateFailure = null;
+    this._setRemoteDescriptionFailure = null;
+    this._streamStats = [];
+    this._rtcJsVersion = "1.3.3";
+    this._userAgentData = null;
+    // Device metrics
+    this._microphonePermission = null;
+    this._deviceMemory = null;
+    // Audio track settings
+    this._noiseSuppression = null;
+    this._autoGainControl = null;
+    this._echoCancellation = null;
+    this._voiceIsolation = null;
+    // Network metrics
+    this._networkEffectiveType = null;
+    this._networkRtt = null;
+    // Browser info
+    this._browserBrand = null;
+    this._browserVersion = null;
+    this._platform = null;
+    this._platformVersion = null;
+    // Audio devices
+    this._audioInputDevices = null;
+    this._audioOutputDevices = null;
+    this._timeSinceLastCallSeconds = null;
+    this._pcmCreationToFirstCallSeconds = null;
+    this._vdiMetadata = null;
+    this._vdiClientVersion = null;
+  }
+  /**
+   *Timestamp when RTCSession started.
+   */
+  return _createClass(SessionReport, [{
+    key: "sessionStartTime",
+    get: function get() {
+      return this._sessionStartTime;
     }
     /**
      * Timestamp when RTCSession ended.
-     */
-    get sessionEndTime() {
-        return this._sessionEndTime;
+     */,
+    set: function set(value) {
+      this._sessionStartTime = value;
+    }
+  }, {
+    key: "sessionEndTime",
+    get: function get() {
+      return this._sessionEndTime;
     }
     /**
      * Time taken for grabbing user microphone at the time of connecting RTCSession.
-     */
-    get gumTimeMillis() {
-        return this._gumTimeMillis;
+     */,
+    set: function set(value) {
+      this._sessionEndTime = value;
+    }
+  }, {
+    key: "gumTimeMillis",
+    get: function get() {
+      return this._gumTimeMillis;
     }
     /**
      * Time taken for session initialization in millis. Includes time spent in GrabLocalMedia, SetLocalSDP states.
-     */
-    get initializationTimeMillis() {
-        return this._initializationTimeMillis;
+     */,
+    set: function set(value) {
+      this._gumTimeMillis = value;
+    }
+  }, {
+    key: "initializationTimeMillis",
+    get: function get() {
+      return this._initializationTimeMillis;
     }
     /**
      * Time spent on ICECollection in millis.
-     */
-    get iceCollectionTimeMillis() {
-        return this._iceCollectionTimeMillis;
+     */,
+    set: function set(value) {
+      this._initializationTimeMillis = value;
+    }
+  }, {
+    key: "iceCollectionTimeMillis",
+    get: function get() {
+      return this._iceCollectionTimeMillis;
     }
     /**
      * Time taken for connecting the signalling in millis.
-     */
-    get signallingConnectTimeMillis() {
-        return this._signallingConnectTimeMillis;
+     */,
+    set: function set(value) {
+      this._iceCollectionTimeMillis = value;
+    }
+  }, {
+    key: "signallingConnectTimeMillis",
+    get: function get() {
+      return this._signallingConnectTimeMillis;
     }
     /**
      * Times spent from RTCSession connection until entering Talking state in millis.
-     */
-    get preTalkingTimeMillis() {
-        return this._preTalkingTimeMillis;
+     */,
+    set: function set(value) {
+      this._signallingConnectTimeMillis = value;
+    }
+  }, {
+    key: "preTalkingTimeMillis",
+    get: function get() {
+      return this._preTalkingTimeMillis;
     }
     /**
      *  Times spent in completing handshaking process of the RTCSession in millis.
-     */
-    get handshakingTimeMillis() {
-        return this._handshakingTimeMillis;
+     */,
+    set: function set(value) {
+      this._preTalkingTimeMillis = value;
+    }
+  }, {
+    key: "handshakingTimeMillis",
+    get: function get() {
+      return this._handshakingTimeMillis;
     }
     /**
      *  Times spent in Talking state in millis.
-     */
-    get talkingTimeMillis() {
-        return this._talkingTimeMillis;
+     */,
+    set: function set(value) {
+      this._handshakingTimeMillis = value;
+    }
+  }, {
+    key: "talkingTimeMillis",
+    get: function get() {
+      return this._talkingTimeMillis;
     }
     /**
      * Time taken to receive the first RTP packet from call session connect in millis.
-     */
-    get firstRTPTimeMillis() {
-        return this._firstRTPTimeMillis;
+     */,
+    set: function set(value) {
+      this._talkingTimeMillis = value;
+    }
+  }, {
+    key: "firstRTPTimeMillis",
+    get: function get() {
+      return this._firstRTPTimeMillis;
     }
     /**
      * Indicates if this session is using the PCMv2 (call session) path.
-     */
-    get isPCMv2Path() {
-        return this._isPCMv2Path;
+     */,
+    set: function set(value) {
+      this._firstRTPTimeMillis = value;
+    }
+  }, {
+    key: "isPCMv2Path",
+    get: function get() {
+      return this._isPCMv2Path;
     }
     /**
      * Indicates if this session is using an existing persistent peer connection.
-     */
-    get isExistingPersistentPeerConnection() {
-        return this._isExistingPersistentPeerConnection;
+     */,
+    set: function set(value) {
+      this._isPCMv2Path = value;
+    }
+  }, {
+    key: "isExistingPersistentPeerConnection",
+    get: function get() {
+      return this._isExistingPersistentPeerConnection;
     }
     /**
      * Source of ICE credentials used - 'api-fetched' or 'contact-provided'.
-     */
-    get iceCredentialSource() {
-        return this._iceCredentialSource;
+     */,
+    set: function set(value) {
+      this._isExistingPersistentPeerConnection = value;
+    }
+  }, {
+    key: "iceCredentialSource",
+    get: function get() {
+      return this._iceCredentialSource;
     }
     /**
      * Boolean flag indicating whether contact credentials were from a different region.
-     */
-    get isContactCredentialsDifferentRegion() {
-        return this._isContactCredentialsDifferentRegion;
+     */,
+    set: function set(value) {
+      this._iceCredentialSource = value;
+    }
+  }, {
+    key: "isContactCredentialsDifferentRegion",
+    get: function get() {
+      return this._isContactCredentialsDifferentRegion;
     }
     /**
      * Indicates if persistent peer connection was enabled for this session.
-     */
-    get isPersistentPeerConnection() {
-        return this._isPersistentPeerConnection;
+     */,
+    set: function set(value) {
+      this._isContactCredentialsDifferentRegion = value;
+    }
+  }, {
+    key: "isPersistentPeerConnection",
+    get: function get() {
+      return this._isPersistentPeerConnection;
     }
     /**
      * How many times the RTCSession has lost ICE connection in talking state.
-     */
-    get iceConnectionsLost() {
-        return this._iceConnectionsLost;
+     */,
+    set: function set(value) {
+      this._isPersistentPeerConnection = value;
+    }
+  }, {
+    key: "iceConnectionsLost",
+    get: function get() {
+      return this._iceConnectionsLost;
     }
     /**
      * Tells if the RTCSession has failed RTCPeerConnection.iceConnectionState
-     */
-    get iceConnectionsFailed() {
-        return this._iceConnectionsFailed;
+     */,
+    set: function set(value) {
+      this._iceConnectionsLost = value;
+    }
+  }, {
+    key: "iceConnectionsFailed",
+    get: function get() {
+      return this._iceConnectionsFailed;
     }
     /**
      * Tells if the RTCSession has failed RTCPeerConnection.connectionState
-     */
-    get peerConnectionFailed() {
-        return this._peerConnectionFailed;
+     */,
+    set: function set(value) {
+      this._iceConnectionsFailed = value;
+    }
+  }, {
+    key: "peerConnectionFailed",
+    get: function get() {
+      return this._peerConnectionFailed;
     }
     /**
      * Number of times ICE restart was attempted during this session
-     */
-    get iceRestartAttempts() {
-        return this._iceRestartAttempts;
+     */,
+    set: function set(value) {
+      this._peerConnectionFailed = value;
+    }
+  }, {
+    key: "iceRestartAttempts",
+    get: function get() {
+      return this._iceRestartAttempts;
     }
     /**
      * Number of times ICE restart succeeded during this session
-     */
-    get iceRestartSuccesses() {
-        return this._iceRestartSuccesses;
+     */,
+    set: function set(value) {
+      this._iceRestartAttempts = value;
+    }
+  }, {
+    key: "iceRestartSuccesses",
+    get: function get() {
+      return this._iceRestartSuccesses;
     }
     /**
      * Number of invite retries for the last ICE restart
-     */
-    get iceRestartInviteRetries() {
-        return this._iceRestartInviteRetries;
+     */,
+    set: function set(value) {
+      this._iceRestartSuccesses = value;
+    }
+  }, {
+    key: "iceRestartInviteRetries",
+    get: function get() {
+      return this._iceRestartInviteRetries;
     }
     /**
      * Time taken for the last ICE restart in milliseconds
-     */
-    get iceRestartTimeMillis() {
-        return this._iceRestartTimeMillis;
+     */,
+    set: function set(value) {
+      this._iceRestartInviteRetries = value;
+    }
+  }, {
+    key: "iceRestartTimeMillis",
+    get: function get() {
+      return this._iceRestartTimeMillis;
     }
     /**
      * Whether the last ICE restart failed (true) or succeeded (false)
-     */
-    get iceRestartFailed() {
-        return this._iceRestartFailed;
+     */,
+    set: function set(value) {
+      this._iceRestartTimeMillis = value;
+    }
+  }, {
+    key: "iceRestartFailed",
+    get: function get() {
+      return this._iceRestartFailed;
     }
     /**
      * Times spent in Cleanup state in millis
-     */
-    get cleanupTimeMillis() {
-        return this._cleanupTimeMillis;
+     */,
+    set: function set(value) {
+      this._iceRestartFailed = value;
+    }
+  }, {
+    key: "cleanupTimeMillis",
+    get: function get() {
+      return this._cleanupTimeMillis;
     }
     /**
      * Tells if the RTCSession fails in ICECollection.
-     */
-    get iceCollectionFailure() {
-        return this._iceCollectionFailure;
+     */,
+    set: function set(value) {
+      this._cleanupTimeMillis = value;
+    }
+  }, {
+    key: "iceCollectionFailure",
+    get: function get() {
+      return this._iceCollectionFailure;
     }
     /**
      * Tells if the RTCSession failed in signalling connect stage.
-     */
-    get signallingConnectionFailure() {
-        return this._signallingConnectionFailure;
+     */,
+    set: function set(value) {
+      this._iceCollectionFailure = value;
+    }
+  }, {
+    key: "signallingConnectionFailure",
+    get: function get() {
+      return this._signallingConnectionFailure;
     }
     /**
      * Handshaking failure of the RTCSession
-     */
-    get handshakingFailure() {
-        return this._handshakingFailure;
+     */,
+    set: function set(value) {
+      this._signallingConnectionFailure = value;
+    }
+  }, {
+    key: "handshakingFailure",
+    get: function get() {
+      return this._handshakingFailure;
     }
     /**
      * Gum failed due to timeout at the time of new RTCSession connection
-     */
-    get gumTimeoutFailure() {
-        return this._gumTimeoutFailure;
+     */,
+    set: function set(value) {
+      this._handshakingFailure = value;
+    }
+  }, {
+    key: "gumTimeoutFailure",
+    get: function get() {
+      return this._gumTimeoutFailure;
     }
     /**
      * Gum failed due to other reasons (other than Timeout)
-     */
-    get gumOtherFailure() {
-        return this._gumOtherFailure;
+     */,
+    set: function set(value) {
+      this._gumTimeoutFailure = value;
+    }
+  }, {
+    key: "gumOtherFailure",
+    get: function get() {
+      return this._gumOtherFailure;
+    }
+    /**
+     * RTC Session failed because the VDI client was not connected (audio redirection unavailable).
+     */,
+    set: function set(value) {
+      this._gumOtherFailure = value;
+    }
+  }, {
+    key: "vdiDisconnectedFailure",
+    get: function get() {
+      return this._vdiDisconnectedFailure;
     }
     /**
      * RTC Session failed in create Offer state.
-     */
-    get createOfferFailure() {
-        return this._createOfferFailure;
+     */,
+    set: function set(value) {
+      this._vdiDisconnectedFailure = value;
+    }
+  }, {
+    key: "createOfferFailure",
+    get: function get() {
+      return this._createOfferFailure;
     }
     /**
      * Tells if setLocalDescription failed for the RTC Session.
-     */
-    get setLocalDescriptionFailure() {
-        return this._setLocalDescriptionFailure;
+     */,
+    set: function set(value) {
+      this._createOfferFailure = value;
+    }
+  }, {
+    key: "setLocalDescriptionFailure",
+    get: function get() {
+      return this._setLocalDescriptionFailure;
     }
     /**
      * Tells if handshaking failed due to user busy case,
      * happens when multiple softphone calls are initiated at same time.
-     */
-    get userBusyFailure() {
-        return this._userBusyFailure;
+     */,
+    set: function set(value) {
+      this._setLocalDescriptionFailure = value;
+    }
+  }, {
+    key: "userBusyFailure",
+    get: function get() {
+      return this._userBusyFailure;
     }
     /**
      * Tells it remote SDP is invalid.
-     */
-    get invalidRemoteSDPFailure() {
-        return this._invalidRemoteSDPFailure;
+     */,
+    set: function set(value) {
+      this._userBusyFailure = value;
+    }
+  }, {
+    key: "invalidRemoteSDPFailure",
+    get: function get() {
+      return this._invalidRemoteSDPFailure;
     }
     /**
      * Tells if the setRemoteDescription failed for the RTC Session.
-     */
-    get setRemoteDescriptionFailure() {
-        return this._setRemoteDescriptionFailure;
+     */,
+    set: function set(value) {
+      this._invalidRemoteSDPFailure = value;
+    }
+  }, {
+    key: "setRemoteDescriptionFailure",
+    get: function get() {
+      return this._setRemoteDescriptionFailure;
     }
     /**
      * A failure case when there is no RemoteIceCandidate.
-     */
-    get noRemoteIceCandidateFailure() {
-        return this._noRemoteIceCandidateFailure;
+     */,
+    set: function set(value) {
+      this._setRemoteDescriptionFailure = value;
+    }
+  }, {
+    key: "noRemoteIceCandidateFailure",
+    get: function get() {
+      return this._noRemoteIceCandidateFailure;
     }
     /**
      * Statistics for each stream(audio-in, audio-out, video-in, video-out) of the RTCSession.
-     */
-    get streamStats() {
-        return this._streamStats;
+     */,
+    set: function set(value) {
+      this._noRemoteIceCandidateFailure = value;
+    }
+  }, {
+    key: "streamStats",
+    get: function get() {
+      return this._streamStats;
     }
     /**
      * get current connect-rtc-js version
-     */
-    get rtcJsVersion() {
-        return this._rtcJsVersion;
+     */,
+    set: function set(value) {
+      this._streamStats = value;
+    }
+  }, {
+    key: "rtcJsVersion",
+    get: function get() {
+      return this._rtcJsVersion;
     }
     /**
      * userAgent data
-     */
-    get userAgentData() {
-        return this._userAgentData;
+     */,
+    set: function set(value) {
+      this._rtcJsVersion = value;
+    }
+  }, {
+    key: "userAgentData",
+    get: function get() {
+      return this._userAgentData;
     }
     /**
      * Microphone permission state (granted/denied/prompt)
-     */
-    get microphonePermission() {
-        return this._microphonePermission;
+     */,
+    set: function set(value) {
+      this._userAgentData = value;
+    }
+  }, {
+    key: "microphonePermission",
+    get: function get() {
+      return this._microphonePermission;
     }
     /**
      * Device memory in GB (navigator.deviceMemory)
-     */
-    get deviceMemory() {
-        return this._deviceMemory;
+     */,
+    set: function set(value) {
+      this._microphonePermission = value;
+    }
+  }, {
+    key: "deviceMemory",
+    get: function get() {
+      return this._deviceMemory;
     }
     /**
      * Whether noise suppression is enabled on the audio track
-     */
-    get noiseSuppression() {
-        return this._noiseSuppression;
+     */,
+    set: function set(value) {
+      this._deviceMemory = value;
+    }
+  }, {
+    key: "noiseSuppression",
+    get: function get() {
+      return this._noiseSuppression;
     }
     /**
      * Whether auto gain control is enabled on the audio track
-     */
-    get autoGainControl() {
-        return this._autoGainControl;
+     */,
+    set: function set(value) {
+      this._noiseSuppression = value;
+    }
+  }, {
+    key: "autoGainControl",
+    get: function get() {
+      return this._autoGainControl;
     }
     /**
      * Whether echo cancellation is enabled on the audio track
-     */
-    get echoCancellation() {
-        return this._echoCancellation;
+     */,
+    set: function set(value) {
+      this._autoGainControl = value;
+    }
+  }, {
+    key: "echoCancellation",
+    get: function get() {
+      return this._echoCancellation;
     }
     /**
      * Whether Voice Isolation is enabled on the audio track
-     */
-    get voiceIsolation() {
-        return this._voiceIsolation;
+     */,
+    set: function set(value) {
+      this._echoCancellation = value;
+    }
+  }, {
+    key: "voiceIsolation",
+    get: function get() {
+      return this._voiceIsolation;
     }
     /**
      * Network effective type (2g/3g/4g)
-     */
-    get networkEffectiveType() {
-        return this._networkEffectiveType;
+     */,
+    set: function set(value) {
+      this._voiceIsolation = value;
+    }
+  }, {
+    key: "networkEffectiveType",
+    get: function get() {
+      return this._networkEffectiveType;
     }
     /**
      * Network RTT baseline in ms
-     */
-    get networkRtt() {
-        return this._networkRtt;
+     */,
+    set: function set(value) {
+      this._networkEffectiveType = value;
+    }
+  }, {
+    key: "networkRtt",
+    get: function get() {
+      return this._networkRtt;
     }
     /**
      * Browser brand name
-     */
-    get browserBrand() {
-        return this._browserBrand;
+     */,
+    set: function set(value) {
+      this._networkRtt = value;
+    }
+  }, {
+    key: "browserBrand",
+    get: function get() {
+      return this._browserBrand;
     }
     /**
      * Browser version
-     */
-    get browserVersion() {
-        return this._browserVersion;
+     */,
+    set: function set(value) {
+      this._browserBrand = value;
+    }
+  }, {
+    key: "browserVersion",
+    get: function get() {
+      return this._browserVersion;
     }
     /**
      * Platform/OS name
-     */
-    get platform() {
-        return this._platform;
+     */,
+    set: function set(value) {
+      this._browserVersion = value;
+    }
+  }, {
+    key: "platform",
+    get: function get() {
+      return this._platform;
     }
     /**
      * Platform/OS version
-     */
-    get platformVersion() {
-        return this._platformVersion;
+     */,
+    set: function set(value) {
+      this._platform = value;
+    }
+  }, {
+    key: "platformVersion",
+    get: function get() {
+      return this._platformVersion;
     }
     /**
      * List of available audio input devices
-     */
-    get audioInputDevices() {
-        return this._audioInputDevices;
+     */,
+    set: function set(value) {
+      this._platformVersion = value;
+    }
+  }, {
+    key: "audioInputDevices",
+    get: function get() {
+      return this._audioInputDevices;
     }
     /**
      * List of available audio output devices
-     */
-    get audioOutputDevices() {
-        return this._audioOutputDevices;
+     */,
+    set: function set(value) {
+      this._audioInputDevices = value;
     }
-    set sessionStartTime(value) {
-        this._sessionStartTime = value;
-    }
-    set sessionEndTime(value) {
-        this._sessionEndTime = value;
-    }
-    set gumTimeMillis(value) {
-        this._gumTimeMillis = value;
-    }
-    set initializationTimeMillis(value) {
-        this._initializationTimeMillis = value;
-    }
-    set iceCollectionTimeMillis(value) {
-        this._iceCollectionTimeMillis = value;
-    }
-    set signallingConnectTimeMillis(value) {
-        this._signallingConnectTimeMillis = value;
-    }
-    set preTalkingTimeMillis(value) {
-        this._preTalkingTimeMillis = value;
-    }
-    set handshakingTimeMillis(value) {
-        this._handshakingTimeMillis = value;
-    }
-    set talkingTimeMillis(value) {
-        this._talkingTimeMillis = value;
-    }
-    set firstRTPTimeMillis(value) {
-        this._firstRTPTimeMillis = value;
-    }
-    set isPCMv2Path(value) {
-        this._isPCMv2Path = value;
-    }
-    set isExistingPersistentPeerConnection(value) {
-        this._isExistingPersistentPeerConnection = value;
-    }
-    set iceCredentialSource(value) {
-        this._iceCredentialSource = value;
-    }
-    set isContactCredentialsDifferentRegion(value) {
-        this._isContactCredentialsDifferentRegion = value;
-    }
-    set isPersistentPeerConnection(value) {
-        this._isPersistentPeerConnection = value;
-    }
-    set iceConnectionsLost(value) {
-        this._iceConnectionsLost = value;
-    }
-    set iceConnectionsFailed(value) {
-        this._iceConnectionsFailed = value;
-    }
-    set peerConnectionFailed(value) {
-        this._peerConnectionFailed = value;
-    }
-    set iceRestartAttempts(value) {
-        this._iceRestartAttempts = value;
-    }
-    set iceRestartSuccesses(value) {
-        this._iceRestartSuccesses = value;
-    }
-    set iceRestartInviteRetries(value) {
-        this._iceRestartInviteRetries = value;
-    }
-    set iceRestartTimeMillis(value) {
-        this._iceRestartTimeMillis = value;
-    }
-    set iceRestartFailed(value) {
-        this._iceRestartFailed = value;
-    }
-    set cleanupTimeMillis(value) {
-        this._cleanupTimeMillis = value;
-    }
-    set iceCollectionFailure(value) {
-        this._iceCollectionFailure = value;
-    }
-    set signallingConnectionFailure(value) {
-        this._signallingConnectionFailure = value;
-    }
-    set handshakingFailure(value) {
-        this._handshakingFailure = value;
-    }
-    set gumTimeoutFailure(value) {
-        this._gumTimeoutFailure = value;
-    }
-    set gumOtherFailure(value) {
-        this._gumOtherFailure = value;
-    }
-    set createOfferFailure(value) {
-        this._createOfferFailure = value;
-    }
-    set setLocalDescriptionFailure(value) {
-        this._setLocalDescriptionFailure = value;
-    }
-    set userBusyFailure(value) {
-        this._userBusyFailure = value;
-    }
-    set invalidRemoteSDPFailure(value) {
-        this._invalidRemoteSDPFailure = value;
-    }
-    set noRemoteIceCandidateFailure(value) {
-        this._noRemoteIceCandidateFailure = value;
-    }
-    set setRemoteDescriptionFailure(value) {
-        this._setRemoteDescriptionFailure = value;
-    }
-    set streamStats(value) {
-        this._streamStats = value;
-    }
-    set rtcJsVersion(value) {
-        this._rtcJsVersion = value;
-    }
-    set userAgentData(value) {
-        this._userAgentData = value;
-    }
-    set microphonePermission(value) {
-        this._microphonePermission = value;
-    }
-    set deviceMemory(value) {
-        this._deviceMemory = value;
-    }
-    set noiseSuppression(value) {
-        this._noiseSuppression = value;
-    }
-    set autoGainControl(value) {
-        this._autoGainControl = value;
-    }
-    set echoCancellation(value) {
-        this._echoCancellation = value;
-    }
-    set voiceIsolation(value) {
-        this._voiceIsolation = value;
-    }
-    set networkEffectiveType(value) {
-        this._networkEffectiveType = value;
-    }
-    set networkRtt(value) {
-        this._networkRtt = value;
-    }
-    set browserBrand(value) {
-        this._browserBrand = value;
-    }
-    set browserVersion(value) {
-        this._browserVersion = value;
-    }
-    set platform(value) {
-        this._platform = value;
-    }
-    set platformVersion(value) {
-        this._platformVersion = value;
-    }
-    set audioInputDevices(value) {
-        this._audioInputDevices = value;
-    }
-    set audioOutputDevices(value) {
-        this._audioOutputDevices = value;
+  }, {
+    key: "audioOutputDevices",
+    get: function get() {
+      return this._audioOutputDevices;
+    },
+    set: function set(value) {
+      this._audioOutputDevices = value;
     }
     /**
      * Time in seconds since the last call ended (2nd+ calls only).
      * Helps understand agent call frequency and optimize persistent connection timeout.
      */
-    get timeSinceLastCallSeconds() {
-        return this._timeSinceLastCallSeconds;
-    }
-    set timeSinceLastCallSeconds(value) {
-        this._timeSinceLastCallSeconds = value;
+  }, {
+    key: "timeSinceLastCallSeconds",
+    get: function get() {
+      return this._timeSinceLastCallSeconds;
+    },
+    set: function set(value) {
+      this._timeSinceLastCallSeconds = value;
     }
     /**
      * Time in seconds from PCM creation to the first call (1st call only).
      * Measures page-load-to-first-call latency.
      */
-    get pcmCreationToFirstCallSeconds() {
-        return this._pcmCreationToFirstCallSeconds;
+  }, {
+    key: "pcmCreationToFirstCallSeconds",
+    get: function get() {
+      return this._pcmCreationToFirstCallSeconds;
+    },
+    set: function set(value) {
+      this._pcmCreationToFirstCallSeconds = value;
     }
-    set pcmCreationToFirstCallSeconds(value) {
-        this._pcmCreationToFirstCallSeconds = value;
+  }, {
+    key: "vdiMetadata",
+    get: function get() {
+      return this._vdiMetadata;
+    },
+    set: function set(value) {
+      this._vdiMetadata = value;
     }
-    get vdiMetadata() {
-        return this._vdiMetadata;
+  }, {
+    key: "vdiClientVersion",
+    get: function get() {
+      return this._vdiClientVersion;
+    },
+    set: function set(value) {
+      this._vdiClientVersion = value;
     }
-    set vdiMetadata(value) {
-        this._vdiMetadata = value;
-    }
-    get vdiClientVersion() {
-        return this._vdiClientVersion;
-    }
-    set vdiClientVersion(value) {
-        this._vdiClientVersion = value;
-    }
-}
+  }]);
+}();
 exports.SessionReport = SessionReport;
 
-},{}],40:[function(require,module,exports){
+},{}],56:[function(require,module,exports){
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.FailedState = exports.DisconnectedState = exports.CleanUpState = exports.TalkingState = exports.AcceptState = exports.InviteAnswerState = exports.ConnectSignalingAndIceCollectionState = exports.SetLocalSessionDescriptionState = exports.CreateOfferState = exports.GrabLocalMediaState = exports.SharedMediaSessionState = void 0;
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-const utils_1 = require("./utils");
-const session_report_1 = require("./session_report");
-const rtc_const_1 = require("./rtc_const");
-const exceptions_1 = require("./exceptions");
-const shared_media_signaling_1 = require("./shared_media_signaling");
-const uuid_1 = require("uuid");
-const sdp_1 = require("sdp");
-const StandardStrategy_1 = require("./strategies/StandardStrategy");
-const rtp_stats_1 = require("./rtp-stats");
-const shared_media_session_talking_substates_1 = require("./shared_media_session_talking_substates");
+var utils_1 = require("./utils");
+var session_report_1 = require("./session_report");
+var rtc_const_1 = require("./rtc_const");
+var exceptions_1 = require("./exceptions");
+var shared_media_signaling_1 = require("./shared_media_signaling");
+var uuid_1 = require("uuid");
+var sdp_1 = require("sdp");
+var StandardStrategy_1 = require("./strategies/StandardStrategy");
+var rtp_stats_1 = require("./rtp-stats");
+var shared_media_session_talking_substates_1 = require("./shared_media_session_talking_substates");
 /**
  * SharedMediaSessionState is the base class for all states in the SharedMediaSession state machine
  */
-class SharedMediaSessionState {
-    /**
-     * @param {SharedMediaSession} sharedMediaSession
-     */
-    constructor(sharedMediaSession) {
-        this._sharedMediaSession = sharedMediaSession;
+var SharedMediaSessionState = /*#__PURE__*/function () {
+  /**
+   * @param {SharedMediaSession} sharedMediaSession
+   */
+  function SharedMediaSessionState(sharedMediaSession) {
+    _classCallCheck(this, SharedMediaSessionState);
+    this._sharedMediaSession = sharedMediaSession;
+  }
+  return _createClass(SharedMediaSessionState, [{
+    key: "onEnter",
+    value: function onEnter() {}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "_isCurrentState",
+    value: function _isCurrentState() {
+      return this._sharedMediaSession._state === this;
     }
-    onEnter() {
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      if (this._isCurrentState()) {
+        this._sharedMediaSession.transit(nextState);
+      }
     }
-    onExit() {
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    _isCurrentState() {
-        return this._sharedMediaSession._state === this;
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.transit(new FailedState(this._sharedMediaSession));
     }
-    transit(nextState) {
-        if (this._isCurrentState()) {
-            this._sharedMediaSession.transit(nextState);
-        }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      //ignore candidate by default, ConnectSignalingAndIceCollectionState will override to collect candidates, but collecting process could last much longer than ConnectSignalingAndIceCollectionState
+      //we don't want to spam the console log
     }
-    get logger() {
-        return this._sharedMediaSession._logger;
+  }, {
+    key: "onRemoteHungup",
+    value: function onRemoteHungup() {
+      throw new exceptions_1.UnsupportedOperation('onRemoteHungup not implemented by ' + this.name);
     }
-    hangup() {
-        this.transit(new FailedState(this._sharedMediaSession));
+  }, {
+    key: "name",
+    get: function get() {
+      return "SharedMediaSessionState";
     }
-    onIceCandidate(evt) {
-        //ignore candidate by default, ConnectSignalingAndIceCollectionState will override to collect candidates, but collecting process could last much longer than ConnectSignalingAndIceCollectionState
-        //we don't want to spam the console log
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      throw new exceptions_1.UnsupportedOperation('onSignalingConnected not implemented by ' + this.name);
     }
-    onRemoteHungup() {
-        throw new exceptions_1.UnsupportedOperation('onRemoteHungup not implemented by ' + this.name);
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      throw new exceptions_1.UnsupportedOperation('onSignalingHandshaked not implemented by ' + this.name);
     }
-    get name() {
-        return "SharedMediaSessionState";
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      throw new exceptions_1.UnsupportedOperation('onSignalingFailed not implemented by ' + this.name);
     }
-    onSignalingConnected() {
-        throw new exceptions_1.UnsupportedOperation('onSignalingConnected not implemented by ' + this.name);
-    }
-    onSignalingHandshaked() {
-        throw new exceptions_1.UnsupportedOperation('onSignalingHandshaked not implemented by ' + this.name);
-    }
-    onSignalingFailed(e) {
-        throw new exceptions_1.UnsupportedOperation('onSignalingFailed not implemented by ' + this.name);
-    }
-    onIceStateChange(evt) {
-    }
-}
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {}
+  }]);
+}();
 exports.SharedMediaSessionState = SharedMediaSessionState;
 /**
  * GrabLocalMediaState acquires the local media stream from the microphone
  */
-class GrabLocalMediaState extends SharedMediaSessionState {
-    onEnter() {
-        var self = this;
-        if (self._sharedMediaSession._isUserProvidedStream) {
-            self.transit(new CreateOfferState(self._sharedMediaSession));
-        }
-        else {
-            // Use the device requested from the constructor.
-            self._sharedMediaSession._doGUM()
-                .then((stream) => {
-                const audioTracks = stream.getAudioTracks();
-                if (audioTracks.length > 0) {
-                    self._sharedMediaSession._selectedMicrophoneDeviceId = audioTracks[0].getSettings().deviceId;
-                    var replacementStream = self._sharedMediaSession._replaceStreamCallback(self, stream);
-                    // Promisify it if it's not a promise.
-                    if (replacementStream == undefined) {
-                        replacementStream = Promise.resolve(stream);
-                    }
-                    else if (!(replacementStream instanceof Promise)) {
-                        replacementStream = Promise.resolve(replacementStream);
-                    }
-                    (0, utils_1.promiseWithTimeout)(replacementStream, self._sharedMediaSession._gumTimeoutMillis, new exceptions_1.Timeout('Timed out waiting for replacement stream'))
-                        .then(stream => {
-                        const audioTracks = stream.getAudioTracks();
-                        if (audioTracks.length > 0) {
-                            const track = audioTracks[0];
-                            if (track.getSettings().deviceId != self._sharedMediaSession._selectedMicrophoneDeviceId) {
-                                self._sharedMediaSession._logger.info(`[GrabLocalMediaState] Audio stream was replaced with track: ${JSON.stringify(track.getSettings())}`).sendInternalLogToServer();
-                            }
-                            self._sharedMediaSession._localStream = stream;
-                            self.transit(new CreateOfferState(self._sharedMediaSession));
-                        }
-                        else {
-                            self.transit(new FailedState(self._sharedMediaSession, "A audio track is required."));
-                        }
-                    }, e => {
-                        self.transit(new FailedState(self._sharedMediaSession, e));
-                    });
+var GrabLocalMediaState = /*#__PURE__*/function (_SharedMediaSessionSt) {
+  function GrabLocalMediaState() {
+    _classCallCheck(this, GrabLocalMediaState);
+    return _callSuper(this, GrabLocalMediaState, arguments);
+  }
+  _inherits(GrabLocalMediaState, _SharedMediaSessionSt);
+  return _createClass(GrabLocalMediaState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      if (self._sharedMediaSession._isUserProvidedStream) {
+        self.transit(new CreateOfferState(self._sharedMediaSession));
+      } else {
+        self._sharedMediaSession._logger.info('[GrabLocalMediaState] Ensuring strategy is connected before acquiring local media').sendInternalLogToServer();
+        self._sharedMediaSession._ensureStrategyConnected().then(function () {
+          return self._sharedMediaSession._doGUM();
+        }).then(function (stream) {
+          var audioTracks = stream.getAudioTracks();
+          if (audioTracks.length > 0) {
+            self._sharedMediaSession._selectedMicrophoneDeviceId = audioTracks[0].getSettings().deviceId;
+            var replacementStream = self._sharedMediaSession._replaceStreamCallback(self, stream);
+            // Promisify it if it's not a promise.
+            if (replacementStream == undefined) {
+              replacementStream = Promise.resolve(stream);
+            } else if (!(replacementStream instanceof Promise)) {
+              replacementStream = Promise.resolve(replacementStream);
+            }
+            (0, utils_1.promiseWithTimeout)(replacementStream, self._sharedMediaSession._gumTimeoutMillis, new exceptions_1.Timeout('Timed out waiting for replacement stream')).then(function (stream) {
+              var audioTracks = stream.getAudioTracks();
+              if (audioTracks.length > 0) {
+                var track = audioTracks[0];
+                if (track.getSettings().deviceId != self._sharedMediaSession._selectedMicrophoneDeviceId) {
+                  self._sharedMediaSession._logger.info("[GrabLocalMediaState] Audio stream was replaced with track: ".concat(JSON.stringify(track.getSettings()))).sendInternalLogToServer();
                 }
-                else {
-                    self.transit(new FailedState(self._sharedMediaSession, "A audio track is required."));
-                }
-            }, e => {
-                self.transit(new FailedState(self._sharedMediaSession, e));
+                self._sharedMediaSession._localStream = stream;
+                self.transit(new CreateOfferState(self._sharedMediaSession));
+              } else {
+                self.transit(new FailedState(self._sharedMediaSession, "A audio track is required."));
+              }
+            }, function (e) {
+              self.transit(new FailedState(self._sharedMediaSession, e));
             });
-        }
+          } else {
+            self.transit(new FailedState(self._sharedMediaSession, "A audio track is required."));
+          }
+        }, function (e) {
+          self.transit(new FailedState(self._sharedMediaSession, e));
+        });
+      }
     }
-    get name() {
-        return "GrabLocalMediaState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "GrabLocalMediaState";
     }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.GrabLocalMediaState = GrabLocalMediaState;
 /**
  * CreateOfferState creates an SDP offer for the peer connection
  */
-class CreateOfferState extends SharedMediaSessionState {
-    onEnter() {
-        var self = this;
-        var stream = self._sharedMediaSession._localStream;
-        self._sharedMediaSession._strategy.addStream(self._sharedMediaSession._pc, stream);
-        self._sharedMediaSession._onLocalPeerConnectionAvailable(self._sharedMediaSession, self._sharedMediaSession._pc);
-        self._sharedMediaSession._onLocalStreamAdded(self._sharedMediaSession, stream);
-        self._sharedMediaSession._pc.createOffer().then(rtcSessionDescription => {
-            self._sharedMediaSession._localSessionDescription = rtcSessionDescription;
-            self._sharedMediaSession._sessionReport.createOfferFailure = false;
-            self.transit(new SetLocalSessionDescriptionState(self._sharedMediaSession));
-        }).catch(e => {
-            self.logger.error('CreateOffer failed', e);
-            self._sharedMediaSession._sessionReport.createOfferFailure = true;
-            self.transit(new FailedState(self._sharedMediaSession, rtc_const_1.RTC_ERRORS.CREATE_OFFER_FAILURE));
-        });
+var CreateOfferState = /*#__PURE__*/function (_SharedMediaSessionSt2) {
+  function CreateOfferState() {
+    _classCallCheck(this, CreateOfferState);
+    return _callSuper(this, CreateOfferState, arguments);
+  }
+  _inherits(CreateOfferState, _SharedMediaSessionSt2);
+  return _createClass(CreateOfferState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      var stream = self._sharedMediaSession._localStream;
+      self._sharedMediaSession._strategy.addStream(self._sharedMediaSession._pc, stream);
+      self._sharedMediaSession._onLocalPeerConnectionAvailable(self._sharedMediaSession, self._sharedMediaSession._pc);
+      self._sharedMediaSession._onLocalStreamAdded(self._sharedMediaSession, stream);
+      self._sharedMediaSession._pc.createOffer().then(function (rtcSessionDescription) {
+        self._sharedMediaSession._localSessionDescription = rtcSessionDescription;
+        self._sharedMediaSession._sessionReport.createOfferFailure = false;
+        self.transit(new SetLocalSessionDescriptionState(self._sharedMediaSession));
+      })["catch"](function (e) {
+        self.logger.error('CreateOffer failed', e);
+        self._sharedMediaSession._sessionReport.createOfferFailure = true;
+        self.transit(new FailedState(self._sharedMediaSession, rtc_const_1.RTC_ERRORS.CREATE_OFFER_FAILURE));
+      });
     }
-    get name() {
-        return "CreateOfferState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "CreateOfferState";
     }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.CreateOfferState = CreateOfferState;
 /**
  * SetLocalSessionDescriptionState sets the SDP offer as the local description for the peer connection
  */
-class SetLocalSessionDescriptionState extends SharedMediaSessionState {
-    onEnter() {
-        var self = this;
-        // fix/modify SDP as needed here, before setLocalDescription
-        var localDescription = self._sharedMediaSession._localSessionDescription;
-        var sdpOptions = new utils_1.SdpOptions();
-        // Set audio codec.
-        if (self._sharedMediaSession._forceAudioCodec) {
-            sdpOptions.forceCodec['audio'] = self._sharedMediaSession._forceAudioCodec;
-        }
-        sdpOptions.enableOpusDtx = self._sharedMediaSession._enableOpusDtx;
-        var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
-        localDescription.sdp = transformedSdp.sdp;
-        localDescription.sdp += 'a=ptime:20\r\n';
-        localDescription.sdp += 'a=maxptime:20\r\n';
-        localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
-        self.logger.info('LocalSD', self._sharedMediaSession._localSessionDescription);
-        self._sharedMediaSession._pc.setLocalDescription(self._sharedMediaSession._localSessionDescription).then(() => {
-            var initializationTime = Date.now() - self._sharedMediaSession._connectTimeStamp;
-            self._sharedMediaSession._sessionReport.initializationTimeMillis = initializationTime;
-            self._sharedMediaSession._onSessionInitialized(self._sharedMediaSession, initializationTime);
-            self._sharedMediaSession._sessionReport.setLocalDescriptionFailure = false;
-            self.transit(new ConnectSignalingAndIceCollectionState(self._sharedMediaSession, transformedSdp.mLines));
-        }).catch(e => {
-            self.logger.error('SetLocalDescription failed', e);
-            self._sharedMediaSession._sessionReport.setLocalDescriptionFailure = true;
-            self.transit(new FailedState(self._sharedMediaSession, rtc_const_1.RTC_ERRORS.SET_LOCAL_DESCRIPTION_FAILURE));
-        });
+var SetLocalSessionDescriptionState = /*#__PURE__*/function (_SharedMediaSessionSt3) {
+  function SetLocalSessionDescriptionState() {
+    _classCallCheck(this, SetLocalSessionDescriptionState);
+    return _callSuper(this, SetLocalSessionDescriptionState, arguments);
+  }
+  _inherits(SetLocalSessionDescriptionState, _SharedMediaSessionSt3);
+  return _createClass(SetLocalSessionDescriptionState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      // fix/modify SDP as needed here, before setLocalDescription
+      var localDescription = self._sharedMediaSession._localSessionDescription;
+      var sdpOptions = new utils_1.SdpOptions();
+      // Set audio codec.
+      if (self._sharedMediaSession._forceAudioCodec) {
+        sdpOptions.forceCodec['audio'] = self._sharedMediaSession._forceAudioCodec;
+      }
+      sdpOptions.enableOpusDtx = self._sharedMediaSession._enableOpusDtx;
+      var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
+      localDescription.sdp = transformedSdp.sdp;
+      localDescription.sdp += 'a=ptime:20\r\n';
+      localDescription.sdp += 'a=maxptime:20\r\n';
+      localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
+      self.logger.info('LocalSD', self._sharedMediaSession._localSessionDescription);
+      self._sharedMediaSession._pc.setLocalDescription(self._sharedMediaSession._localSessionDescription).then(function () {
+        var initializationTime = Date.now() - self._sharedMediaSession._connectTimeStamp;
+        self._sharedMediaSession._sessionReport.initializationTimeMillis = initializationTime;
+        self._sharedMediaSession._onSessionInitialized(self._sharedMediaSession, initializationTime);
+        self._sharedMediaSession._sessionReport.setLocalDescriptionFailure = false;
+        self.transit(new ConnectSignalingAndIceCollectionState(self._sharedMediaSession, transformedSdp.mLines));
+      })["catch"](function (e) {
+        self.logger.error('SetLocalDescription failed', e);
+        self._sharedMediaSession._sessionReport.setLocalDescriptionFailure = true;
+        self.transit(new FailedState(self._sharedMediaSession, rtc_const_1.RTC_ERRORS.SET_LOCAL_DESCRIPTION_FAILURE));
+      });
     }
-    get name() {
-        return "SetLocalSessionDescriptionState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "SetLocalSessionDescriptionState";
     }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.SetLocalSessionDescriptionState = SetLocalSessionDescriptionState;
 /**
  * Kick off signaling connection. Wait until signaling connects and ICE collection (which already started in previous state) completes.
  * ICE collection times out after user specified amount of time (default to DEFAULT_ICE_TIMEOUT_MS) in case user has complex network environment that blackholes STUN/TURN requests. In this case at least one candidate is required to move forward.
  * ICE collection could also wrap up before timeout if it's determined that RTP candidates from same TURN server have been collected for all m lines.
  */
-class ConnectSignalingAndIceCollectionState extends SharedMediaSessionState {
-    /**
-     * Create ConnectSignalingAndIceCollectionState object.
-     * @param {SharedMediaSession} sharedMediaSession
-     * @param {number} mLines Number of m lines in SDP
-     */
-    constructor(sharedMediaSession, mLines) {
-        super(sharedMediaSession);
-        this._iceCandidates = [];
-        this._iceCandidateFoundationsMap = {};
-        this._mLines = mLines;
+var ConnectSignalingAndIceCollectionState = /*#__PURE__*/function (_SharedMediaSessionSt4) {
+  /**
+   * Create ConnectSignalingAndIceCollectionState object.
+   * @param {SharedMediaSession} sharedMediaSession
+   * @param {number} mLines Number of m lines in SDP
+   */
+  function ConnectSignalingAndIceCollectionState(sharedMediaSession, mLines) {
+    var _this;
+    _classCallCheck(this, ConnectSignalingAndIceCollectionState);
+    _this = _callSuper(this, ConnectSignalingAndIceCollectionState, [sharedMediaSession]);
+    _this._iceCandidates = [];
+    _this._iceCandidateFoundationsMap = {};
+    _this._mLines = mLines;
+    return _this;
+  }
+  _inherits(ConnectSignalingAndIceCollectionState, _SharedMediaSessionSt4);
+  return _createClass(ConnectSignalingAndIceCollectionState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      self._startTime = Date.now();
+      setTimeout(function () {
+        if (self._isCurrentState() && !self._iceCompleted) {
+          self.logger.warn('ICE collection timed out');
+          self._reportIceCompleted(true);
+        }
+      }, self._sharedMediaSession._iceTimeoutMillis);
+      self._sharedMediaSession._createSignalingChannel().connect();
     }
-    onEnter() {
-        var self = this;
-        self._startTime = Date.now();
-        setTimeout(() => {
-            if (self._isCurrentState() && !self._iceCompleted) {
-                self.logger.warn('ICE collection timed out');
-                self._reportIceCompleted(true);
-            }
-        }, self._sharedMediaSession._iceTimeoutMillis);
-        self._sharedMediaSession._createSignalingChannel().connect();
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      this._sharedMediaSession._signallingConnectTimestamp = Date.now();
+      this._sharedMediaSession._sessionReport.signallingConnectTimeMillis = this._sharedMediaSession._signallingConnectTimestamp - this._startTime;
+      this._signalingConnected = true;
+      this._sharedMediaSession._onSignalingConnected(this._sharedMediaSession);
+      this._sharedMediaSession._sessionReport.signallingConnectionFailure = false;
+      this._checkAndTransit();
     }
-    onSignalingConnected() {
-        this._sharedMediaSession._signallingConnectTimestamp = Date.now();
-        this._sharedMediaSession._sessionReport.signallingConnectTimeMillis = this._sharedMediaSession._signallingConnectTimestamp - this._startTime;
-        this._signalingConnected = true;
-        this._sharedMediaSession._onSignalingConnected(this._sharedMediaSession);
-        this._sharedMediaSession._sessionReport.signallingConnectionFailure = false;
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      this._sharedMediaSession._sessionReport.signallingConnectTimeMillis = Date.now() - this._startTime;
+      this.logger.error('Failed connecting to signaling server', e);
+      this._sharedMediaSession._sessionReport.signallingConnectionFailure = true;
+      this.transit(new FailedState(this._sharedMediaSession, rtc_const_1.RTC_ERRORS.SIGNALLING_CONNECTION_FAILURE));
+    }
+  }, {
+    key: "_createLocalCandidate",
+    value: function _createLocalCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
+    }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      var candidate = evt.candidate;
+      this.logger.log('onicecandidate ' + JSON.stringify(candidate));
+      if (candidate) {
+        if (candidate.candidate) {
+          this._iceCandidates.push(this._createLocalCandidate(candidate));
+          if (!this._iceCompleted) {
+            this._checkCandidatesSufficient(candidate);
+          }
+        }
+      } else {
+        this._reportIceCompleted(false);
+      }
+    }
+  }, {
+    key: "_checkCandidatesSufficient",
+    value: function _checkCandidatesSufficient(candidate) {
+      //check if we collected sufficient candidates from single media server to start the call
+      var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
+      if (candidateObj.component != 1) {
+        return;
+      }
+      var candidateFoundation = candidateObj.foundation;
+      var candidateMLineIndex = candidate.sdpMLineIndex;
+      if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
+        var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
+        if (!mIndexList.includes(candidateMLineIndex)) {
+          mIndexList.push(candidateMLineIndex);
+        }
+        this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
+        if (this._mLines == mIndexList.length) {
+          this._reportIceCompleted(false);
+        }
+      }
+    }
+  }, {
+    key: "_reportIceCompleted",
+    value: function _reportIceCompleted(isTimeout) {
+      this._sharedMediaSession._sessionReport.iceCollectionTimeMillis = Date.now() - this._startTime;
+      this._iceCompleted = true;
+      this._sharedMediaSession._onIceCollectionComplete(this._sharedMediaSession, isTimeout, this._iceCandidates.length);
+      if (this._iceCandidates.length > 0) {
+        this._sharedMediaSession._sessionReport.iceCollectionFailure = false;
         this._checkAndTransit();
+      } else {
+        this.logger.error('No ICE candidate');
+        this._sharedMediaSession._sessionReport.iceCollectionFailure = true;
+        this.transit(new FailedState(this._sharedMediaSession, rtc_const_1.RTC_ERRORS.ICE_COLLECTION_TIMEOUT));
+      }
     }
-    onSignalingFailed(e) {
-        this._sharedMediaSession._sessionReport.signallingConnectTimeMillis = Date.now() - this._startTime;
-        this.logger.error('Failed connecting to signaling server', e);
-        this._sharedMediaSession._sessionReport.signallingConnectionFailure = true;
-        this.transit(new FailedState(this._sharedMediaSession, rtc_const_1.RTC_ERRORS.SIGNALLING_CONNECTION_FAILURE));
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._iceCompleted && this._signalingConnected) {
+        this.transit(new InviteAnswerState(this._sharedMediaSession, this._iceCandidates));
+      } else if (!this._iceCompleted) {
+        this.logger.log('Pending ICE collection');
+      } else {
+        //implies _signalingConnected == false
+        this.logger.log('Pending signaling connection');
+      }
     }
-    _createLocalCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectSignalingAndIceCollectionState";
     }
-    onIceCandidate(evt) {
-        var candidate = evt.candidate;
-        this.logger.log('onicecandidate ' + JSON.stringify(candidate));
-        if (candidate) {
-            if (candidate.candidate) {
-                this._iceCandidates.push(this._createLocalCandidate(candidate));
-                if (!this._iceCompleted) {
-                    this._checkCandidatesSufficient(candidate);
-                }
-            }
-        }
-        else {
-            this._reportIceCompleted(false);
-        }
-    }
-    _checkCandidatesSufficient(candidate) {
-        //check if we collected sufficient candidates from single media server to start the call
-        var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
-        if (candidateObj.component != 1) {
-            return;
-        }
-        var candidateFoundation = candidateObj.foundation;
-        var candidateMLineIndex = candidate.sdpMLineIndex;
-        if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
-            var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
-            if (!mIndexList.includes(candidateMLineIndex)) {
-                mIndexList.push(candidateMLineIndex);
-            }
-            this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
-            if (this._mLines == mIndexList.length) {
-                this._reportIceCompleted(false);
-            }
-        }
-    }
-    _reportIceCompleted(isTimeout) {
-        this._sharedMediaSession._sessionReport.iceCollectionTimeMillis = Date.now() - this._startTime;
-        this._iceCompleted = true;
-        this._sharedMediaSession._onIceCollectionComplete(this._sharedMediaSession, isTimeout, this._iceCandidates.length);
-        if (this._iceCandidates.length > 0) {
-            this._sharedMediaSession._sessionReport.iceCollectionFailure = false;
-            this._checkAndTransit();
-        }
-        else {
-            this.logger.error('No ICE candidate');
-            this._sharedMediaSession._sessionReport.iceCollectionFailure = true;
-            this.transit(new FailedState(this._sharedMediaSession, rtc_const_1.RTC_ERRORS.ICE_COLLECTION_TIMEOUT));
-        }
-    }
-    _checkAndTransit() {
-        if (this._iceCompleted && this._signalingConnected) {
-            this.transit(new InviteAnswerState(this._sharedMediaSession, this._iceCandidates));
-        }
-        else if (!this._iceCompleted) {
-            this.logger.log('Pending ICE collection');
-        }
-        else { //implies _signalingConnected == false
-            this.logger.log('Pending signaling connection');
-        }
-    }
-    get name() {
-        return "ConnectSignalingAndIceCollectionState";
-    }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.ConnectSignalingAndIceCollectionState = ConnectSignalingAndIceCollectionState;
 /**
  * InviteAnswerState sends the SDP offer and ICE candidates to the signaling server
  */
-class InviteAnswerState extends SharedMediaSessionState {
-    constructor(sharedMediaSession, iceCandidates) {
-        super(sharedMediaSession);
-        this._iceCandidates = iceCandidates;
+var InviteAnswerState = /*#__PURE__*/function (_SharedMediaSessionSt5) {
+  function InviteAnswerState(sharedMediaSession, iceCandidates) {
+    var _this2;
+    _classCallCheck(this, InviteAnswerState);
+    _this2 = _callSuper(this, InviteAnswerState, [sharedMediaSession]);
+    _this2._iceCandidates = iceCandidates;
+    return _this2;
+  }
+  _inherits(InviteAnswerState, _SharedMediaSessionSt5);
+  return _createClass(InviteAnswerState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var sharedMediaSession = this._sharedMediaSession;
+      sharedMediaSession._onSignalingStarted(sharedMediaSession);
+      sharedMediaSession._signalingChannel.invite(sharedMediaSession._localSessionDescription.sdp, this._iceCandidates);
     }
-    onEnter() {
-        var sharedMediaSession = this._sharedMediaSession;
-        sharedMediaSession._onSignalingStarted(sharedMediaSession);
-        sharedMediaSession._signalingChannel.invite(sharedMediaSession._localSessionDescription.sdp, this._iceCandidates);
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+      this._sharedMediaSession._sessionReport.userBusyFailure = false;
+      this._sharedMediaSession._sessionReport.handshakingFailure = false;
+      // signaling answered, set the inactivityDuration, peerConnectionId and peerConnectionToken
+      // Todo: inactivityDuration should be owned by PCM only, reset for every call.
+      this._sharedMediaSession.inactivityDuration = inactivityDuration;
+      this._sharedMediaSession.peerConnectionId = peerConnectionId;
+      this._sharedMediaSession.peerConnectionToken = peerConnectionToken;
+      this._sharedMediaSession._isPersistentConnectionAllowlistedCallback(!!peerConnectionId);
+      this._sharedMediaSession._setPeerConnectionIdCallback(peerConnectionId);
+      this._sharedMediaSession._setPeerConnectionTokenCallback(peerConnectionToken);
+      this._sharedMediaSession._setInactivityDurationCallback(inactivityDuration);
+      this.transit(new AcceptState(this._sharedMediaSession, sdp, candidates));
     }
-    onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      var reason;
+      if (e.name == exceptions_1.BusyExceptionName) {
+        this.logger.error('User Busy, possibly multiple CCP windows open', e);
+        this._sharedMediaSession._sessionReport.userBusyFailure = true;
+        this._sharedMediaSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.USER_BUSY;
+      } else if (e.name == exceptions_1.CallNotFoundExceptionName) {
+        this.logger.error('Call not found. One of the participant probably hungup.', e);
+        reason = rtc_const_1.RTC_ERRORS.CALL_NOT_FOUND;
+        this._sharedMediaSession._sessionReport.handshakingFailure = true;
+      } else {
+        this.logger.error('Failed handshaking with signaling server', e);
         this._sharedMediaSession._sessionReport.userBusyFailure = false;
-        this._sharedMediaSession._sessionReport.handshakingFailure = false;
-        // signaling answered, set the inactivityDuration, peerConnectionId and peerConnectionToken
-        // Todo: inactivityDuration should be owned by PCM only, reset for every call.
-        this._sharedMediaSession.inactivityDuration = inactivityDuration;
-        this._sharedMediaSession.peerConnectionId = peerConnectionId;
-        this._sharedMediaSession.peerConnectionToken = peerConnectionToken;
-        this._sharedMediaSession._isPersistentConnectionAllowlistedCallback(!!peerConnectionId);
-        this._sharedMediaSession._setPeerConnectionIdCallback(peerConnectionId);
-        this._sharedMediaSession._setPeerConnectionTokenCallback(peerConnectionToken);
-        this._sharedMediaSession._setInactivityDurationCallback(inactivityDuration);
-        this.transit(new AcceptState(this._sharedMediaSession, sdp, candidates));
+        this._sharedMediaSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
+      }
+      this.transit(new FailedState(this._sharedMediaSession, reason));
     }
-    onSignalingFailed(e) {
-        var reason;
-        if (e.name == exceptions_1.BusyExceptionName) {
-            this.logger.error('User Busy, possibly multiple CCP windows open', e);
-            this._sharedMediaSession._sessionReport.userBusyFailure = true;
-            this._sharedMediaSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.USER_BUSY;
-        }
-        else if (e.name == exceptions_1.CallNotFoundExceptionName) {
-            this.logger.error('Call not found. One of the participant probably hungup.', e);
-            reason = rtc_const_1.RTC_ERRORS.CALL_NOT_FOUND;
-            this._sharedMediaSession._sessionReport.handshakingFailure = true;
-        }
-        else {
-            this.logger.error('Failed handshaking with signaling server', e);
-            this._sharedMediaSession._sessionReport.userBusyFailure = false;
-            this._sharedMediaSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
-        }
-        this.transit(new FailedState(this._sharedMediaSession, reason));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.transit(new FailedState(this._sharedMediaSession, "Agent clicks hangs up"));
     }
-    hangup() {
-        this.transit(new FailedState(this._sharedMediaSession, "Agent clicks hangs up"));
+  }, {
+    key: "name",
+    get: function get() {
+      return "InviteAnswerState";
     }
-    get name() {
-        return "InviteAnswerState";
-    }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.InviteAnswerState = InviteAnswerState;
 /**
  * AcceptState processes the SDP answer and ICE candidates from the signaling server
  */
-class AcceptState extends SharedMediaSessionState {
-    constructor(sharedMediaSession, sdp, candidates) {
-        super(sharedMediaSession);
-        this._sdp = sdp;
-        this._candidates = candidates;
+var AcceptState = /*#__PURE__*/function (_SharedMediaSessionSt6) {
+  function AcceptState(sharedMediaSession, sdp, candidates) {
+    var _this3;
+    _classCallCheck(this, AcceptState);
+    _this3 = _callSuper(this, AcceptState, [sharedMediaSession]);
+    _this3._sdp = sdp;
+    _this3._candidates = candidates;
+    return _this3;
+  }
+  _inherits(AcceptState, _SharedMediaSessionSt6);
+  return _createClass(AcceptState, [{
+    key: "_createSessionDescription",
+    value: function _createSessionDescription(initDict) {
+      return new RTCSessionDescription(initDict);
     }
-    _createSessionDescription(initDict) {
-        return new RTCSessionDescription(initDict);
+  }, {
+    key: "_createRemoteCandidate",
+    value: function _createRemoteCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _createRemoteCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      var sharedMediaSession = self._sharedMediaSession;
+      if (!self._sdp) {
+        self.logger.error('Invalid remote SDP');
+        sharedMediaSession._stopSession();
+        sharedMediaSession._sessionReport.invalidRemoteSDPFailure = true;
+        self.transit(new FailedState(sharedMediaSession, rtc_const_1.RTC_ERRORS.INVALID_REMOTE_SDP));
+        return;
+      } else if (!self._candidates || self._candidates.length < 1) {
+        self.logger.error('No remote ICE candidate');
+        sharedMediaSession._stopSession();
+        sharedMediaSession._sessionReport.noRemoteIceCandidateFailure = true;
+        self.transit(new FailedState(sharedMediaSession, rtc_const_1.RTC_ERRORS.NO_REMOTE_ICE_CANDIDATE));
+        return;
+      }
+      sharedMediaSession._sessionReport.invalidRemoteSDPFailure = false;
+      sharedMediaSession._sessionReport.noRemoteIceCandidateFailure = false;
+      self._sharedMediaSession._strategy.setRemoteDescription(self, sharedMediaSession);
     }
-    onEnter() {
-        var self = this;
-        var sharedMediaSession = self._sharedMediaSession;
-        if (!self._sdp) {
-            self.logger.error('Invalid remote SDP');
-            sharedMediaSession._stopSession();
-            sharedMediaSession._sessionReport.invalidRemoteSDPFailure = true;
-            self.transit(new FailedState(sharedMediaSession, rtc_const_1.RTC_ERRORS.INVALID_REMOTE_SDP));
-            return;
-        }
-        else if (!self._candidates || self._candidates.length < 1) {
-            self.logger.error('No remote ICE candidate');
-            sharedMediaSession._stopSession();
-            sharedMediaSession._sessionReport.noRemoteIceCandidateFailure = true;
-            self.transit(new FailedState(sharedMediaSession, rtc_const_1.RTC_ERRORS.NO_REMOTE_ICE_CANDIDATE));
-            return;
-        }
-        sharedMediaSession._sessionReport.invalidRemoteSDPFailure = false;
-        sharedMediaSession._sessionReport.noRemoteIceCandidateFailure = false;
-        self._sharedMediaSession._strategy.setRemoteDescription(self, sharedMediaSession);
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      this._sharedMediaSession._sessionReport.handshakingTimeMillis = Date.now() - this._sharedMediaSession._signallingConnectTimestamp;
+      this._signalingHandshaked = true;
+      this._checkAndTransit();
     }
-    onSignalingHandshaked() {
-        this._sharedMediaSession._sessionReport.handshakingTimeMillis = Date.now() - this._sharedMediaSession._signallingConnectTimestamp;
-        this._signalingHandshaked = true;
-        this._checkAndTransit();
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._signalingHandshaked && this._remoteDescriptionSet) {
+        this.transit(new TalkingState(this._sharedMediaSession));
+      } else if (!this._signalingHandshaked) {
+        this.logger.log('Pending handshaking');
+      } else {
+        //implies _remoteDescriptionSet == false
+        this.logger.log('Pending setting remote description');
+      }
     }
-    _checkAndTransit() {
-        if (this._signalingHandshaked && this._remoteDescriptionSet) {
-            this.transit(new TalkingState(this._sharedMediaSession));
-        }
-        else if (!this._signalingHandshaked) {
-            this.logger.log('Pending handshaking');
-        }
-        else { //implies _remoteDescriptionSet == false
-            this.logger.log('Pending setting remote description');
-        }
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      // do nothing
     }
-    onPeerConnectionStateChange() {
-        // do nothing
+  }, {
+    key: "name",
+    get: function get() {
+      return "AcceptState";
     }
-    get name() {
-        return "AcceptState";
-    }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.AcceptState = AcceptState;
 /**
  * TalkingState represents an active media session
  */
-class TalkingState extends SharedMediaSessionState {
-    onEnter() {
-        this._startTime = Date.now();
-        this._sharedMediaSession._sessionReport.preTalkingTimeMillis = this._startTime - this._sharedMediaSession._connectTimeStamp;
-        this._sharedMediaSession._sessionReport.isMediaClusterPath = this._sharedMediaSession._signalingChannel._isMediaClusterPath;
-        //Todo: verify how to mute/resume local audio for new call session
-        this._sharedMediaSession.resumeLocalAudio();
-        this._sharedMediaSession._onSessionConnected(this._sharedMediaSession);
-        this._sharedMediaSession._onSessionSetupLatencyMetricReady(this._sharedMediaSession._sessionReport);
-        this._sharedMediaSession._setupMetricsSent = true;
-        this.setSubState(new shared_media_session_talking_substates_1.ConnectedSubstate(this._sharedMediaSession));
+var TalkingState = /*#__PURE__*/function (_SharedMediaSessionSt7) {
+  function TalkingState() {
+    _classCallCheck(this, TalkingState);
+    return _callSuper(this, TalkingState, arguments);
+  }
+  _inherits(TalkingState, _SharedMediaSessionSt7);
+  return _createClass(TalkingState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this._startTime = Date.now();
+      this._sharedMediaSession._sessionReport.preTalkingTimeMillis = this._startTime - this._sharedMediaSession._connectTimeStamp;
+      this._sharedMediaSession._sessionReport.isMediaClusterPath = this._sharedMediaSession._signalingChannel._isMediaClusterPath;
+      //Todo: verify how to mute/resume local audio for new call session
+      this._sharedMediaSession.resumeLocalAudio();
+      this._sharedMediaSession._onSessionConnected(this._sharedMediaSession);
+      this._sharedMediaSession._onSessionSetupLatencyMetricReady(this._sharedMediaSession._sessionReport);
+      this._sharedMediaSession._setupMetricsSent = true;
+      this.setSubState(new shared_media_session_talking_substates_1.ConnectedSubstate(this._sharedMediaSession));
     }
-    onSignalingReconnected() {
+  }, {
+    key: "onSignalingReconnected",
+    value: function onSignalingReconnected() {}
+  }, {
+    key: "onRemoteHungup",
+    value: function onRemoteHungup() {
+      this._sharedMediaSession._signalingChannel.hangup();
+      this.transit(new DisconnectedState(this._sharedMediaSession));
     }
-    onRemoteHungup() {
-        this._sharedMediaSession._signalingChannel.hangup();
-        this.transit(new DisconnectedState(this._sharedMediaSession));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var serverInitiated = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      // hangup for sharedMediaSession always destory the peer connection
+      this._sharedMediaSession._signalingChannel.hangup(serverInitiated);
+      this.transit(new DisconnectedState(this._sharedMediaSession));
     }
-    hangup(serverInitiated = false) {
-        // hangup for sharedMediaSession always destory the peer connection
-        this._sharedMediaSession._signalingChannel.hangup(serverInitiated);
-        this.transit(new DisconnectedState(this._sharedMediaSession));
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {
+      var iceState = this._sharedMediaSession._strategy.onIceStateChange(evt, this._sharedMediaSession._pc);
+      this.logger.info('ICE Connection State: ', iceState);
+      if (this._subState && typeof this._subState.onIceStateChange === 'function') {
+        this._subState.onIceStateChange(evt);
+      }
     }
-    onIceStateChange(evt) {
-        var iceState = this._sharedMediaSession._strategy.onIceStateChange(evt, this._sharedMediaSession._pc);
-        this.logger.info('ICE Connection State: ', iceState);
-        if (this._subState && typeof this._subState.onIceStateChange === 'function') {
-            this._subState.onIceStateChange(evt);
-        }
+  }, {
+    key: "onSignalingConnected",
+    value: function onSignalingConnected() {
+      if (this._subState && typeof this._subState.onSignalingConnected === 'function') {
+        this._subState.onSignalingConnected();
+      }
     }
-    onSignalingConnected() {
-        if (this._subState && typeof this._subState.onSignalingConnected === 'function') {
-            this._subState.onSignalingConnected();
-        }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      if (this._subState && typeof this._subState.onSignalingFailed === 'function') {
+        this._subState.onSignalingFailed(e);
+      }
+      var reason;
+      if (e.name == exceptions_1.AccessDeniedExceptionName) {
+        this.logger.error('[TalkingState] Access Denied by server', e);
+        this._sharedMediaSession._sessionReport.handshakingFailure = true;
+        reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
+        this.transit(new FailedState(this._sharedMediaSession, reason));
+      } else {
+        this.logger.error('[TalkingState] Failed handshaking with signaling server', e);
+      }
     }
-    onSignalingFailed(e) {
-        if (this._subState && typeof this._subState.onSignalingFailed === 'function') {
-            this._subState.onSignalingFailed(e);
-        }
-        var reason;
-        if (e.name == exceptions_1.AccessDeniedExceptionName) {
-            this.logger.error('[TalkingState] Access Denied by server', e);
-            this._sharedMediaSession._sessionReport.handshakingFailure = true;
-            reason = rtc_const_1.RTC_ERRORS.SIGNALLING_HANDSHAKE_FAILURE;
-            this.transit(new FailedState(this._sharedMediaSession, reason));
-        }
-        else {
-            this.logger.error('[TalkingState] Failed handshaking with signaling server', e);
-        }
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates) {
+      if (this._subState && typeof this._subState.onSignalingAnswered === 'function') {
+        this._subState.onSignalingAnswered(sdp, candidates);
+      }
     }
-    onSignalingAnswered(sdp, candidates) {
-        if (this._subState && typeof this._subState.onSignalingAnswered === 'function') {
-            this._subState.onSignalingAnswered(sdp, candidates);
-        }
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      if (this._subState && typeof this._subState.onSignalingHandshaked === 'function') {
+        this._subState.onSignalingHandshaked();
+      }
     }
-    onSignalingHandshaked() {
-        if (this._subState && typeof this._subState.onSignalingHandshaked === 'function') {
-            this._subState.onSignalingHandshaked();
-        }
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      if (this._subState && typeof this._subState.onIceCandidate === 'function') {
+        this._subState.onIceCandidate(evt);
+      }
     }
-    onIceCandidate(evt) {
-        if (this._subState && typeof this._subState.onIceCandidate === 'function') {
-            this._subState.onIceCandidate(evt);
-        }
+  }, {
+    key: "onIceRestartFailure",
+    value: function onIceRestartFailure() {
+      if (this._subState && typeof this._subState.onIceRestartFailure === 'function') {
+        this._subState.onIceRestartFailure();
+      }
     }
-    onIceRestartFailure() {
-        if (this._subState && typeof this._subState.onIceRestartFailure === 'function') {
-            this._subState.onIceRestartFailure();
-        }
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._subState && typeof this._subState._checkAndTransit === 'function') {
+        this._subState._checkAndTransit();
+      }
     }
-    _checkAndTransit() {
-        if (this._subState && typeof this._subState._checkAndTransit === 'function') {
-            this._subState._checkAndTransit();
-        }
+  }, {
+    key: "setSubState",
+    value: function setSubState(nextState) {
+      this.logger.info('Substate: ' + (this._subState ? this._subState.name : 'null') + ' => ' + nextState.name);
+      if (this._subState) {
+        this._subState.onExit();
+      }
+      this._subState = nextState;
+      this._subState.onEnter();
     }
-    setSubState(nextState) {
-        this.logger.info('Substate: ' + (this._subState ? this._subState.name : 'null') + ' => ' + nextState.name);
-        if (this._subState) {
-            this._subState.onExit();
-        }
-        this._subState = nextState;
-        this._subState.onEnter();
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      var peerConnectionState = this._sharedMediaSession._strategy.onPeerConnectionStateChange(this._sharedMediaSession._pc);
+      this.logger.info('Peer Connection State: ', peerConnectionState);
+      if (peerConnectionState == rtc_const_1.PEER_CONNECTION_STATE.FAILED) {
+        this._sharedMediaSession._sessionReport.peerConnectionFailed = true;
+      }
+      // Notify via callback for Citrix compatibility
+      if (typeof this._sharedMediaSession._onPeerConnectionStateChangeCallback === 'function') {
+        this._sharedMediaSession._onPeerConnectionStateChangeCallback(peerConnectionState);
+      }
     }
-    onPeerConnectionStateChange() {
-        var peerConnectionState = this._sharedMediaSession._strategy.onPeerConnectionStateChange(this._sharedMediaSession._pc);
-        this.logger.info('Peer Connection State: ', peerConnectionState);
-        if (peerConnectionState == rtc_const_1.PEER_CONNECTION_STATE.FAILED) {
-            this._sharedMediaSession._sessionReport.peerConnectionFailed = true;
-        }
-        // Notify via callback for Citrix compatibility
-        if (typeof this._sharedMediaSession._onPeerConnectionStateChangeCallback === 'function') {
-            this._sharedMediaSession._onPeerConnectionStateChangeCallback(peerConnectionState);
-        }
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      this._sharedMediaSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
+      this._sharedMediaSession._detachMedia();
+      this._sharedMediaSession._sessionReport.sessionEndTime = new Date();
+      this._sharedMediaSession._onSessionCompleted(this._sharedMediaSession);
+      if (this._subState) {
+        this._subState.onExit();
+      }
     }
-    onExit() {
-        this._sharedMediaSession._sessionReport.talkingTimeMillis = Date.now() - this._startTime;
-        this._sharedMediaSession._detachMedia();
-        this._sharedMediaSession._sessionReport.sessionEndTime = new Date();
-        this._sharedMediaSession._onSessionCompleted(this._sharedMediaSession);
-        if (this._subState) {
-            this._subState.onExit();
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "TalkingState";
     }
-    get name() {
-        return "TalkingState";
-    }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.TalkingState = TalkingState;
-class CleanUpState extends SharedMediaSessionState {
-    onEnter() {
-        // Todo: Re-evaluatino the media stream handling: mute at the end of the callSession end
-        this._startTime = Date.now();
-        // Reset cleanup flag since we're performing cleanup now
-        this._sharedMediaSession._needsCleanup = false;
-        this._sharedMediaSession._stopSession();
-        this._sharedMediaSession._sessionReport.cleanupTimeMillis = Date.now() - this._startTime;
-        this._sharedMediaSession._onSessionDestroyed(this._sharedMediaSession, this._sharedMediaSession._sessionReport);
+var CleanUpState = /*#__PURE__*/function (_SharedMediaSessionSt8) {
+  function CleanUpState() {
+    _classCallCheck(this, CleanUpState);
+    return _callSuper(this, CleanUpState, arguments);
+  }
+  _inherits(CleanUpState, _SharedMediaSessionSt8);
+  return _createClass(CleanUpState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      // Todo: Re-evaluatino the media stream handling: mute at the end of the callSession end
+      this._startTime = Date.now();
+      // Reset cleanup flag since we're performing cleanup now
+      this._sharedMediaSession._needsCleanup = false;
+      this._sharedMediaSession._stopSession();
+      this._sharedMediaSession._sessionReport.cleanupTimeMillis = Date.now() - this._startTime;
+      this._sharedMediaSession._onSessionDestroyed(this._sharedMediaSession, this._sharedMediaSession._sessionReport);
     }
-    get name() {
-        return "CleanUpState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "CleanUpState";
     }
-    hangup() {
-        //do nothing, already at the end of lifecycle
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      //do nothing, already at the end of lifecycle
     }
-}
+  }]);
+}(SharedMediaSessionState);
 exports.CleanUpState = CleanUpState;
-class DisconnectedState extends CleanUpState {
-    onSignalingHandshaked() {
-        // do nothing
+var DisconnectedState = /*#__PURE__*/function (_CleanUpState) {
+  function DisconnectedState() {
+    _classCallCheck(this, DisconnectedState);
+    return _callSuper(this, DisconnectedState, arguments);
+  }
+  _inherits(DisconnectedState, _CleanUpState);
+  return _createClass(DisconnectedState, [{
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      // do nothing
     }
-    onSignalingFailed(e) {
-        // do nothing - session already disconnected
-        this._sharedMediaSession._logger.info('Ignoring signaling failure in DisconnectedState', e);
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      // do nothing - session already disconnected
+      this._sharedMediaSession._logger.info('Ignoring signaling failure in DisconnectedState', e);
     }
-    onPeerConnectionStateChange() {
-        // do nothing
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      // do nothing
     }
-    get name() {
-        return "DisconnectedState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "DisconnectedState";
     }
-}
+  }]);
+}(CleanUpState);
 exports.DisconnectedState = DisconnectedState;
-class FailedState extends CleanUpState {
-    constructor(sharedMediaSession, failureReason) {
-        super(sharedMediaSession);
-        this._failureReason = failureReason || `ForceDestroyedIn${sharedMediaSession._state ? sharedMediaSession._state.name : 'UnknownState'}`;
-    }
-    onEnter() {
-        this._sharedMediaSession._sessionReport.sessionEndTime = new Date();
-        try {
-            // If we failed before reaching TalkingState, send setup metrics now
-            // TalkingState sets this flag when it calls the callback
-            if (!this._sharedMediaSession._setupMetricsSent) {
-                this._sharedMediaSession._onSessionSetupLatencyMetricReady(this._sharedMediaSession._sessionReport);
-                this._sharedMediaSession._setupMetricsSent = true;
-            }
-            this._sharedMediaSession._onSessionFailed(this._sharedMediaSession, this._failureReason);
+var FailedState = /*#__PURE__*/function (_CleanUpState2) {
+  function FailedState(sharedMediaSession, failureReason) {
+    var _this4;
+    _classCallCheck(this, FailedState);
+    _this4 = _callSuper(this, FailedState, [sharedMediaSession]);
+    _this4._failureReason = failureReason || "ForceDestroyedIn".concat(sharedMediaSession._state ? sharedMediaSession._state.name : 'UnknownState');
+    return _this4;
+  }
+  _inherits(FailedState, _CleanUpState2);
+  return _createClass(FailedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this._sharedMediaSession._sessionReport.sessionEndTime = new Date();
+      try {
+        // If we failed before reaching TalkingState, send setup metrics now
+        // TalkingState sets this flag when it calls the callback
+        if (!this._sharedMediaSession._setupMetricsSent) {
+          this._sharedMediaSession._onSessionSetupLatencyMetricReady(this._sharedMediaSession._sessionReport);
+          this._sharedMediaSession._setupMetricsSent = true;
         }
-        catch (e) {
-            this.logger.warn(`FailedState#onEnter failed ${e}`);
-        }
-        super.onEnter();
+        this._sharedMediaSession._onSessionFailed(this._sharedMediaSession, this._failureReason);
+      } catch (e) {
+        this.logger.warn("FailedState#onEnter failed ".concat(e));
+      }
+      _superPropGet(FailedState, "onEnter", this, 3)([]);
     }
-    get name() {
-        return "FailedState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailedState";
     }
-}
+  }]);
+}(CleanUpState);
 exports.FailedState = FailedState;
-class SharedMediaSession {
+var SharedMediaSession = /*#__PURE__*/function () {
+  /**
+   * Constructor for SharedMediaSession
+   * @param {Object} config Configuration options
+   */
+  function SharedMediaSession(config) {
+    var _this5 = this;
+    _classCallCheck(this, SharedMediaSession);
+    if (!config) {
+      throw new exceptions_1.IllegalParameters('config is required');
+    }
+    if (!config.iceServers) {
+      throw new exceptions_1.IllegalParameters('iceServers required');
+    }
+    if (_typeof(config.logger) !== 'object') {
+      throw new exceptions_1.IllegalParameters('logger required');
+    }
+    this._callId = config.callId || (0, uuid_1.v4)();
+    this._strategy = config.strategy || new StandardStrategy_1["default"]();
+    this._connectionId = config.connectionId || (0, uuid_1.v4)();
+    this._signalingChannelManager = config.signalingChannelManager;
+    this._isPersistentConnectionEnabled = config.isPersistentConnectionEnabled;
+    this._allowExtendedPersistentConnection = !!config.allowExtendedPersistentConnection;
+    this._sessionReport = new session_report_1.SessionReport();
+    this._iceServers = config.iceServers;
+    this._contactToken = config.contactToken;
+    this._originalLogger = config.logger;
+    this._logger = (0, utils_1.wrapLogger)(config.logger, this._callId, 'SharedMediaSession');
+    this._iceTimeoutMillis = rtc_const_1.DEFAULT_ICE_TIMEOUT_MS;
+    this._gumTimeoutMillis = rtc_const_1.DEFAULT_GUM_TIMEOUT_MS;
+    this._requestIceAccess = config.requestIceAccess;
+    this._browserId = config.browserId;
+    this._enableAudio = true;
+    this._legacyStatsReportSupport = false;
+    this._setupMetricsSent = false;
     /**
-     * Constructor for SharedMediaSession
-     * @param {Object} config Configuration options
+     * user may provide the stream to the RtcSession directly to connect to the other end.
+     * user may also acquire the stream from the local device.
+     * This flag is used to track where the stream is acquired.
+     * If it's acquired from local devices, then we must close the stream when the session ends.
+     * If it's provided by user (rather than local camera/microphone), then we should leave it open when the
+     * session ends.
      */
-    constructor(config) {
-        if (!config) {
-            throw new exceptions_1.IllegalParameters('config is required');
-        }
-        if (!config.iceServers) {
-            throw new exceptions_1.IllegalParameters('iceServers required');
-        }
-        if (typeof config.logger !== 'object') {
-            throw new exceptions_1.IllegalParameters('logger required');
-        }
-        this._callId = config.callId || (0, uuid_1.v4)();
-        this._strategy = config.strategy || new StandardStrategy_1.default();
-        this._connectionId = config.connectionId || (0, uuid_1.v4)();
-        this._signalingChannelManager = config.signalingChannelManager;
-        this._isPersistentConnectionEnabled = config.isPersistentConnectionEnabled;
-        this._allowExtendedPersistentConnection = !!config.allowExtendedPersistentConnection;
-        this._sessionReport = new session_report_1.SessionReport();
-        this._iceServers = config.iceServers;
-        this._contactToken = config.contactToken;
-        this._originalLogger = config.logger;
-        this._logger = (0, utils_1.wrapLogger)(config.logger, this._callId, 'SharedMediaSession');
-        this._iceTimeoutMillis = rtc_const_1.DEFAULT_ICE_TIMEOUT_MS;
-        this._gumTimeoutMillis = rtc_const_1.DEFAULT_GUM_TIMEOUT_MS;
-        this._requestIceAccess = config.requestIceAccess;
-        this._browserId = config.browserId;
-        this._enableAudio = true;
-        this._legacyStatsReportSupport = false;
-        this._setupMetricsSent = false;
-        /**
-         * user may provide the stream to the RtcSession directly to connect to the other end.
-         * user may also acquire the stream from the local device.
-         * This flag is used to track where the stream is acquired.
-         * If it's acquired from local devices, then we must close the stream when the session ends.
-         * If it's provided by user (rather than local camera/microphone), then we should leave it open when the
-         * session ends.
-         */
-        this._isUserProvidedStream = false;
-        this._onGumError =
-            this._onGumSuccess =
-                this._onLocalPeerConnectionAvailable =
-                    this._onLocalStreamAdded =
-                        this._onSessionFailed =
-                            this._onSessionInitialized =
-                                this._onSignalingConnected =
-                                    this._onIceCollectionComplete =
-                                        this._onSignalingStarted =
-                                            this._onSessionConnected =
-                                                this._onSessionSetupLatencyMetricReady =
-                                                    this._onRemoteStreamAdded =
-                                                        this._onSessionCompleted =
-                                                            this._onSessionDestroyed =
-                                                                this._setInactivityDurationCallback =
-                                                                    this._isPersistentConnectionAllowlistedCallback =
-                                                                        this._setPeerConnectionIdCallback =
-                                                                            this._setPeerConnectionTokenCallback =
-                                                                                this._onIceConnectionStateChangeCallback =
-                                                                                    this._onPeerConnectionStateChangeCallback =
-                                                                                        this._onIceRestartCompleteCallback =
-                                                                                            this._replaceStreamCallback = () => {
-                                                                                            };
-        // VDI cleanup flag
-        this._needsCleanup = false;
-        // Track current microphone device ID for idempotent setMicrophoneDevice calls
-        this._currentMicDeviceId = null;
-        // Register VDI disconnection handler if strategy supports it
-        if (this._strategy.onConnectionNeedingCleanup && typeof this._strategy.onConnectionNeedingCleanup === 'function') {
-            this._strategy.onConnectionNeedingCleanup(() => this.markNeedsCleanup());
-        }
+    this._isUserProvidedStream = false;
+    this._onGumError = this._onGumSuccess = this._onLocalPeerConnectionAvailable = this._onLocalStreamAdded = this._onSessionFailed = this._onSessionInitialized = this._onSignalingConnected = this._onIceCollectionComplete = this._onSignalingStarted = this._onSessionConnected = this._onSessionSetupLatencyMetricReady = this._onRemoteStreamAdded = this._onSessionCompleted = this._onSessionDestroyed = this._setInactivityDurationCallback = this._isPersistentConnectionAllowlistedCallback = this._setPeerConnectionIdCallback = this._setPeerConnectionTokenCallback = this._onIceConnectionStateChangeCallback = this._onPeerConnectionStateChangeCallback = this._onIceRestartCompleteCallback = this._replaceStreamCallback = function () {};
+    // VDI cleanup flag
+    this._needsCleanup = false;
+    // Track current microphone device ID for idempotent setMicrophoneDevice calls
+    this._currentMicDeviceId = null;
+    // Register VDI disconnection handler if strategy supports it
+    if (this._strategy.onConnectionNeedingCleanup && typeof this._strategy.onConnectionNeedingCleanup === 'function') {
+      this._strategy.onConnectionNeedingCleanup(function () {
+        return _this5.markNeedsCleanup();
+      });
     }
-    get sessionReport() {
-        return this._sessionReport;
+  }
+  return _createClass(SharedMediaSession, [{
+    key: "sessionReport",
+    get: function get() {
+      return this._sessionReport;
     }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "callId",
+    get: function get() {
+      return this._callId;
     }
     /**
      * getMediaStream returns the local stream, which may be acquired from local device or from user provided stream.
      * Rather than getting a stream by calling getUserMedia (which gets a stream from local device such as camera),
      * user could also provide the stream to the RtcSession directly to connect to the other end.
      */
-    get mediaStream() {
-        return this._localStream;
+  }, {
+    key: "mediaStream",
+    get: function get() {
+      return this._localStream;
+    },
+    set:
+    /**
+     * Optional. RtcSession will grab input device if this is not specified.
+     * Please note: this RtcSession class only supports single audio track.
+     */
+    function set(input) {
+      this._localStream = input;
+      this._isUserProvidedStream = true;
     }
-    setMicrophoneDevice(newAudioDeviceId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            var self = this;
-            var logger = this._logger;
-            // Idempotent: skip if deviceId matches current.
-            // TODO: If deviceId is "default" and the underlying physical device changed, this no-op
-            // may incorrectly block the switch. Need to address it before this API is more publicly used
-            if (self._currentMicDeviceId === newAudioDeviceId) {
-                if (newAudioDeviceId === 'default') {
-                    logger.warn("[setMicrophoneDevice] Skipping — deviceId 'default' matches current. " +
-                        "If the underlying physical device changed, this may incorrectly block the switch. " +
-                        "Please use the exact device ID if this is causing a problem.").sendInternalLogToServer();
-                }
-                else {
-                    logger.info("[setMicrophoneDevice] Requested deviceId matches current device, no-op. deviceId=" + newAudioDeviceId).sendInternalLogToServer();
-                }
-                return;
-            }
-            logger.info("[setMicrophoneDevice] Starting mic device change to deviceId: " + newAudioDeviceId).sendInternalLogToServer();
-            // Mark as user-provided stream immediately to prevent automatic refreshes during the async operation
-            self._isUserProvidedStream = true;
-            // Get old track reference
-            var oldTrack = self._localStream ? self._localStream.getAudioTracks()[0] : null;
-            logger.info("[setMicrophoneDevice] Old track state: " +
-                (oldTrack ? "id=" + oldTrack.id + ", readyState=" + oldTrack.readyState + ", enabled=" + oldTrack.enabled : "no old track"));
-            try {
-                // Acquire new media stream with GUM timeout
-                logger.info("[setMicrophoneDevice] Acquiring new media stream...").sendInternalLogToServer();
-                var newStream = yield this._doGUM(newAudioDeviceId);
-                var newTrack = newStream.getAudioTracks()[0];
-                logger.info("[setMicrophoneDevice] New media stream acquired, track id=" + newTrack.id +
-                    ", settings=" + JSON.stringify(newTrack.getSettings())).sendInternalLogToServer();
-                // Preserve mute state: apply old track's enabled state to new track immediately
-                var wasEnabled = oldTrack ? oldTrack.enabled : true;
-                newTrack.enabled = wasEnabled;
-                logger.info("[setMicrophoneDevice] Mute state preserved: wasEnabled=" + wasEnabled).sendInternalLogToServer();
-                // Replace audio track in peer connection sender
-                var audioSender = self._pc.getSenders().find(function (sender) { return sender.track && sender.track.kind === 'audio'; });
-                if (!audioSender) {
-                    logger.error("[setMicrophoneDevice] No audio sender found in peer connection").sendInternalLogToServer();
-                    return;
-                }
-                logger.info("[setMicrophoneDevice] Replacing track in peer connection sender...").sendInternalLogToServer();
-                yield audioSender.replaceTrack(newTrack);
-                logger.info("[setMicrophoneDevice] Track replaced in peer connection sender successfully").sendInternalLogToServer();
-                // Replace track in _localStream in-place (same object reference StreamsJS holds)
-                if (oldTrack) {
-                    oldTrack.enabled = false;
-                    self._localStream.removeTrack(oldTrack);
-                    oldTrack.stop();
-                    logger.info("[setMicrophoneDevice] Old track disabled, removed, and stopped").sendInternalLogToServer();
-                }
-                self._localStream.addTrack(newTrack);
-                // Update selected device ID
-                self._selectedMicrophoneDeviceId = newTrack.getSettings().deviceId;
-                // Note: For VDI environments, the enabled property may take time to propagate
-                logger.info("[setMicrophoneDevice] New track added to local media stream, id=" + newTrack.id + ", enabled=" + newTrack.enabled + ", readyState=" + newTrack.readyState);
-                self._currentMicDeviceId = newAudioDeviceId;
-                logger.info("[setMicrophoneDevice] Mic device change completed successfully").sendInternalLogToServer();
-            }
-            catch (error) {
-                logger.error("[setMicrophoneDevice] Failed to change microphone device").withException(error).sendInternalLogToServer();
-            }
-        });
+    /**
+     * Needed, expect an audio element that can be used to play remote audio stream.
+     */
+  }, {
+    key: "setMicrophoneDevice",
+    value: function setMicrophoneDevice(newAudioDeviceId) {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+        var self, logger, oldTrack, newStream, newTrack, wasEnabled, audioSender, _t;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.p = _context.n) {
+            case 0:
+              self = this;
+              logger = this._logger; // Idempotent: skip if deviceId matches current.
+              // TODO: If deviceId is "default" and the underlying physical device changed, this no-op
+              // may incorrectly block the switch. Need to address it before this API is more publicly used
+              if (!(self._currentMicDeviceId === newAudioDeviceId)) {
+                _context.n = 1;
+                break;
+              }
+              if (newAudioDeviceId === 'default') {
+                logger.warn("[setMicrophoneDevice] Skipping — deviceId 'default' matches current. " + "If the underlying physical device changed, this may incorrectly block the switch. " + "Please use the exact device ID if this is causing a problem.").sendInternalLogToServer();
+              } else {
+                logger.info("[setMicrophoneDevice] Requested deviceId matches current device, no-op. deviceId=" + newAudioDeviceId).sendInternalLogToServer();
+              }
+              return _context.a(2);
+            case 1:
+              logger.info("[setMicrophoneDevice] Starting mic device change to deviceId: " + newAudioDeviceId).sendInternalLogToServer();
+              // Mark as user-provided stream immediately to prevent automatic refreshes during the async operation
+              self._isUserProvidedStream = true;
+              // Get old track reference
+              oldTrack = self._localStream ? self._localStream.getAudioTracks()[0] : null;
+              logger.info("[setMicrophoneDevice] Old track state: " + (oldTrack ? "id=" + oldTrack.id + ", readyState=" + oldTrack.readyState + ", enabled=" + oldTrack.enabled : "no old track"));
+              _context.p = 2;
+              _context.n = 3;
+              return this._ensureStrategyConnected();
+            case 3:
+              logger.info("[setMicrophoneDevice] Acquiring new media stream...").sendInternalLogToServer();
+              _context.n = 4;
+              return this._doGUM(newAudioDeviceId);
+            case 4:
+              newStream = _context.v;
+              newTrack = newStream.getAudioTracks()[0];
+              logger.info("[setMicrophoneDevice] New media stream acquired, track id=" + newTrack.id + ", settings=" + JSON.stringify(newTrack.getSettings())).sendInternalLogToServer();
+              // Preserve mute state: apply old track's enabled state to new track immediately
+              wasEnabled = oldTrack ? oldTrack.enabled : true;
+              newTrack.enabled = wasEnabled;
+              logger.info("[setMicrophoneDevice] Mute state preserved: wasEnabled=" + wasEnabled).sendInternalLogToServer();
+              // Replace audio track in peer connection sender
+              audioSender = self._pc.getSenders().find(function (sender) {
+                return sender.track && sender.track.kind === 'audio';
+              });
+              if (audioSender) {
+                _context.n = 5;
+                break;
+              }
+              logger.error("[setMicrophoneDevice] No audio sender found in peer connection").sendInternalLogToServer();
+              return _context.a(2);
+            case 5:
+              logger.info("[setMicrophoneDevice] Replacing track in peer connection sender...").sendInternalLogToServer();
+              _context.n = 6;
+              return audioSender.replaceTrack(newTrack);
+            case 6:
+              logger.info("[setMicrophoneDevice] Track replaced in peer connection sender successfully").sendInternalLogToServer();
+              // Replace track in _localStream in-place (same object reference StreamsJS holds)
+              if (oldTrack) {
+                oldTrack.enabled = false;
+                self._localStream.removeTrack(oldTrack);
+                oldTrack.stop();
+                logger.info("[setMicrophoneDevice] Old track disabled, removed, and stopped").sendInternalLogToServer();
+              }
+              self._localStream.addTrack(newTrack);
+              // Update selected device ID
+              self._selectedMicrophoneDeviceId = newTrack.getSettings().deviceId;
+              // Note: For VDI environments, the enabled property may take time to propagate
+              logger.info("[setMicrophoneDevice] New track added to local media stream, id=" + newTrack.id + ", enabled=" + newTrack.enabled + ", readyState=" + newTrack.readyState);
+              self._currentMicDeviceId = newAudioDeviceId;
+              logger.info("[setMicrophoneDevice] Mic device change completed successfully").sendInternalLogToServer();
+              _context.n = 8;
+              break;
+            case 7:
+              _context.p = 7;
+              _t = _context.v;
+              logger.error("[setMicrophoneDevice] Failed to change microphone device").withException(_t).sendInternalLogToServer();
+            case 8:
+              return _context.a(2);
+          }
+        }, _callee, this, [[2, 7]]);
+      }));
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -15247,14 +17301,16 @@ class SharedMediaSession {
      *         audioTrack.enabled = false;
      *     }
      */
-    pauseLocalAudio() {
-        var audioTrack;
-        if (this._localStream) {
-            audioTrack = this._localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = false;
-            }
+  }, {
+    key: "pauseLocalAudio",
+    value: function pauseLocalAudio() {
+      var audioTrack;
+      if (this._localStream) {
+        audioTrack = this._localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
+      }
     }
     /**
      * TODO: fix eslint version to use optional chaining
@@ -15263,184 +17319,192 @@ class SharedMediaSession {
      *         audioTrack.enabled = true;
      *     }
      */
-    resumeLocalAudio() {
-        var audioTrack;
-        if (this._localStream) {
-            audioTrack = this._localStream.getAudioTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = true;
-            }
+  }, {
+    key: "resumeLocalAudio",
+    value: function resumeLocalAudio() {
+      var audioTrack;
+      if (this._localStream) {
+        audioTrack = this._localStream.getAudioTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = true;
         }
+      }
     }
-    pauseRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = false;
-            }
+  }, {
+    key: "pauseRemoteAudio",
+    value: function pauseRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = false;
         }
+      }
     }
-    resumeRemoteAudio() {
-        if (this._remoteAudioStream) {
-            var audioTrack = this._remoteAudioStream.getTracks()[0];
-            if (audioTrack) {
-                audioTrack.enabled = true;
-            }
+  }, {
+    key: "resumeRemoteAudio",
+    value: function resumeRemoteAudio() {
+      if (this._remoteAudioStream) {
+        var audioTrack = this._remoteAudioStream.getTracks()[0];
+        if (audioTrack) {
+          audioTrack.enabled = true;
         }
+      }
     }
     /**
      * Shared Media Session callbacks, should be registered by PCM only
      */
-    registerCallbacks(callbacks) {
-        if (!callbacks) {
-            return;
-        }
-        /**
-         * Callback when gUM succeeds.
-         * First param is RtcSession object.
-         */
-        if (callbacks.onGumSuccess) {
-            this._onGumSuccess = callbacks.onGumSuccess;
-        }
-        /**
-         * Callback when gUM fails.
-         * First param is RtcSession object.
-         * Second param is the error.
-         */
-        if (callbacks.onGumError) {
-            this._onGumError = callbacks.onGumError;
-        }
-        /**
-         * Callback if failed initializing local resources
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSharedMediaSessionFailed) {
-            this._onSessionFailed = callbacks.onSharedMediaSessionFailed;
-        }
-        /**
-         * Callback before local user media stream is added to the pc.
-         * First param is RtcSession object.
-         * Second param is peer connection
-         */
-        if (callbacks.onLocalPeerConnectionAvailable) {
-            this._onLocalPeerConnectionAvailable = callbacks.onLocalPeerConnectionAvailable;
-        }
-        /**
-         * Callback after local user media stream is added to the session.
-         * First param is RtcSession object.
-         * Second param is media stream
-         */
-        if (callbacks.onLocalStreamAdded) {
-            this._onLocalStreamAdded = callbacks.onLocalStreamAdded;
-        }
-        /**
-         * Callback when all local resources are ready. Establishing signaling chanel and ICE collection happens at the same time after this.
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSharedMediaSessionInitialized) {
-            this._onSessionInitialized = callbacks.onSharedMediaSessionInitialized;
-        }
-        /**
-         * Callback when signaling channel is established.
-         * RTC session will move forward only if onSignalingConnected and onIceCollectionComplete are both called.
-         *
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSignalingConnected) {
-            this._onSignalingConnected = callbacks.onSignalingConnected;
-        }
-        /**
-         * Called to give consumers a chance to replace a media stream before it is added to a peer connection.
-         */
-        if (callbacks.replaceStreamCallback) {
-            this._replaceStreamCallback = callbacks.replaceStreamCallback;
-        }
-        /**
-         * Callback when ICE collection completes either because there is no more candidate or collection timed out.
-         * RTC session will move forward only if onSignalingConnected and onIceCollectionComplete are both called.
-         *
-         * First param is RtcSession object.
-         * Second param is boolean, TRUE - ICE collection timed out.
-         * Third param is number of candidates collected.
-         */
-        if (callbacks.onIceCollectionComplete) {
-            this._onIceCollectionComplete = callbacks.onIceCollectionComplete;
-        }
-        /**
-         * Callback when signaling channel is established and ICE collection completed with at least one candidate.
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSignalingStarted) {
-            this._onSignalingStarted = callbacks.onSignalingStarted;
-        }
-        /**
-         * Callback when the call is established (handshaked and media stream should be flowing)
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSharedMediaSessionConnected) {
-            this._onSessionConnected = callbacks.onSharedMediaSessionConnected;
-        }
-        if (callbacks.onSharedMediaSessionSetupLatencyMetricReady) {
-            this._onSessionSetupLatencyMetricReady = callbacks.onSharedMediaSessionSetupLatencyMetricReady;
-        }
-        /**
-         * Callback after remote media stream is added to the session.
-         * This could be called multiple times with the same stream if multiple tracks are included in the same stream.
-         *
-         * First param is RtcSession object.
-         * Second param is media stream track.
-         */
-        if (callbacks.onRemoteStreamAdded) {
-            this._onRemoteStreamAdded = callbacks.onRemoteStreamAdded;
-        }
-        /**
-         * Callback when the hangup is initiated (implies the call was successfully established).
-         * First param is RtcSession object.
-         */
-        if (callbacks.onSessionCompleted) {
-            this._onSessionCompleted = callbacks.onSessionCompleted;
-        }
-        /**
-         * Callback after session is cleaned up, no matter if the call was successfully established or not.
-         * First param is RtcSession object.
-         * Second param is SessionReport object.
-         */
-        if (callbacks.onSharedMediaSessionDestroyed) {
-            this._onSessionDestroyed = callbacks.onSharedMediaSessionDestroyed;
-        }
-        if (callbacks.setInactivityDurationCallback) {
-            this._setInactivityDurationCallback = callbacks.setInactivityDurationCallback;
-        }
-        if (callbacks.isPersistentConnectionAllowlistedCallback) {
-            this._isPersistentConnectionAllowlistedCallback = callbacks.isPersistentConnectionAllowlistedCallback;
-        }
-        if (callbacks.setPeerConnectionIdCallback) {
-            this._setPeerConnectionIdCallback = callbacks.setPeerConnectionIdCallback;
-        }
-        if (callbacks.setPeerConnectionTokenCallback) {
-            this._setPeerConnectionTokenCallback = callbacks.setPeerConnectionTokenCallback;
-        }
-        /**
-         * Callback when ICE connection state changes
-         * First param is ICE connection state string
-         */
-        if (callbacks.onIceConnectionStateChange) {
-            this._onIceConnectionStateChangeCallback = callbacks.onIceConnectionStateChange;
-        }
-        /**
-         * Callback when peer connection state changes
-         * First param is peer connection state string
-         */
-        if (callbacks.onPeerConnectionStateChange) {
-            this._onPeerConnectionStateChangeCallback = callbacks.onPeerConnectionStateChange;
-        }
-        /**
-         * Callback when ICE restart completes (success or failure)
-         * Params: success (boolean), timeMillis (number or null), inviteRetries (number)
-         */
-        if (callbacks.onIceRestartComplete) {
-            this._onIceRestartCompleteCallback = callbacks.onIceRestartComplete;
-        }
+  }, {
+    key: "registerCallbacks",
+    value: function registerCallbacks(callbacks) {
+      if (!callbacks) {
+        return;
+      }
+      /**
+       * Callback when gUM succeeds.
+       * First param is RtcSession object.
+       */
+      if (callbacks.onGumSuccess) {
+        this._onGumSuccess = callbacks.onGumSuccess;
+      }
+      /**
+       * Callback when gUM fails.
+       * First param is RtcSession object.
+       * Second param is the error.
+       */
+      if (callbacks.onGumError) {
+        this._onGumError = callbacks.onGumError;
+      }
+      /**
+       * Callback if failed initializing local resources
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSharedMediaSessionFailed) {
+        this._onSessionFailed = callbacks.onSharedMediaSessionFailed;
+      }
+      /**
+       * Callback before local user media stream is added to the pc.
+       * First param is RtcSession object.
+       * Second param is peer connection
+       */
+      if (callbacks.onLocalPeerConnectionAvailable) {
+        this._onLocalPeerConnectionAvailable = callbacks.onLocalPeerConnectionAvailable;
+      }
+      /**
+       * Callback after local user media stream is added to the session.
+       * First param is RtcSession object.
+       * Second param is media stream
+       */
+      if (callbacks.onLocalStreamAdded) {
+        this._onLocalStreamAdded = callbacks.onLocalStreamAdded;
+      }
+      /**
+       * Callback when all local resources are ready. Establishing signaling chanel and ICE collection happens at the same time after this.
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSharedMediaSessionInitialized) {
+        this._onSessionInitialized = callbacks.onSharedMediaSessionInitialized;
+      }
+      /**
+       * Callback when signaling channel is established.
+       * RTC session will move forward only if onSignalingConnected and onIceCollectionComplete are both called.
+       *
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSignalingConnected) {
+        this._onSignalingConnected = callbacks.onSignalingConnected;
+      }
+      /**
+       * Called to give consumers a chance to replace a media stream before it is added to a peer connection.
+       */
+      if (callbacks.replaceStreamCallback) {
+        this._replaceStreamCallback = callbacks.replaceStreamCallback;
+      }
+      /**
+       * Callback when ICE collection completes either because there is no more candidate or collection timed out.
+       * RTC session will move forward only if onSignalingConnected and onIceCollectionComplete are both called.
+       *
+       * First param is RtcSession object.
+       * Second param is boolean, TRUE - ICE collection timed out.
+       * Third param is number of candidates collected.
+       */
+      if (callbacks.onIceCollectionComplete) {
+        this._onIceCollectionComplete = callbacks.onIceCollectionComplete;
+      }
+      /**
+       * Callback when signaling channel is established and ICE collection completed with at least one candidate.
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSignalingStarted) {
+        this._onSignalingStarted = callbacks.onSignalingStarted;
+      }
+      /**
+       * Callback when the call is established (handshaked and media stream should be flowing)
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSharedMediaSessionConnected) {
+        this._onSessionConnected = callbacks.onSharedMediaSessionConnected;
+      }
+      if (callbacks.onSharedMediaSessionSetupLatencyMetricReady) {
+        this._onSessionSetupLatencyMetricReady = callbacks.onSharedMediaSessionSetupLatencyMetricReady;
+      }
+      /**
+       * Callback after remote media stream is added to the session.
+       * This could be called multiple times with the same stream if multiple tracks are included in the same stream.
+       *
+       * First param is RtcSession object.
+       * Second param is media stream track.
+       */
+      if (callbacks.onRemoteStreamAdded) {
+        this._onRemoteStreamAdded = callbacks.onRemoteStreamAdded;
+      }
+      /**
+       * Callback when the hangup is initiated (implies the call was successfully established).
+       * First param is RtcSession object.
+       */
+      if (callbacks.onSessionCompleted) {
+        this._onSessionCompleted = callbacks.onSessionCompleted;
+      }
+      /**
+       * Callback after session is cleaned up, no matter if the call was successfully established or not.
+       * First param is RtcSession object.
+       * Second param is SessionReport object.
+       */
+      if (callbacks.onSharedMediaSessionDestroyed) {
+        this._onSessionDestroyed = callbacks.onSharedMediaSessionDestroyed;
+      }
+      if (callbacks.setInactivityDurationCallback) {
+        this._setInactivityDurationCallback = callbacks.setInactivityDurationCallback;
+      }
+      if (callbacks.isPersistentConnectionAllowlistedCallback) {
+        this._isPersistentConnectionAllowlistedCallback = callbacks.isPersistentConnectionAllowlistedCallback;
+      }
+      if (callbacks.setPeerConnectionIdCallback) {
+        this._setPeerConnectionIdCallback = callbacks.setPeerConnectionIdCallback;
+      }
+      if (callbacks.setPeerConnectionTokenCallback) {
+        this._setPeerConnectionTokenCallback = callbacks.setPeerConnectionTokenCallback;
+      }
+      /**
+       * Callback when ICE connection state changes
+       * First param is ICE connection state string
+       */
+      if (callbacks.onIceConnectionStateChange) {
+        this._onIceConnectionStateChangeCallback = callbacks.onIceConnectionStateChange;
+      }
+      /**
+       * Callback when peer connection state changes
+       * First param is peer connection state string
+       */
+      if (callbacks.onPeerConnectionStateChange) {
+        this._onPeerConnectionStateChangeCallback = callbacks.onPeerConnectionStateChange;
+      }
+      /**
+       * Callback when ICE restart completes (success or failure)
+       * Params: success (boolean), timeMillis (number or null), inviteRetries (number)
+       */
+      if (callbacks.onIceRestartComplete) {
+        this._onIceRestartCompleteCallback = callbacks.onIceRestartComplete;
+      }
     }
     /**
      * Called when ICE restart completes (success or failure)
@@ -15449,429 +17513,545 @@ class SharedMediaSession {
      * @param {boolean} success - Whether ICE restart succeeded
      * @param {number} iceRestartStartTime - Start time of ICE restart (null if not an ICE restart)
      */
-    _onIceRestartComplete(success, iceRestartStartTime) {
-        // Only process if this is an ICE restart (has start time)
-        if (!iceRestartStartTime) {
-            this._logger.info('_onIceRestartComplete called without iceRestartStartTime').sendInternalLogToServer();
-            return;
-        }
-        // Calculate timing
-        const timeMillis = Date.now() - iceRestartStartTime;
-        const inviteRetries = this._sessionReport.iceRestartInviteRetries;
-        // Notify call sessions with discrete ICE restart event
-        if (typeof this._onIceRestartCompleteCallback === 'function') {
-            this._onIceRestartCompleteCallback({
-                success: success,
-                timeMillis: timeMillis,
-                inviteRetries: inviteRetries
-            });
-        }
-        // Reset all metrics for next ICE restart
-        this._sessionReport.iceRestartAttempts = 0;
-        this._sessionReport.iceRestartSuccesses = 0;
-        this._sessionReport.iceRestartInviteRetries = 0;
-        this._sessionReport.iceRestartTimeMillis = null;
-        this._sessionReport.iceRestartFailed = null;
-        this._logger.info(`ICE restart event sent to call sessions (success: ${success}, time: ${timeMillis}ms, retries: ${inviteRetries}). Metrics reset.`).sendInternalLogToServer();
+  }, {
+    key: "_onIceRestartComplete",
+    value: function _onIceRestartComplete(success, iceRestartStartTime) {
+      // Only process if this is an ICE restart (has start time)
+      if (!iceRestartStartTime) {
+        this._logger.info('_onIceRestartComplete called without iceRestartStartTime').sendInternalLogToServer();
+        return;
+      }
+      // Calculate timing
+      var timeMillis = Date.now() - iceRestartStartTime;
+      var inviteRetries = this._sessionReport.iceRestartInviteRetries;
+      // Notify call sessions with discrete ICE restart event
+      if (typeof this._onIceRestartCompleteCallback === 'function') {
+        this._onIceRestartCompleteCallback({
+          success: success,
+          timeMillis: timeMillis,
+          inviteRetries: inviteRetries
+        });
+      }
+      // Reset all metrics for next ICE restart
+      this._sessionReport.iceRestartAttempts = 0;
+      this._sessionReport.iceRestartSuccesses = 0;
+      this._sessionReport.iceRestartInviteRetries = 0;
+      this._sessionReport.iceRestartTimeMillis = null;
+      this._sessionReport.iceRestartFailed = null;
+      this._logger.info("ICE restart event sent to call sessions (success: ".concat(success, ", time: ").concat(timeMillis, "ms, retries: ").concat(inviteRetries, "). Metrics reset.")).sendInternalLogToServer();
     }
-    set echoCancellation(flag) {
-        this._echoCancellation = flag;
+  }, {
+    key: "echoCancellation",
+    set: function set(flag) {
+      this._echoCancellation = flag;
     }
-    /**
-     * Optional. RtcSession will grab input device if this is not specified.
-     * Please note: this RtcSession class only supports single audio track.
-     */
-    set mediaStream(input) {
-        this._localStream = input;
-        this._isUserProvidedStream = true;
-    }
-    /**
-     * Needed, expect an audio element that can be used to play remote audio stream.
-     */
-    set remoteAudioElement(element) {
-        this._remoteAudioElement = element;
+  }, {
+    key: "remoteAudioElement",
+    set: function set(element) {
+      this._remoteAudioElement = element;
     }
     /**
      * Override the default signaling connect time out.
      */
-    set signalingConnectTimeout(ms) {
-        this._signalingConnectTimeout = ms;
+  }, {
+    key: "signalingConnectTimeout",
+    set: function set(ms) {
+      this._signalingConnectTimeout = ms;
     }
     /**
      * Override the default ICE collection time limit.
      */
-    set iceTimeoutMillis(timeoutMillis) {
-        this._iceTimeoutMillis = timeoutMillis;
+  }, {
+    key: "iceTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._iceTimeoutMillis = timeoutMillis;
     }
     /**
      * Override the default GUM timeout time limit.
      */
-    set gumTimeoutMillis(timeoutMillis) {
-        this._gumTimeoutMillis = timeoutMillis;
+  }, {
+    key: "gumTimeoutMillis",
+    set: function set(timeoutMillis) {
+      this._gumTimeoutMillis = timeoutMillis;
     }
     /**
      * connect-rtc-js disables OPUS DTX by default because it harms audio quality.
      * @param flag boolean
      */
-    set enableOpusDtx(flag) {
-        this._enableOpusDtx = flag;
+  }, {
+    key: "enableOpusDtx",
+    set: function set(flag) {
+      this._enableOpusDtx = flag;
     }
-    transit(nextState) {
-        try {
-            this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
-            if (this._state && this._state.onExit) {
-                this._state.onExit();
-            }
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      try {
+        this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
+        if (this._state && this._state.onExit) {
+          this._state.onExit();
         }
-        finally {
-            this._state = nextState;
-            if (nextState.onEnter) {
-                try {
-                    nextState.onEnter();
-                }
-                catch (e) {
-                    this._logger.warn(nextState.name + '#onEnter failed', e);
-                    throw e; // eslint-disable-line no-unsafe-finally
-                }
-            }
+      } finally {
+        this._state = nextState;
+        if (nextState.onEnter) {
+          try {
+            nextState.onEnter();
+          } catch (e) {
+            this._logger.warn(nextState.name + '#onEnter failed', e);
+            throw e; // eslint-disable-line no-unsafe-finally
+          }
         }
+      }
     }
-    _createSignalingChannel() {
-        // Create the signaling channel using the existing SignalingChannelManager
-        // Todo: create a MediaSignalingConfig object instead
-        var signalingChannel = new shared_media_signaling_1.default(this._callId, this._contactToken, this._originalLogger, rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS, this._connectionId, this._signalingChannelManager, this._iceRestart || false, this._isPersistentConnectionEnabled, this.peerConnectionId, this.peerConnectionToken, this._browserId, this._allowExtendedPersistentConnection);
-        signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
-        signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
-        signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
-        signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
-        signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
-        signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
-        this._signalingChannel = signalingChannel;
-        return signalingChannel;
+  }, {
+    key: "_createSignalingChannel",
+    value: function _createSignalingChannel() {
+      // Create the signaling channel using the existing SignalingChannelManager
+      // Todo: create a MediaSignalingConfig object instead
+      var signalingChannel = new shared_media_signaling_1["default"](this._callId, this._contactToken, this._originalLogger, rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS, this._connectionId, this._signalingChannelManager, this._iceRestart || false, this._isPersistentConnectionEnabled, this.peerConnectionId, this.peerConnectionToken, this._browserId, this._allowExtendedPersistentConnection);
+      signalingChannel.onConnected = (0, utils_1.hitch)(this, this._signalingConnected);
+      signalingChannel.onAnswered = (0, utils_1.hitch)(this, this._signalingAnswered);
+      signalingChannel.onHandshaked = (0, utils_1.hitch)(this, this._signalingHandshaked);
+      signalingChannel.onRemoteHungup = (0, utils_1.hitch)(this, this._signalingRemoteHungup);
+      signalingChannel.onFailed = (0, utils_1.hitch)(this, this._signalingFailed);
+      signalingChannel.onDisconnected = (0, utils_1.hitch)(this, this._signalingDisconnected);
+      this._signalingChannel = signalingChannel;
+      return signalingChannel;
     }
-    _sanitizeDeviceId(deviceId) {
-        if (deviceId === 'default' || deviceId == undefined) {
-            return null;
+  }, {
+    key: "_sanitizeDeviceId",
+    value: function _sanitizeDeviceId(deviceId) {
+      if (deviceId === 'default' || deviceId == undefined) {
+        return null;
+      }
+      return deviceId;
+    }
+    /**
+     * Ensure the strategy is connected before an operation that needs the audio-redirection
+     * channel. Rejects with RTC_ERRORS.VDI_DISCONNECTED (and records vdiDisconnectedFailure)
+     * when a VDI client is not connected; non-VDI strategies resolve immediately.
+     */
+  }, {
+    key: "_ensureStrategyConnected",
+    value: function _ensureStrategyConnected() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee2() {
+        var _t2;
+        return _regenerator().w(function (_context2) {
+          while (1) switch (_context2.p = _context2.n) {
+            case 0:
+              _context2.p = 0;
+              _context2.n = 1;
+              return this._strategy.whenConnected();
+            case 1:
+              _context2.n = 3;
+              break;
+            case 2:
+              _context2.p = 2;
+              _t2 = _context2.v;
+              this._sessionReport.vdiDisconnectedFailure = true;
+              this._logger.error("Strategy is not connected (VDI client unavailable): ".concat(_t2 && _t2.message)).sendInternalLogToServer();
+              throw rtc_const_1.RTC_ERRORS.VDI_DISCONNECTED;
+            case 3:
+              return _context2.a(2);
+          }
+        }, _callee2, this, [[0, 2]]);
+      }));
+    }
+  }, {
+    key: "_doGUM",
+    value: function _doGUM(newDeviceId) {
+      var self = this;
+      var logger = this._logger;
+      var startTime = Date.now();
+      var constraints = this._buildMediaConstraints(newDeviceId);
+      var sessionGumPromise = this._strategy._gUM(constraints);
+      return (0, utils_1.promiseWithTimeout)(sessionGumPromise, self._gumTimeoutMillis, new exceptions_1.GumTimeout('Local media has not been initialized yet.')).then(function (stream) {
+        var audioTracks = stream.getAudioTracks();
+        if (audioTracks.length > 0) {
+          var audioTrack = audioTracks[0];
+          logger.info("[_doGUM] Got audio stream: ".concat(JSON.stringify(audioTrack.getSettings()))).sendInternalLogToServer();
         }
-        return deviceId;
-    }
-    _doGUM(newDeviceId) {
-        var self = this;
-        const logger = this._logger;
-        var startTime = Date.now();
-        const constraints = this._buildMediaConstraints(newDeviceId);
-        var sessionGumPromise = this._strategy._gUM(constraints);
-        return (0, utils_1.promiseWithTimeout)(sessionGumPromise, self._gumTimeoutMillis, new exceptions_1.GumTimeout('Local media has not been initialized yet.'))
-            .then(stream => {
-            const audioTracks = stream.getAudioTracks();
-            if (audioTracks.length > 0) {
-                const audioTrack = audioTracks[0];
-                logger.info(`[_doGUM] Got audio stream: ${JSON.stringify(audioTrack.getSettings())}`).sendInternalLogToServer();
-            }
-            self._sessionReport.gumTimeMillis = Date.now() - startTime;
-            self._onGumSuccess(self);
-            self._sessionReport.gumOtherFailure = false;
-            self._sessionReport.gumTimeoutFailure = false;
-            return stream;
-        }).catch(e => {
-            self._sessionReport.gumTimeMillis = Date.now() - startTime;
-            var errorReason;
-            if (e && e.name == exceptions_1.GumTimeoutExceptionName) {
-                errorReason = rtc_const_1.RTC_ERRORS.GUM_TIMEOUT_FAILURE;
-                self._sessionReport.gumTimeoutFailure = true;
-                self._sessionReport.gumOtherFailure = false;
-            }
-            else {
-                errorReason = rtc_const_1.RTC_ERRORS.GUM_OTHER_FAILURE;
-                self._sessionReport.gumOtherFailure = true;
-                self._sessionReport.gumTimeoutFailure = false;
-            }
-            const errorLog = self._logger.error('Local media initialization failed', e);
-            if (errorLog && errorLog.sendInternalLogToServer) {
-                errorLog.withObject({ constraints }).sendInternalLogToServer();
-            }
-            self._onGumError(self);
-            throw errorReason;
-        });
-    }
-    _signalingConnected() {
-        this._state.onSignalingConnected();
-    }
-    _signalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
-        this._state.onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken);
-    }
-    _signalingHandshaked() {
-        this._state.onSignalingHandshaked();
-    }
-    _signalingRemoteHungup() {
-        this._state.onRemoteHungup();
-    }
-    _signalingFailed(e) {
-        this._state.onSignalingFailed(e);
-    }
-    _signalingDisconnected() {
-    }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        return this._strategy._createPeerConnection(configuration, optionalConfiguration);
-    }
-    connect(pc) {
-        var self = this;
-        var now = new Date();
-        self._sessionReport.sessionStartTime = now;
-        self._connectTimeStamp = now.getTime();
-        if (pc && pc.signalingState != 'closed') {
-            self._pc = pc;
+        self._sessionReport.gumTimeMillis = Date.now() - startTime;
+        self._onGumSuccess(self);
+        self._sessionReport.gumOtherFailure = false;
+        self._sessionReport.gumTimeoutFailure = false;
+        return stream;
+      })["catch"](function (e) {
+        self._sessionReport.gumTimeMillis = Date.now() - startTime;
+        var errorReason;
+        if (e && e.name == exceptions_1.GumTimeoutExceptionName) {
+          errorReason = rtc_const_1.RTC_ERRORS.GUM_TIMEOUT_FAILURE;
+          self._sessionReport.gumTimeoutFailure = true;
+          self._sessionReport.gumOtherFailure = false;
+        } else {
+          errorReason = rtc_const_1.RTC_ERRORS.GUM_OTHER_FAILURE;
+          self._sessionReport.gumOtherFailure = true;
+          self._sessionReport.gumTimeoutFailure = false;
         }
-        else {
-            if (pc) {
-                self._strategy.close(pc);
-                pc = null;
-            }
-            rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceServers = self._iceServers;
-            rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-            self._pc = self._createPeerConnection(rtc_const_1.RTC_PEER_CONNECTION_CONFIG, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
+        var errorLog = self._logger.error('Local media initialization failed', e);
+        if (errorLog && errorLog.sendInternalLogToServer) {
+          errorLog.withObject({
+            constraints: constraints
+          }).sendInternalLogToServer();
         }
-        self._pc.ontrack = (0, utils_1.hitch)(self, self._ontrack);
-        self._pc.onicecandidate = (0, utils_1.hitch)(self, self._onIceCandidate);
-        self._pc.onconnectionstatechange = (0, utils_1.hitch)(self, self._onPeerConnectionStateChange);
-        self._pc.oniceconnectionstatechange = (0, utils_1.hitch)(self, self._onIceStateChange);
-        this.transit(new GrabLocalMediaState(this));
+        self._onGumError(self);
+        throw errorReason;
+      });
     }
-    accept() {
-        throw new exceptions_1.UnsupportedOperation('accept does not go through signaling channel at this moment');
+  }, {
+    key: "_signalingConnected",
+    value: function _signalingConnected() {
+      this._state.onSignalingConnected();
     }
-    hangup(serverInitiated = false) {
-        this._state.hangup(serverInitiated);
+  }, {
+    key: "_signalingAnswered",
+    value: function _signalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken) {
+      this._state.onSignalingAnswered(sdp, candidates, inactivityDuration, peerConnectionId, peerConnectionToken);
+    }
+  }, {
+    key: "_signalingHandshaked",
+    value: function _signalingHandshaked() {
+      this._state.onSignalingHandshaked();
+    }
+  }, {
+    key: "_signalingRemoteHungup",
+    value: function _signalingRemoteHungup() {
+      this._state.onRemoteHungup();
+    }
+  }, {
+    key: "_signalingFailed",
+    value: function _signalingFailed(e) {
+      this._state.onSignalingFailed(e);
+    }
+  }, {
+    key: "_signalingDisconnected",
+    value: function _signalingDisconnected() {}
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      return this._strategy._createPeerConnection(configuration, optionalConfiguration);
+    }
+  }, {
+    key: "connect",
+    value: function connect(pc) {
+      var self = this;
+      var now = new Date();
+      self._sessionReport.sessionStartTime = now;
+      self._connectTimeStamp = now.getTime();
+      if (pc && pc.signalingState != 'closed') {
+        self._pc = pc;
+      } else {
+        if (pc) {
+          self._strategy.close(pc);
+          pc = null;
+        }
+        rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceServers = self._iceServers;
+        rtc_const_1.RTC_PEER_CONNECTION_CONFIG.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+        self._pc = self._createPeerConnection(rtc_const_1.RTC_PEER_CONNECTION_CONFIG, rtc_const_1.RTC_PEER_CONNECTION_OPTIONAL_CONFIG);
+      }
+      self._pc.ontrack = (0, utils_1.hitch)(self, self._ontrack);
+      self._pc.onicecandidate = (0, utils_1.hitch)(self, self._onIceCandidate);
+      self._pc.onconnectionstatechange = (0, utils_1.hitch)(self, self._onPeerConnectionStateChange);
+      self._pc.oniceconnectionstatechange = (0, utils_1.hitch)(self, self._onIceStateChange);
+      this.transit(new GrabLocalMediaState(this));
+    }
+  }, {
+    key: "accept",
+    value: function accept() {
+      throw new exceptions_1.UnsupportedOperation('accept does not go through signaling channel at this moment');
+    }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var serverInitiated = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      if (!this._state) {
+        this._logger.warn('hangup called but session has no state (connect() was never completed)').sendInternalLogToServer();
+        return;
+      }
+      this._state.hangup(serverInitiated);
     }
     /**
      * Get a promise containing an object with two named lists of audio stats, one for each channel on each
      * media type of 'audio'.
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      */
-    getStats() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const timestamp = new Date();
-            const getStatsForType = (streamType) => __awaiter(this, void 0, void 0, function* () {
-                const rawStats = yield this._pc.getStats();
-                return (0, rtp_stats_1.extractMediaStatsFromStats)(timestamp, rawStats, streamType);
-            });
-            if (this._pc && this._pc.signalingState === 'stable') {
-                const audioInputStats = yield getStatsForType('audio_input');
-                const audioOutputStats = yield getStatsForType('audio_output');
-                // For consistency's sake, coalesce One-Way Metrics into both Audio Streams
-                if (audioInputStats && audioInputStats.jitterBufferEmittedCount !== null) {
-                    audioOutputStats._jitterBufferEmittedCount = audioInputStats.jitterBufferEmittedCount;
-                }
-                if (audioInputStats && audioInputStats.jbMilliseconds !== null) {
-                    audioOutputStats._jbMilliseconds = audioInputStats.jbMilliseconds;
-                }
-                if (audioOutputStats && audioOutputStats.rttMilliseconds !== null) {
-                    audioInputStats._rttMilliseconds = audioOutputStats.rttMilliseconds;
-                }
-                if (audioOutputStats && audioOutputStats.echoReturnLoss !== null) {
-                    audioInputStats._echoReturnLoss = audioOutputStats.echoReturnLoss;
-                }
-                if (audioOutputStats && audioOutputStats.echoReturnLossEnhancement !== null) {
-                    audioInputStats._echoReturnLossEnhancement = audioOutputStats.echoReturnLossEnhancement;
-                }
-                return {
-                    audioInputStats, audioOutputStats,
-                };
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
+  }, {
+    key: "getStats",
+    value: function getStats() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee4() {
+        var _this6 = this;
+        var timestamp, getStatsForType, audioInputStats, audioOutputStats;
+        return _regenerator().w(function (_context4) {
+          while (1) switch (_context4.n) {
+            case 0:
+              timestamp = new Date();
+              getStatsForType = function getStatsForType(streamType) {
+                return __awaiter(_this6, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee3() {
+                  var rawStats;
+                  return _regenerator().w(function (_context3) {
+                    while (1) switch (_context3.n) {
+                      case 0:
+                        _context3.n = 1;
+                        return this._pc.getStats();
+                      case 1:
+                        rawStats = _context3.v;
+                        return _context3.a(2, (0, rtp_stats_1.extractMediaStatsFromStats)(timestamp, rawStats, streamType));
+                    }
+                  }, _callee3, this);
+                }));
+              };
+              if (!(this._pc && this._pc.signalingState === 'stable')) {
+                _context4.n = 3;
+                break;
+              }
+              _context4.n = 1;
+              return getStatsForType('audio_input');
+            case 1:
+              audioInputStats = _context4.v;
+              _context4.n = 2;
+              return getStatsForType('audio_output');
+            case 2:
+              audioOutputStats = _context4.v;
+              // For consistency's sake, coalesce One-Way Metrics into both Audio Streams
+              if (audioInputStats && audioInputStats.jitterBufferEmittedCount !== null) {
+                audioOutputStats._jitterBufferEmittedCount = audioInputStats.jitterBufferEmittedCount;
+              }
+              if (audioInputStats && audioInputStats.jbMilliseconds !== null) {
+                audioOutputStats._jbMilliseconds = audioInputStats.jbMilliseconds;
+              }
+              if (audioOutputStats && audioOutputStats.rttMilliseconds !== null) {
+                audioInputStats._rttMilliseconds = audioOutputStats.rttMilliseconds;
+              }
+              if (audioOutputStats && audioOutputStats.echoReturnLoss !== null) {
+                audioInputStats._echoReturnLoss = audioOutputStats.echoReturnLoss;
+              }
+              if (audioOutputStats && audioOutputStats.echoReturnLossEnhancement !== null) {
+                audioInputStats._echoReturnLossEnhancement = audioOutputStats.echoReturnLossEnhancement;
+              }
+              return _context4.a(2, {
+                audioInputStats: audioInputStats,
+                audioOutputStats: audioOutputStats
+              });
+            case 3:
+              return _context4.a(2, Promise.reject(new exceptions_1.IllegalState()));
+            case 4:
+              return _context4.a(2);
+          }
+        }, _callee4, this);
+      }));
     }
     /**
      * Get a promise of MediaRtpStats object for remote audio (from Amazon Connect to client).
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      * @deprecated in favor of getStats()
      */
-    getRemoteAudioStats() {
-        return this.getStats().then((stats) => {
-            if (stats.audioOutputStats) {
-                return stats.audioOutputStats;
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
+  }, {
+    key: "getRemoteAudioStats",
+    value: function getRemoteAudioStats() {
+      return this.getStats().then(function (stats) {
+        if (stats.audioOutputStats) {
+          return stats.audioOutputStats;
+        } else {
+          return Promise.reject(new exceptions_1.IllegalState());
+        }
+      });
     }
     /**
      * Get a promise of MediaRtpStats object for user audio (from client to Amazon Connect).
      * @return Rejected promise if failed to get MediaRtpStats. The promise is never resolved with null value.
      * @deprecated in favor of getStats()
      */
-    getUserAudioStats() {
-        return this.getStats().then((stats) => {
-            if (stats.audioInputStats) {
-                return stats.audioInputStats;
-            }
-            else {
-                return Promise.reject(new exceptions_1.IllegalState());
-            }
-        });
-    }
-    _onIceCandidate(evt) {
-        this._state.onIceCandidate(evt);
-    }
-    _onPeerConnectionStateChange() {
-        if (this._state && typeof this._state.onPeerConnectionStateChange === 'function') {
-            this._state.onPeerConnectionStateChange();
+  }, {
+    key: "getUserAudioStats",
+    value: function getUserAudioStats() {
+      return this.getStats().then(function (stats) {
+        if (stats.audioInputStats) {
+          return stats.audioInputStats;
+        } else {
+          return Promise.reject(new exceptions_1.IllegalState());
         }
-        // Notify via callback for VDI compatibility (Citrix doesn't support addEventListener)
-        if (this._pc && typeof this._onPeerConnectionStateChangeCallback === 'function') {
-            const peerConnectionState = this._pc.connectionState;
-            this._onPeerConnectionStateChangeCallback(peerConnectionState);
-        }
+      });
     }
-    _onIceStateChange(evt) {
-        this._state.onIceStateChange(evt);
-        // Notify via callback for VDI compatibility (Citrix doesn't support addEventListener)
-        if (this._pc && typeof this._onIceConnectionStateChangeCallback === 'function') {
-            const iceState = this._pc.iceConnectionState;
-            this._onIceConnectionStateChangeCallback(iceState);
-        }
+  }, {
+    key: "_onIceCandidate",
+    value: function _onIceCandidate(evt) {
+      this._state.onIceCandidate(evt);
+    }
+  }, {
+    key: "_onPeerConnectionStateChange",
+    value: function _onPeerConnectionStateChange() {
+      if (this._state && typeof this._state.onPeerConnectionStateChange === 'function') {
+        this._state.onPeerConnectionStateChange();
+      }
+      // Notify via callback for VDI compatibility (Citrix doesn't support addEventListener)
+      if (this._pc && typeof this._onPeerConnectionStateChangeCallback === 'function') {
+        var peerConnectionState = this._pc.connectionState;
+        this._onPeerConnectionStateChangeCallback(peerConnectionState);
+      }
+    }
+  }, {
+    key: "_onIceStateChange",
+    value: function _onIceStateChange(evt) {
+      this._state.onIceStateChange(evt);
+      // Notify via callback for VDI compatibility (Citrix doesn't support addEventListener)
+      if (this._pc && typeof this._onIceConnectionStateChangeCallback === 'function') {
+        var iceState = this._pc.iceConnectionState;
+        this._onIceConnectionStateChangeCallback(iceState);
+      }
     }
     /**
      * Attach remote media stream to web element.
      */
-    _ontrack(evt) {
-        this._strategy._ontrack(this, evt);
-        this._onRemoteStreamAdded(this, evt.streams[0]);
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(evt) {
+      this._strategy._ontrack(this, evt);
+      this._onRemoteStreamAdded(this, evt.streams[0]);
     }
-    _detachMedia() {
-        if (this._remoteAudioElement) {
-            this._remoteAudioElement.srcObject = null;
-            this._remoteAudioStream = null;
+  }, {
+    key: "_detachMedia",
+    value: function _detachMedia() {
+      if (this._remoteAudioElement) {
+        this._remoteAudioElement.srcObject = null;
+        this._remoteAudioStream = null;
+      }
+    }
+  }, {
+    key: "_stopSession",
+    value: function _stopSession() {
+      try {
+        if (this._localStream) {
+          (0, utils_1.closeStream)(this._localStream);
+          this._localStream = null;
+          this._isUserProvidedStream = false;
         }
-    }
-    _stopSession() {
+      } finally {
         try {
-            if (this._localStream) {
-                (0, utils_1.closeStream)(this._localStream);
-                this._localStream = null;
-                this._isUserProvidedStream = false;
-            }
+          if (this._pc) {
+            this._strategy.close(this._pc);
+          }
+        } catch (e) {
+          // eat exception
+        } finally {
+          this._pc = null;
         }
-        finally {
-            try {
-                if (this._pc) {
-                    this._strategy.close(this._pc);
-                }
-            }
-            catch (e) {
-                // eat exception
-            }
-            finally {
-                this._pc = null;
-            }
-        }
+      }
     }
-    _buildMediaConstraints(newDeviceId) {
-        var self = this;
-        var mediaConstraints = {};
-        if (self._enableAudio) {
-            var audioConstraints = {};
-            if (typeof self._echoCancellation !== 'undefined') {
-                audioConstraints.echoCancellation = !!self._echoCancellation;
-            }
-            if (newDeviceId != undefined && newDeviceId != 'default') {
-                audioConstraints.deviceId = { exact: newDeviceId };
-            }
-            // This is required to handle behaviour in published sample code.
-            if (window && window.audio_input) {
-                audioConstraints.deviceId = window.audio_input;
-                if (newDeviceId != window.audio_input) {
-                    this._logger.warn('window.audio_input does not match requested device id');
-                }
-            }
-            if (Object.keys(audioConstraints).length > 0) {
-                mediaConstraints.audio = audioConstraints;
-            }
-            else {
-                mediaConstraints.audio = true;
-            }
+  }, {
+    key: "_buildMediaConstraints",
+    value: function _buildMediaConstraints(newDeviceId) {
+      var self = this;
+      var mediaConstraints = {};
+      if (self._enableAudio) {
+        var audioConstraints = {};
+        if (typeof self._echoCancellation !== 'undefined') {
+          audioConstraints.echoCancellation = !!self._echoCancellation;
         }
-        else {
-            mediaConstraints.audio = false;
+        if (newDeviceId != undefined && newDeviceId != 'default') {
+          audioConstraints.deviceId = {
+            exact: newDeviceId
+          };
         }
-        return mediaConstraints;
+        // This is required to handle behaviour in published sample code.
+        if (window && window.audio_input) {
+          audioConstraints.deviceId = window.audio_input;
+          if (newDeviceId != window.audio_input) {
+            this._logger.warn('window.audio_input does not match requested device id');
+          }
+        }
+        if (Object.keys(audioConstraints).length > 0) {
+          mediaConstraints.audio = audioConstraints;
+        } else {
+          mediaConstraints.audio = true;
+        }
+      } else {
+        mediaConstraints.audio = false;
+      }
+      return mediaConstraints;
     }
-    isInTalkingState() {
-        return this._state instanceof TalkingState;
+  }, {
+    key: "isInTalkingState",
+    value: function isInTalkingState() {
+      return this._state instanceof TalkingState;
     }
     /**
      * Check if peer connection is healthy by validating ICE connection state
      * @returns {boolean} true if peer connection exists and ICE state is valid
      */
-    isPeerConnectionHealthy() {
-        if (!this._pc) {
-            return false;
-        }
-        const iceState = this._pc.iceConnectionState;
-        return !(iceState === rtc_const_1.ICE_CONNECTION_STATE.FAILED ||
-            iceState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED ||
-            iceState === rtc_const_1.ICE_CONNECTION_STATE.CLOSED);
+  }, {
+    key: "isPeerConnectionHealthy",
+    value: function isPeerConnectionHealthy() {
+      if (!this._pc) {
+        return false;
+      }
+      var iceState = this._pc.iceConnectionState;
+      return !(iceState === rtc_const_1.ICE_CONNECTION_STATE.FAILED || iceState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED || iceState === rtc_const_1.ICE_CONNECTION_STATE.CLOSED);
     }
     /**
      * Check if SharedMediaSession is healthy and ready to use
      * Validates: talking state, peer connection health, signaling channel state, and cleanup flag
      * @returns {boolean} true if all health checks pass
      */
-    isSharedMediaSessionHealthy() {
-        // Check cleanup flag first
-        if (this._needsCleanup) {
-            this._logger.info("SharedMediaSession requires cleanup");
-            return false; // Unhealthy - cleanup needed
-        }
-        // Check if in talking state
-        if (!this.isInTalkingState()) {
-            return false;
-        }
-        // Check peer connection health
-        if (!this.isPeerConnectionHealthy()) {
-            return false;
-        }
-        // Check signaling channel state
-        if (this._signalingChannel &&
-            this._signalingChannel._state &&
-            this._signalingChannel._state.name === "FailedState") {
-            return false;
-        }
-        return true;
+  }, {
+    key: "isSharedMediaSessionHealthy",
+    value: function isSharedMediaSessionHealthy() {
+      // Check cleanup flag first
+      if (this._needsCleanup) {
+        this._logger.info("SharedMediaSession requires cleanup");
+        return false; // Unhealthy - cleanup needed
+      }
+      // Check if in talking state
+      if (!this.isInTalkingState()) {
+        return false;
+      }
+      // Check peer connection health
+      if (!this.isPeerConnectionHealthy()) {
+        return false;
+      }
+      // Check signaling channel state
+      if (this._signalingChannel && this._signalingChannel._state && this._signalingChannel._state.name === "FailedState") {
+        return false;
+      }
+      return true;
     }
     /**
      * Mark that cleanup is needed
      */
-    markNeedsCleanup() {
-        this._logger.info("SharedMediaSession marked for cleanup");
-        this._needsCleanup = true;
+  }, {
+    key: "markNeedsCleanup",
+    value: function markNeedsCleanup() {
+      this._logger.info("SharedMediaSession marked for cleanup");
+      this._needsCleanup = true;
     }
-    getPeerConnection() {
-        return this._pc;
+  }, {
+    key: "getPeerConnection",
+    value: function getPeerConnection() {
+      return this._pc;
     }
     /**
      * Disable media stream refresh
      * Called when a user-provided stream is being used (e.g., after voice enhancement)
      * Prevents RTC.js from changing the media stream
      */
-    disableMediaStreamRefresh() {
-        this._isUserProvidedStream = true;
-        this._logger.info("Media stream refresh disabled - user-provided stream").sendInternalLogToServer();
+  }, {
+    key: "disableMediaStreamRefresh",
+    value: function disableMediaStreamRefresh() {
+      this._isUserProvidedStream = true;
+      this._logger.info("Media stream refresh disabled - user-provided stream").sendInternalLogToServer();
     }
     /**
      * Reset ICE restart metrics for a new call
      * Called when SharedMediaSession is reused for a new call with persistent connection
      */
-    resetIceRestartMetrics() {
-        this._sessionReport.iceRestartAttempts = 0;
-        this._sessionReport.iceRestartSuccesses = 0;
-        this._sessionReport.iceRestartInviteRetries = 0;
-        this._sessionReport.iceRestartTimeMillis = null;
-        this._sessionReport.iceRestartFailed = null;
-        this._logger.info("Reset ICE restart metrics for new call").sendInternalLogToServer();
+  }, {
+    key: "resetIceRestartMetrics",
+    value: function resetIceRestartMetrics() {
+      this._sessionReport.iceRestartAttempts = 0;
+      this._sessionReport.iceRestartSuccesses = 0;
+      this._sessionReport.iceRestartInviteRetries = 0;
+      this._sessionReport.iceRestartTimeMillis = null;
+      this._sessionReport.iceRestartFailed = null;
+      this._logger.info("Reset ICE restart metrics for new call").sendInternalLogToServer();
     }
     /**
      * Refresh media stream between calls (non-blocking)
@@ -15881,128 +18061,153 @@ class SharedMediaSession {
      * - VDI users who may have device changes between calls
      * - Non-VDI users with audio permission disabled who face device issues
      */
-    refreshMediaStreamBetweenCalls() {
-        // Check if we should skip refresh
-        if (this._isUserProvidedStream) {
-            this._logger.log("Not refreshing media stream - user provided stream is being used");
-            return;
+  }, {
+    key: "refreshMediaStreamBetweenCalls",
+    value: function refreshMediaStreamBetweenCalls() {
+      var _this7 = this;
+      // Check if we should skip refresh
+      if (this._isUserProvidedStream) {
+        this._logger.log("Not refreshing media stream - user provided stream is being used");
+        return;
+      }
+      this._logger.info("Refreshing media stream between calls").sendInternalLogToServer();
+      // Use default device constraints (no specific deviceId) - matches ConnectContact behavior
+      var constraints = this._buildMediaConstraints();
+      var gumPromise = this._strategy._gUM(constraints);
+      gumPromise.then(function (newStream) {
+        // Double-check in case user set stream during async gUM
+        if (_this7._isUserProvidedStream) {
+          _this7._logger.log("User provided stream set during gUM, aborting refresh");
+          // NOTE: Do NOT stop tracks to be consistent with ConnectContact behavior.
+          // Previous attempts to stop old tracks also stopped new tracks on Linux + Citrix for unknown reasons.
+          return;
         }
-        this._logger.info("Refreshing media stream between calls").sendInternalLogToServer();
-        // Use default device constraints (no specific deviceId) - matches ConnectContact behavior
-        const constraints = this._buildMediaConstraints();
-        const gumPromise = this._strategy._gUM(constraints);
-        gumPromise.then((newStream) => {
-            // Double-check in case user set stream during async gUM
-            if (this._isUserProvidedStream) {
-                this._logger.log("User provided stream set during gUM, aborting refresh");
-                // NOTE: Do NOT stop tracks to be consistent with ConnectContact behavior.
-                // Previous attempts to stop old tracks also stopped new tracks on Linux + Citrix for unknown reasons.
-                return;
-            }
-            const newAudioTrack = newStream.getAudioTracks()[0];
-            if (!newAudioTrack) {
-                throw new Error('No audio track in refreshed stream');
-            }
-            // Replace track in peer connection
-            const audioSender = this._pc.getSenders().find(sender => sender.track && sender.track.kind === 'audio');
-            if (audioSender) {
-                return audioSender.replaceTrack(newAudioTrack).then(() => {
-                    // Update the existing MediaStream object (don't create a new one)
-                    const oldTrack = this._localStream.getAudioTracks()[0];
-                    if (oldTrack) {
-                        this._localStream.removeTrack(oldTrack);
-                        // NOTE: Do NOT stop the old track to be consistent with ConnectContact behavior.
-                        // Previous attempts to stop old tracks also stopped new tracks on Linux + Citrix for unknown reasons.
-                    }
-                    this._localStream.addTrack(newAudioTrack);
-                    // Update selected device ID
-                    this._selectedMicrophoneDeviceId = newAudioTrack.getSettings().deviceId;
-                    this._logger.info("Media stream refreshed successfully between calls").sendInternalLogToServer();
-                    this._logger.info(`Audio track settings: ${JSON.stringify(newAudioTrack.getSettings())}`).sendInternalLogToServer();
-                });
-            }
-            else {
-                this._logger.warn("No audio sender found to replace track").sendInternalLogToServer();
-                // NOTE: Do NOT stop tracks to be consistent with ConnectContact behavior.
-            }
-        }).catch((error) => {
-            this._logger.error("Failed to refresh media stream between calls", error).sendInternalLogToServer();
-            // Don't throw - allow call to continue with existing stream
+        var newAudioTrack = newStream.getAudioTracks()[0];
+        if (!newAudioTrack) {
+          throw new Error('No audio track in refreshed stream');
+        }
+        // Replace track in peer connection
+        var audioSender = _this7._pc.getSenders().find(function (sender) {
+          return sender.track && sender.track.kind === 'audio';
         });
+        if (audioSender) {
+          return audioSender.replaceTrack(newAudioTrack).then(function () {
+            // Update the existing MediaStream object (don't create a new one)
+            var oldTrack = _this7._localStream.getAudioTracks()[0];
+            if (oldTrack) {
+              _this7._localStream.removeTrack(oldTrack);
+              // NOTE: Do NOT stop the old track to be consistent with ConnectContact behavior.
+              // Previous attempts to stop old tracks also stopped new tracks on Linux + Citrix for unknown reasons.
+            }
+            _this7._localStream.addTrack(newAudioTrack);
+            // Update selected device ID
+            _this7._selectedMicrophoneDeviceId = newAudioTrack.getSettings().deviceId;
+            _this7._logger.info("Media stream refreshed successfully between calls").sendInternalLogToServer();
+            _this7._logger.info("Audio track settings: ".concat(JSON.stringify(newAudioTrack.getSettings()))).sendInternalLogToServer();
+          });
+        } else {
+          _this7._logger.warn("No audio sender found to replace track").sendInternalLogToServer();
+          // NOTE: Do NOT stop tracks to be consistent with ConnectContact behavior.
+        }
+      })["catch"](function (error) {
+        _this7._logger.error("Failed to refresh media stream between calls", error).sendInternalLogToServer();
+        // Don't throw - allow call to continue with existing stream
+      });
     }
-}
-exports.default = SharedMediaSession;
+  }]);
+}();
+exports["default"] = SharedMediaSession;
 
-},{"./exceptions":30,"./rtc_const":32,"./rtp-stats":38,"./session_report":39,"./shared_media_session_talking_substates":41,"./shared_media_signaling":42,"./strategies/StandardStrategy":52,"./utils":54,"sdp":7,"uuid":9}],41:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./rtp-stats":54,"./session_report":55,"./shared_media_session_talking_substates":57,"./shared_media_signaling":58,"./strategies/StandardStrategy":68,"./utils":70,"sdp":7,"uuid":9}],57:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.AcceptSubstate = exports.InviteAnswerSubstate = exports.ConnectSignalingAndIceCollectionSubstate = exports.SetLocalSessionDescriptionSubstate = exports.IceRestartSubstate = exports.ConnectedSubstate = void 0;
-const rtc_const_1 = require("./rtc_const");
-const utils_1 = require("./utils");
-const exceptions_1 = require("./exceptions");
-const sdp_1 = require("sdp");
-const shared_media_signaling_1 = require("./shared_media_signaling");
+var rtc_const_1 = require("./rtc_const");
+var utils_1 = require("./utils");
+var exceptions_1 = require("./exceptions");
+var sdp_1 = require("sdp");
+var shared_media_signaling_1 = require("./shared_media_signaling");
 /**
  * ConnectedSubstate is the default substate of the shared media session talking state
  * It monitors the peer connection ICE connection state and attempts to reconnect if disconnected.
  * If the ICE connection state changes to 'DISCONNECTED' more than 3 seconds, it triggers an ICE restart.
  */
-class ConnectedSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var ConnectedSubstate = /*#__PURE__*/function () {
+  function ConnectedSubstate(sharedMediaSession) {
+    _classCallCheck(this, ConnectedSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this.retryInterval = 3000; // Retry interval set to 3 seconds
+  }
+  return _createClass(ConnectedSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession) {
-        this._sharedMediaSession = sharedMediaSession;
-        this.retryInterval = 3000; // Retry interval set to 3 seconds
-    }
-    onEnter() {
-    }
+  }, {
+    key: "onEnter",
+    value: function onEnter() {}
     // onIceStateChange will be invoked when peer connection Ice Connection state change
-    onIceStateChange(evt) {
-        const iceState = this._sharedMediaSession._strategy.onIceStateChange(evt, this._sharedMediaSession._pc);
-        this.logger.info('ICE Connection State: ', iceState);
-        if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
-            // Check if the shared media session supports ICE restart
-            if (this._sharedMediaSession.peerConnectionToken) {
-                this.logger.info('Detected Lost ICE connection, pending IceRestart');
-                this.IceRestartTimeoutId = setTimeout(() => {
-                    if (this._sharedMediaSession._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
-                        this.logger.info('Trying to restart ICE connection');
-                        this._sharedMediaSession._sessionReport.iceRestartAttempts += 1;
-                        this._sharedMediaSession._state.setSubState(new IceRestartSubstate(this._sharedMediaSession));
-                    }
-                    else {
-                        this.logger.info('The network recovered, IceRestart cancelled');
-                    }
-                }, this.retryInterval);
-            }
-            else {
-                this.logger.info('Detected Lost ICE connection, IceRestart not supported');
-            }
-        }
-    }
-    onSignalingFailed(e) {
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt) {
+      var _this = this;
+      var iceState = this._sharedMediaSession._strategy.onIceStateChange(evt, this._sharedMediaSession._pc);
+      this.logger.info('ICE Connection State: ', iceState);
+      if (iceState == rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
+        // Check if the shared media session supports ICE restart
         if (this._sharedMediaSession.peerConnectionToken) {
-            if (e.name === exceptions_1.BadRequestExceptionName && e.message.includes("Stale Peer Connection")) {
-                this.logger.error('Server detect peer connection being unhealthy, performing IceRestart', e);
-                this._sharedMediaSession._sessionReport.iceRestartAttempts += 1;
-                this._sharedMediaSession._state.setSubState(new IceRestartSubstate(this._sharedMediaSession));
+          this.logger.info('Detected Lost ICE connection, pending IceRestart');
+          this.IceRestartTimeoutId = setTimeout(function () {
+            if (_this._sharedMediaSession._pc.iceConnectionState === rtc_const_1.ICE_CONNECTION_STATE.DISCONNECTED) {
+              _this.logger.info('Trying to restart ICE connection');
+              _this._sharedMediaSession._sessionReport.iceRestartAttempts += 1;
+              _this._sharedMediaSession._state.setSubState(new IceRestartSubstate(_this._sharedMediaSession));
+            } else {
+              _this.logger.info('The network recovered, IceRestart cancelled');
             }
+          }, this.retryInterval);
+        } else {
+          this.logger.info('Detected Lost ICE connection, IceRestart not supported');
         }
-        else {
-            this.logger.info('Server detect peer connection being unhealthy, IceRestart not supported');
+      }
+    }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      if (this._sharedMediaSession.peerConnectionToken) {
+        if (e.name === exceptions_1.BadRequestExceptionName && e.message.includes("Stale Peer Connection")) {
+          this.logger.error('Server detect peer connection being unhealthy, performing IceRestart', e);
+          this._sharedMediaSession._sessionReport.iceRestartAttempts += 1;
+          this._sharedMediaSession._state.setSubState(new IceRestartSubstate(this._sharedMediaSession));
         }
+      } else {
+        this.logger.info('Server detect peer connection being unhealthy, IceRestart not supported');
+      }
     }
-    onExit() {
-        if (this.IceRestartTimeoutId) {
-            this.logger.info('Exiting, cleaning up IceRestart timeout');
-            clearTimeout(this.IceRestartTimeoutId);
-        }
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      if (this.IceRestartTimeoutId) {
+        this.logger.info('Exiting, cleaning up IceRestart timeout');
+        clearTimeout(this.IceRestartTimeoutId);
+      }
     }
-    get name() {
-        return "ConnectedSubstate";
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectedSubstate";
     }
-}
+  }]);
+}();
 exports.ConnectedSubstate = ConnectedSubstate;
 /**
  * IceRestartSubstate manages the process of requesting ICE access and initiating an ICE restart.
@@ -16018,79 +18223,103 @@ exports.ConnectedSubstate = ConnectedSubstate;
  *
  * In case of failure, the ICE restart process is not retried, and the state transitions back to connected sub state
  */
-class IceRestartSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var IceRestartSubstate = /*#__PURE__*/function () {
+  function IceRestartSubstate(sharedMediaSession) {
+    _classCallCheck(this, IceRestartSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this._iceRestartStartTime = Date.now();
+  }
+  return _createClass(IceRestartSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession) {
-        this._sharedMediaSession = sharedMediaSession;
-        this._iceRestartStartTime = Date.now();
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      this.performIceRestart();
     }
-    onEnter() {
-        this.performIceRestart();
-    }
-    performIceRestart() {
-        // For shared media session, we need to request new ICE servers through the signaling channel
-        this._sharedMediaSession._iceRestart = true;
-        // Request ICE access through signaling channel
-        this._sharedMediaSession._requestIceAccess().then((response) => {
-            var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
-            rtcPeerConnectionConfig.iceServers = response;
-            rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
-            this._sharedMediaSession._pc.setConfiguration(rtcPeerConnectionConfig);
-            return this._sharedMediaSession._pc.createOffer({ iceRestart: true });
-        }).then((rtcSessionDescription) => {
-            this._sharedMediaSession._localSessionDescription = rtcSessionDescription;
-            this.logger.info("ICE restart offer created and set as local description");
-            this._sharedMediaSession._state.setSubState(new SetLocalSessionDescriptionSubstate(this._sharedMediaSession, this._iceRestartStartTime));
-        }).catch((error) => {
-            this.logger.error('ICE restart failed', error);
-            // Send failure notification to call sessions with timing and reset
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+  }, {
+    key: "performIceRestart",
+    value: function performIceRestart() {
+      var _this2 = this;
+      // For shared media session, we need to request new ICE servers through the signaling channel
+      this._sharedMediaSession._iceRestart = true;
+      // Request ICE access through signaling channel
+      this._sharedMediaSession._requestIceAccess().then(function (response) {
+        var rtcPeerConnectionConfig = JSON.parse(JSON.stringify(rtc_const_1.RTC_PEER_CONNECTION_CONFIG));
+        rtcPeerConnectionConfig.iceServers = response;
+        rtcPeerConnectionConfig.iceCandidatePoolSize = rtc_const_1.DEFAULT_ICE_CANDIDATE_POOL_SIZE;
+        _this2._sharedMediaSession._pc.setConfiguration(rtcPeerConnectionConfig);
+        return _this2._sharedMediaSession._pc.createOffer({
+          iceRestart: true
         });
+      }).then(function (rtcSessionDescription) {
+        _this2._sharedMediaSession._localSessionDescription = rtcSessionDescription;
+        _this2.logger.info("ICE restart offer created and set as local description");
+        _this2._sharedMediaSession._state.setSubState(new SetLocalSessionDescriptionSubstate(_this2._sharedMediaSession, _this2._iceRestartStartTime));
+      })["catch"](function (error) {
+        _this2.logger.error('ICE restart failed', error);
+        // Send failure notification to call sessions with timing and reset
+        _this2._sharedMediaSession._onIceRestartComplete(false, _this2._iceRestartStartTime);
+        _this2._sharedMediaSession._state.setSubState(new ConnectedSubstate(_this2._sharedMediaSession));
+      });
     }
-    onExit() {
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "IceRestartSubstate";
     }
-    get name() {
-        return "IceRestartSubstate";
-    }
-}
+  }]);
+}();
 exports.IceRestartSubstate = IceRestartSubstate;
-class SetLocalSessionDescriptionSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var SetLocalSessionDescriptionSubstate = /*#__PURE__*/function () {
+  function SetLocalSessionDescriptionSubstate(sharedMediaSession, iceRestartStartTime) {
+    _classCallCheck(this, SetLocalSessionDescriptionSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this._iceRestartStartTime = iceRestartStartTime;
+  }
+  return _createClass(SetLocalSessionDescriptionSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession, iceRestartStartTime) {
-        this._sharedMediaSession = sharedMediaSession;
-        this._iceRestartStartTime = iceRestartStartTime;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var _this3 = this;
+      var localDescription = this._sharedMediaSession._localSessionDescription;
+      var sdpOptions = new utils_1.SdpOptions();
+      sdpOptions.enableOpusDtx = this._sharedMediaSession._enableOpusDtx;
+      var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
+      localDescription.sdp = transformedSdp.sdp;
+      localDescription.sdp += 'a=ptime:20\r\n';
+      localDescription.sdp += 'a=maxptime:20\r\n';
+      localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
+      this.logger.info('LocalSD', this._sharedMediaSession._localSessionDescription);
+      this._sharedMediaSession._pc.setLocalDescription(this._sharedMediaSession._localSessionDescription).then(function () {
+        _this3.logger.info("Local description set successfully");
+        _this3._sharedMediaSession._state.setSubState(new ConnectSignalingAndIceCollectionSubstate(_this3._sharedMediaSession, transformedSdp.mLines, _this3._iceRestartStartTime));
+      })["catch"](function (error) {
+        _this3.logger.error('Failed to set local description', error);
+        // Send failure notification if this is an ICE restart
+        _this3._sharedMediaSession._onIceRestartComplete(false, _this3._iceRestartStartTime);
+        _this3._sharedMediaSession._state.setSubState(new ConnectedSubstate(_this3._sharedMediaSession));
+      });
     }
-    onEnter() {
-        const localDescription = this._sharedMediaSession._localSessionDescription;
-        const sdpOptions = new utils_1.SdpOptions();
-        sdpOptions.enableOpusDtx = this._sharedMediaSession._enableOpusDtx;
-        var transformedSdp = (0, utils_1.transformSdp)(localDescription.sdp, sdpOptions);
-        localDescription.sdp = transformedSdp.sdp;
-        localDescription.sdp += 'a=ptime:20\r\n';
-        localDescription.sdp += 'a=maxptime:20\r\n';
-        localDescription.sdp = localDescription.sdp.replace("minptime=10", "minptime=20");
-        this.logger.info('LocalSD', this._sharedMediaSession._localSessionDescription);
-        this._sharedMediaSession._pc.setLocalDescription(this._sharedMediaSession._localSessionDescription).then(() => {
-            this.logger.info("Local description set successfully");
-            this._sharedMediaSession._state.setSubState(new ConnectSignalingAndIceCollectionSubstate(this._sharedMediaSession, transformedSdp.mLines, this._iceRestartStartTime));
-        }).catch(error => {
-            this.logger.error('Failed to set local description', error);
-            // Send failure notification if this is an ICE restart
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        });
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "SetLocalSessionDescriptionSubstate";
     }
-    onExit() {
-    }
-    get name() {
-        return "SetLocalSessionDescriptionSubstate";
-    }
-}
+  }]);
+}();
 exports.SetLocalSessionDescriptionSubstate = SetLocalSessionDescriptionSubstate;
 /**
  * ConnectSignalingAndIceCollectionSubstate manages the signaling connection and ICE candidate collection.
@@ -16106,387 +18335,544 @@ exports.SetLocalSessionDescriptionSubstate = SetLocalSessionDescriptionSubstate;
  *
  * 4. Sets a timeout for ICE collection to handle cases where the ICE gathering process gets stuck.
  */
-class ConnectSignalingAndIceCollectionSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var ConnectSignalingAndIceCollectionSubstate = /*#__PURE__*/function () {
+  function ConnectSignalingAndIceCollectionSubstate(sharedMediaSession, mLines, iceRestartStartTime) {
+    _classCallCheck(this, ConnectSignalingAndIceCollectionSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this._iceCandidates = [];
+    this._iceCandidateFoundationsMap = {};
+    this._mLines = mLines;
+    this._iceCompletedForIceRestart = false;
+    this._iceRestartStartTime = iceRestartStartTime;
+  }
+  return _createClass(ConnectSignalingAndIceCollectionSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession, mLines, iceRestartStartTime) {
-        this._sharedMediaSession = sharedMediaSession;
-        this._iceCandidates = [];
-        this._iceCandidateFoundationsMap = {};
-        this._mLines = mLines;
-        this._iceCompletedForIceRestart = false;
-        this._iceRestartStartTime = iceRestartStartTime;
-    }
-    onEnter() {
-        setTimeout(() => {
-            if (this._isCurrentState() && !this._iceCompletedForIceRestart) {
-                this.logger.warn('ICE collection timed out');
-                this._reportIceCompleted(true);
-            }
-        }, this._sharedMediaSession._iceTimeoutMillis);
-    }
-    _isCurrentState() {
-        return this._sharedMediaSession._state._subState === this;
-    }
-    _createLocalCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
-    }
-    onIceCandidate(evt) {
-        const candidate = evt.candidate;
-        this.logger.log('onicecandidate ' + JSON.stringify(candidate));
-        if (candidate) {
-            if (candidate.candidate) {
-                this._iceCandidates.push(this._createLocalCandidate(candidate));
-                if (!this._iceCompletedForIceRestart) {
-                    this._checkCandidatesSufficient(candidate);
-                }
-            }
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      var _this4 = this;
+      setTimeout(function () {
+        if (_this4._isCurrentState() && !_this4._iceCompletedForIceRestart) {
+          _this4.logger.warn('ICE collection timed out');
+          _this4._reportIceCompleted(true);
         }
-        else {
-            this._reportIceCompleted(false);
-        }
+      }, this._sharedMediaSession._iceTimeoutMillis);
     }
-    _checkCandidatesSufficient(candidate) {
-        //check if we collected sufficient candidates from single media server to restart the call
-        var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
-        if (candidateObj.component != 1) {
-            return;
-        }
-        var candidateFoundation = candidateObj.foundation;
-        var candidateMLineIndex = candidate.sdpMLineIndex;
-        if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
-            var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
-            if (!mIndexList.includes(candidateMLineIndex)) {
-                mIndexList.push(candidateMLineIndex);
-            }
-            this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
-            if (this._mLines == mIndexList.length) {
-                this._reportIceCompleted(false);
-            }
-        }
+  }, {
+    key: "_isCurrentState",
+    value: function _isCurrentState() {
+      return this._sharedMediaSession._state._subState === this;
     }
-    _reportIceCompleted(isTimeout) {
-        this._iceCompletedForIceRestart = true;
-        this._sharedMediaSession._onIceCollectionComplete(this._sharedMediaSession, isTimeout, this._iceCandidates.length);
-        if (this._iceCandidates.length > 0) {
-            this._checkAndTransit();
-        }
-        else {
-            this.logger.error('No ICE candidate');
-            this._sharedMediaSession._sessionReport.iceCollectionFailure = true;
-            // Send failure notification if this is an ICE restart
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
+  }, {
+    key: "_createLocalCandidate",
+    value: function _createLocalCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _checkAndTransit() {
-        if (this._iceCompletedForIceRestart) {
-            this._sharedMediaSession._state.setSubState(new InviteAnswerSubstate(this._sharedMediaSession, this._iceCandidates, this._iceRestartStartTime));
+  }, {
+    key: "onIceCandidate",
+    value: function onIceCandidate(evt) {
+      var candidate = evt.candidate;
+      this.logger.log('onicecandidate ' + JSON.stringify(candidate));
+      if (candidate) {
+        if (candidate.candidate) {
+          this._iceCandidates.push(this._createLocalCandidate(candidate));
+          if (!this._iceCompletedForIceRestart) {
+            this._checkCandidatesSufficient(candidate);
+          }
         }
-        else if (!this._iceCompletedForIceRestart) {
-            this.logger.log('Pending ICE collection');
+      } else {
+        this._reportIceCompleted(false);
+      }
+    }
+  }, {
+    key: "_checkCandidatesSufficient",
+    value: function _checkCandidatesSufficient(candidate) {
+      //check if we collected sufficient candidates from single media server to restart the call
+      var candidateObj = (0, sdp_1.parseCandidate)(candidate.candidate);
+      if (candidateObj.component != 1) {
+        return;
+      }
+      var candidateFoundation = candidateObj.foundation;
+      var candidateMLineIndex = candidate.sdpMLineIndex;
+      if (candidateFoundation && candidateMLineIndex >= 0 && candidateMLineIndex < this._mLines) {
+        var mIndexList = this._iceCandidateFoundationsMap[candidateFoundation] || [];
+        if (!mIndexList.includes(candidateMLineIndex)) {
+          mIndexList.push(candidateMLineIndex);
         }
+        this._iceCandidateFoundationsMap[candidateFoundation] = mIndexList;
+        if (this._mLines == mIndexList.length) {
+          this._reportIceCompleted(false);
+        }
+      }
     }
-    onExit() {
+  }, {
+    key: "_reportIceCompleted",
+    value: function _reportIceCompleted(isTimeout) {
+      this._iceCompletedForIceRestart = true;
+      this._sharedMediaSession._onIceCollectionComplete(this._sharedMediaSession, isTimeout, this._iceCandidates.length);
+      if (this._iceCandidates.length > 0) {
+        this._checkAndTransit();
+      } else {
+        this.logger.error('No ICE candidate');
+        this._sharedMediaSession._sessionReport.iceCollectionFailure = true;
+        // Send failure notification if this is an ICE restart
+        this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      }
     }
-    get name() {
-        return "ConnectSignalingAndIceCollectionSubstate";
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._iceCompletedForIceRestart) {
+        this._sharedMediaSession._state.setSubState(new InviteAnswerSubstate(this._sharedMediaSession, this._iceCandidates, this._iceRestartStartTime));
+      } else if (!this._iceCompletedForIceRestart) {
+        this.logger.log('Pending ICE collection');
+      }
     }
-}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "ConnectSignalingAndIceCollectionSubstate";
+    }
+  }]);
+}();
 exports.ConnectSignalingAndIceCollectionSubstate = ConnectSignalingAndIceCollectionSubstate;
 /**
  * InviteAnswerSubstate handles the invitation and response during signaling.
  * It retries the invite process if it fails due to certain errors.
  */
-class InviteAnswerSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var InviteAnswerSubstate = /*#__PURE__*/function () {
+  function InviteAnswerSubstate(sharedMediaSession, iceCandidates, iceRestartStartTime) {
+    _classCallCheck(this, InviteAnswerSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this._iceCandidates = iceCandidates;
+    this._iceRestartStartTime = iceRestartStartTime;
+    this.retryCount = 0;
+    this.maxRetries = 3; // Maximum number of retries for the invite process
+    // The retry interval is set to 1 second. The actual interval between each invite attempt
+    // will be the sum of the MAX_INVITE_DELAY_MS (5 seconds) and the retry interval (1 second).
+    // For example, the timing for the three invite attempts would be:
+    // 1. First invite: 0 seconds
+    // 2. Second invite (after the first invite timeout): 6 seconds
+    // 3. Third invite (after the second invite timeout): 12 seconds
+    this.retryInterval = 1000;
+  }
+  return _createClass(InviteAnswerSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession, iceCandidates, iceRestartStartTime) {
-        this._sharedMediaSession = sharedMediaSession;
-        this._iceCandidates = iceCandidates;
-        this._iceRestartStartTime = iceRestartStartTime;
-        this.retryCount = 0;
-        this.maxRetries = 3; // Maximum number of retries for the invite process
-        // The retry interval is set to 1 second. The actual interval between each invite attempt
-        // will be the sum of the MAX_INVITE_DELAY_MS (5 seconds) and the retry interval (1 second).
-        // For example, the timing for the three invite attempts would be:
-        // 1. First invite: 0 seconds
-        // 2. Second invite (after the first invite timeout): 6 seconds
-        // 3. Third invite (after the second invite timeout): 12 seconds
-        this.retryInterval = 1000;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      this.attemptInvite();
     }
-    onEnter() {
-        this.attemptInvite();
+  }, {
+    key: "attemptInvite",
+    value: function attemptInvite() {
+      // Attempt to send an invite for ICE restart
+      this._sharedMediaSession._createSignalingChannel().connect();
+      this._sharedMediaSession._signalingChannel.transit(new shared_media_signaling_1.PendingInviteState(this._sharedMediaSession._signalingChannel));
+      // Use inviteForIceRestart to exclude callContextToken and contactId
+      this._sharedMediaSession._signalingChannel.inviteForIceRestart(this._sharedMediaSession._localSessionDescription.sdp, this._iceCandidates);
     }
-    attemptInvite() {
-        // Attempt to send an invite for ICE restart
-        this._sharedMediaSession._createSignalingChannel().connect();
-        this._sharedMediaSession._signalingChannel.transit(new shared_media_signaling_1.PendingInviteState(this._sharedMediaSession._signalingChannel));
-        // Use inviteForIceRestart to exclude callContextToken and contactId
-        this._sharedMediaSession._signalingChannel.inviteForIceRestart(this._sharedMediaSession._localSessionDescription.sdp, this._iceCandidates);
+  }, {
+    key: "retryInvite",
+    value: function retryInvite() {
+      var _this5 = this;
+      // Retry logic for invite attempts
+      if (this.retryCount < this.maxRetries) {
+        this.retryCount++;
+        this._sharedMediaSession._sessionReport.iceRestartInviteRetries += 1;
+        this.logger.info("Retrying invite in ".concat(this.retryInterval / 1000, " seconds. Attempt ").concat(this.retryCount));
+        this.signalingRetryTimeoutId = setTimeout(function () {
+          return _this5.attemptInvite();
+        }, this.retryInterval);
+      } else {
+        this.logger.error("Max invite attempts reached (".concat(this.maxRetries, "). ICE restart failed.")).sendInternalLogToServer();
+        // Send failure notification to call sessions with timing and reset
+        this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      }
     }
-    retryInvite() {
-        // Retry logic for invite attempts
-        if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            this._sharedMediaSession._sessionReport.iceRestartInviteRetries += 1;
-            this.logger.info(`Retrying invite in ${this.retryInterval / 1000} seconds. Attempt ${this.retryCount}`);
-            this.signalingRetryTimeoutId = setTimeout(() => this.attemptInvite(), this.retryInterval);
-        }
-        else {
-            this.logger.error(`Max invite attempts reached (${this.maxRetries}). ICE restart failed.`).sendInternalLogToServer();
-            // Send failure notification to call sessions with timing and reset
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
+  }, {
+    key: "onSignalingFailed",
+    value: function onSignalingFailed(e) {
+      // Handle signaling failures
+      if (e.name === exceptions_1.BusyExceptionName) {
+        this.logger.error('User Busy, possibly multiple CCP windows open. ICE restart failed.', e).sendInternalLogToServer();
+        // Send failure notification to call sessions with timing and reset
+        this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      } else if (e.name === exceptions_1.CallNotFoundExceptionName) {
+        this.logger.error('Call not found. One of the participant probably hung up. ICE restart failed.', e).sendInternalLogToServer();
+        // Send failure notification to call sessions with timing and reset
+        this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      } else {
+        this.logger.error('Failed handshaking with signaling server', e);
+        this.retryInvite();
+      }
     }
-    onSignalingFailed(e) {
-        // Handle signaling failures
-        if (e.name === exceptions_1.BusyExceptionName) {
-            this.logger.error('User Busy, possibly multiple CCP windows open. ICE restart failed.', e).sendInternalLogToServer();
-            // Send failure notification to call sessions with timing and reset
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
-        else if (e.name === exceptions_1.CallNotFoundExceptionName) {
-            this.logger.error('Call not found. One of the participant probably hung up. ICE restart failed.', e).sendInternalLogToServer();
-            // Send failure notification to call sessions with timing and reset
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
-        else {
-            this.logger.error('Failed handshaking with signaling server', e);
-            this.retryInvite();
-        }
+  }, {
+    key: "onSignalingAnswered",
+    value: function onSignalingAnswered(sdp, candidates) {
+      this._sharedMediaSession._state.setSubState(new AcceptSubstate(this._sharedMediaSession, sdp, candidates, this._iceRestartStartTime, this.retryCount));
     }
-    onSignalingAnswered(sdp, candidates) {
-        this._sharedMediaSession._state.setSubState(new AcceptSubstate(this._sharedMediaSession, sdp, candidates, this._iceRestartStartTime, this.retryCount));
+  }, {
+    key: "onExit",
+    value: function onExit() {
+      if (this.signalingRetryTimeoutId) {
+        this.logger.info('Exiting, cleaning up invite retry timeout');
+        clearTimeout(this.signalingRetryTimeoutId);
+      }
     }
-    onExit() {
-        if (this.signalingRetryTimeoutId) {
-            this.logger.info('Exiting, cleaning up invite retry timeout');
-            clearTimeout(this.signalingRetryTimeoutId);
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "InviteAnswerSubstate";
     }
-    get name() {
-        return "InviteAnswerSubstate";
-    }
-}
+  }]);
+}();
 exports.InviteAnswerSubstate = InviteAnswerSubstate;
 /**
  * AcceptSubstate handles the remote SDP and remote ICE candidates.
  * It verifies the remote SDP and ICE candidates before proceeding.
  */
-class AcceptSubstate {
-    get logger() {
-        return this._sharedMediaSession._logger;
+var AcceptSubstate = /*#__PURE__*/function () {
+  function AcceptSubstate(sharedMediaSession, sdp, candidates, iceRestartStartTime, inviteRetryCount) {
+    _classCallCheck(this, AcceptSubstate);
+    this._sharedMediaSession = sharedMediaSession;
+    this._sdp = sdp;
+    this._candidates = candidates;
+    this._iceRestartStartTime = iceRestartStartTime;
+    this._inviteRetryCount = inviteRetryCount || 0;
+  }
+  return _createClass(AcceptSubstate, [{
+    key: "logger",
+    get: function get() {
+      return this._sharedMediaSession._logger;
     }
-    constructor(sharedMediaSession, sdp, candidates, iceRestartStartTime, inviteRetryCount) {
-        this._sharedMediaSession = sharedMediaSession;
-        this._sdp = sdp;
-        this._candidates = candidates;
-        this._iceRestartStartTime = iceRestartStartTime;
-        this._inviteRetryCount = inviteRetryCount || 0;
+  }, {
+    key: "_createSessionDescription",
+    value: function _createSessionDescription(initDict) {
+      return new RTCSessionDescription(initDict);
     }
-    _createSessionDescription(initDict) {
-        return new RTCSessionDescription(initDict);
+  }, {
+    key: "_createRemoteCandidate",
+    value: function _createRemoteCandidate(initDict) {
+      return new RTCIceCandidate(initDict);
     }
-    _createRemoteCandidate(initDict) {
-        return new RTCIceCandidate(initDict);
-    }
-    onEnter() {
-        if (!this._sdp) {
-            this.logger.error('Invalid remote SDP');
-            // Send failure notification if this is an ICE restart
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
-        else if (!this._candidates || this._candidates.length < 1) {
-            this.logger.error('No remote ICE candidate');
-            // Send failure notification if this is an ICE restart
-            this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
-        else {
-            this._sharedMediaSession._strategy.setRemoteDescriptionForIceRestart(this, this._sharedMediaSession);
-        }
-    }
-    onSignalingHandshaked() {
-        this._signalingHandshakedForIceRestart = true;
-        this._checkAndTransit();
-    }
-    onIceRestartFailure() {
-        this.logger.error('ICE restart failed during setRemoteDescription').sendInternalLogToServer();
-        // Send failure notification to call sessions with timing and reset
+  }, {
+    key: "onEnter",
+    value: function onEnter() {
+      if (!this._sdp) {
+        this.logger.error('Invalid remote SDP');
+        // Send failure notification if this is an ICE restart
         this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
         this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      } else if (!this._candidates || this._candidates.length < 1) {
+        this.logger.error('No remote ICE candidate');
+        // Send failure notification if this is an ICE restart
+        this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      } else {
+        this._sharedMediaSession._strategy.setRemoteDescriptionForIceRestart(this, this._sharedMediaSession);
+      }
     }
-    _checkAndTransit() {
-        if (this._signalingHandshakedForIceRestart && this._remoteDescriptionSetForIceRestart) {
-            this.logger.info(`ICE restart completed successfully after ${this._inviteRetryCount} retries`);
-            // Send metrics to call sessions and reset
-            this._sharedMediaSession._onIceRestartComplete(true, this._iceRestartStartTime);
-            this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
-        }
-        else if (!this._signalingHandshakedForIceRestart) {
-            this.logger.log('Pending handshaking');
-        }
-        else { //implies _remoteDescriptionSet == false
-            this.logger.log('Pending setting remote description');
-        }
+  }, {
+    key: "onSignalingHandshaked",
+    value: function onSignalingHandshaked() {
+      this._signalingHandshakedForIceRestart = true;
+      this._checkAndTransit();
     }
-    onExit() {
+  }, {
+    key: "onIceRestartFailure",
+    value: function onIceRestartFailure() {
+      this.logger.error('ICE restart failed during setRemoteDescription').sendInternalLogToServer();
+      // Send failure notification to call sessions with timing and reset
+      this._sharedMediaSession._onIceRestartComplete(false, this._iceRestartStartTime);
+      this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
     }
-    get name() {
-        return "AcceptSubstate";
+  }, {
+    key: "_checkAndTransit",
+    value: function _checkAndTransit() {
+      if (this._signalingHandshakedForIceRestart && this._remoteDescriptionSetForIceRestart) {
+        this.logger.info("ICE restart completed successfully after ".concat(this._inviteRetryCount, " retries"));
+        // Send metrics to call sessions and reset
+        this._sharedMediaSession._onIceRestartComplete(true, this._iceRestartStartTime);
+        this._sharedMediaSession._state.setSubState(new ConnectedSubstate(this._sharedMediaSession));
+      } else if (!this._signalingHandshakedForIceRestart) {
+        this.logger.log('Pending handshaking');
+      } else {
+        //implies _remoteDescriptionSet == false
+        this.logger.log('Pending setting remote description');
+      }
     }
-}
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "name",
+    get: function get() {
+      return "AcceptSubstate";
+    }
+  }]);
+}();
 exports.AcceptSubstate = AcceptSubstate;
 
-},{"./exceptions":30,"./rtc_const":32,"./shared_media_signaling":42,"./utils":54,"sdp":7}],42:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./shared_media_signaling":58,"./utils":70,"sdp":7}],58:[function(require,module,exports){
 "use strict";
+
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.FailedState = exports.DisconnectedState = exports.PendingLocalHangupState = exports.PendingRemoteHangupState = exports.TalkingState = exports.PendingAcceptState = exports.PendingAnswerState = exports.PendingInviteState = exports.PendingConnectState = exports.FailOnTimeoutState = exports.SharedMediaSignalingState = void 0;
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-const exceptions_1 = require("./exceptions");
-const uuid_1 = require("uuid");
-const INVITE_MAX_RETRIES = 0;
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var exceptions_1 = require("./exceptions");
+var uuid_1 = require("uuid");
+var INVITE_MAX_RETRIES = 0;
 /**
  * Abstract signaling state class for SharedMediaSession.
  * This is closely modeled after the original SignalingState class in signaling.js.
  */
-class SharedMediaSignalingState {
-    /**
-     * @param {SharedMediaSignaling} signaling SharedMediaSignaling object.
-     */
-    constructor(signaling) {
-        this._signaling = signaling;
-        this._createTime = new Date().getTime();
+var SharedMediaSignalingState = /*#__PURE__*/function () {
+  /**
+   * @param {SharedMediaSignaling} signaling SharedMediaSignaling object.
+   */
+  function SharedMediaSignalingState(signaling) {
+    _classCallCheck(this, SharedMediaSignalingState);
+    this._signaling = signaling;
+    this._createTime = new Date().getTime();
+  }
+  return _createClass(SharedMediaSignalingState, [{
+    key: "setStateTimeout",
+    value: function setStateTimeout(timeoutMs) {
+      setTimeout((0, utils_1.hitch)(this, this._onTimeoutChecked), timeoutMs);
     }
-    setStateTimeout(timeoutMs) {
-        setTimeout((0, utils_1.hitch)(this, this._onTimeoutChecked), timeoutMs);
+  }, {
+    key: "isCurrentState",
+    get: function get() {
+      return this === this._signaling.state;
     }
-    get isCurrentState() {
-        return this === this._signaling.state;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {}
+  }, {
+    key: "_onTimeoutChecked",
+    value: function _onTimeoutChecked() {
+      if (this.isCurrentState) {
+        this.onTimeout();
+      }
     }
-    onEnter() {
+  }, {
+    key: "onTimeout",
+    value: function onTimeout() {
+      throw new exceptions_1.UnsupportedOperation();
     }
-    _onTimeoutChecked() {
-        if (this.isCurrentState) {
-            this.onTimeout();
-        }
+  }, {
+    key: "transit",
+    value: function transit(newState) {
+      this._signaling.transit(newState);
     }
-    onTimeout() {
-        throw new exceptions_1.UnsupportedOperation();
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "onOpen",
+    value: function onOpen() {
+      throw new exceptions_1.UnsupportedOperation('onOpen not supported by ' + this.name);
     }
-    transit(newState) {
-        this._signaling.transit(newState);
+  }, {
+    key: "onError",
+    value: function onError() {
+      this.channelDown();
     }
-    onExit() {
+  }, {
+    key: "onClose",
+    value: function onClose() {
+      this.channelDown();
     }
-    onOpen() {
-        throw new exceptions_1.UnsupportedOperation('onOpen not supported by ' + this.name);
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      throw new exceptions_1.UnsupportedOperation('channelDown not supported by ' + this.name);
     }
-    onError() {
-        this.channelDown();
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg(rpcMsg) {
+      throw new exceptions_1.UnsupportedOperation('onRpcMsg not supported by ' + this.name);
     }
-    onClose() {
-        this.channelDown();
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      throw new exceptions_1.UnsupportedOperation('invite not supported by ' + this.name);
     }
-    channelDown() {
-        throw new exceptions_1.UnsupportedOperation('channelDown not supported by ' + this.name);
+  }, {
+    key: "inviteForIceRestart",
+    value: function inviteForIceRestart(sdp, iceCandidates) {
+      throw new exceptions_1.UnsupportedOperation('inviteForIceRestart not supported by ' + this.name);
     }
-    onRpcMsg(rpcMsg) {
-        throw new exceptions_1.UnsupportedOperation('onRpcMsg not supported by ' + this.name);
+  }, {
+    key: "accept",
+    value: function accept() {
+      throw new exceptions_1.UnsupportedOperation('accept not supported by ' + this.name);
     }
-    invite(sdp, iceCandidates) {
-        throw new exceptions_1.UnsupportedOperation('invite not supported by ' + this.name);
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      throw new exceptions_1.UnsupportedOperation('connectContact not supported by ' + this.name);
     }
-    inviteForIceRestart(sdp, iceCandidates) {
-        throw new exceptions_1.UnsupportedOperation('inviteForIceRestart not supported by ' + this.name);
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      // do nothing
     }
-    accept() {
-        throw new exceptions_1.UnsupportedOperation('accept not supported by ' + this.name);
+  }, {
+    key: "bye",
+    value: function bye() {
+      // do nothing
     }
-    connectContact() {
-        throw new exceptions_1.UnsupportedOperation('connectContact not supported by ' + this.name);
+  }, {
+    key: "name",
+    get: function get() {
+      return "SharedMediaSignalingState";
     }
-    hangup() {
-        // do nothing
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._signaling._logger;
     }
-    bye() {
-        // do nothing
-    }
-    get name() {
-        return "SharedMediaSignalingState";
-    }
-    get logger() {
-        return this._signaling._logger;
-    }
-}
+  }]);
+}();
 exports.SharedMediaSignalingState = SharedMediaSignalingState;
-class FailOnTimeoutState extends SharedMediaSignalingState {
-    constructor(signaling, timeoutMs) {
-        super(signaling);
-        this._timeoutMs = timeoutMs;
+var FailOnTimeoutState = /*#__PURE__*/function (_SharedMediaSignaling) {
+  function FailOnTimeoutState(signaling, timeoutMs) {
+    var _this;
+    _classCallCheck(this, FailOnTimeoutState);
+    _this = _callSuper(this, FailOnTimeoutState, [signaling]);
+    _this._timeoutMs = timeoutMs;
+    return _this;
+  }
+  _inherits(FailOnTimeoutState, _SharedMediaSignaling);
+  return _createClass(FailOnTimeoutState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.setStateTimeout(this._timeoutMs);
     }
-    onEnter() {
-        this.setStateTimeout(this._timeoutMs);
+  }, {
+    key: "onTimeout",
+    value: function onTimeout() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.Timeout()));
     }
-    onTimeout() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.Timeout()));
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailOnTimeoutState";
     }
-    get name() {
-        return "FailOnTimeoutState";
-    }
-}
+  }]);
+}(SharedMediaSignalingState);
 exports.FailOnTimeoutState = FailOnTimeoutState;
-class PendingConnectState extends FailOnTimeoutState {
-    constructor(signaling, timeoutMs, initialStartTimeIn, retriesIn) {
-        super(signaling, timeoutMs);
-        this._initialStartTime = initialStartTimeIn || new Date().getTime();
-        this._retries = retriesIn || 0;
+var PendingConnectState = /*#__PURE__*/function (_FailOnTimeoutState) {
+  function PendingConnectState(signaling, timeoutMs, initialStartTimeIn, retriesIn) {
+    var _this2;
+    _classCallCheck(this, PendingConnectState);
+    _this2 = _callSuper(this, PendingConnectState, [signaling, timeoutMs]);
+    _this2._initialStartTime = initialStartTimeIn || new Date().getTime();
+    _this2._retries = retriesIn || 0;
+    return _this2;
+  }
+  // onOpen would not happen when the signaling channel manager is created by pcm
+  _inherits(PendingConnectState, _FailOnTimeoutState);
+  return _createClass(PendingConnectState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.transit(new PendingInviteState(this._signaling));
     }
-    // onOpen would not happen when the signaling channel manager is created by pcm
-    onEnter() {
-        this.transit(new PendingInviteState(this._signaling));
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
     }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingConnectState";
     }
-    get name() {
-        return "PendingConnectState";
-    }
-}
+  }]);
+}(FailOnTimeoutState);
 exports.PendingConnectState = PendingConnectState;
-class PendingInviteState extends SharedMediaSignalingState {
-    constructor(signaling, retriesIn) {
-        super(signaling);
-        this._retries = retriesIn;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyConnected(resolve) {
-            self._signaling._connectedHandler();
-            resolve();
-        });
+var PendingInviteState = /*#__PURE__*/function (_SharedMediaSignaling2) {
+  function PendingInviteState(signaling, retriesIn) {
+    var _this3;
+    _classCallCheck(this, PendingInviteState);
+    _this3 = _callSuper(this, PendingInviteState, [signaling]);
+    _this3._retries = retriesIn;
+    return _this3;
+  }
+  _inherits(PendingInviteState, _SharedMediaSignaling2);
+  return _createClass(PendingInviteState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyConnected(resolve) {
+        self._signaling._connectedHandler();
+        resolve();
+      });
     }
     /**
      * Send RTC invite to backend service
@@ -16494,26 +18880,33 @@ class PendingInviteState extends SharedMediaSignalingState {
      * @param sdp
      * @param iceCandidates
      */
-    invite(sdp, iceCandidates) {
-        var self = this;
-        var inviteId = (0, uuid_1.v4)();
-        var inviteParams = {
-            sdp: sdp,
-            candidates: iceCandidates,
-            callContextToken: self._signaling._contactToken, // could be null
-            contactId: typeof self._signaling._callId === "undefined" ? "" : self._signaling._callId, // could be null
-            browserId: self._signaling._browserId,
-            persistentConnection: self._signaling._isPersistentConnectionEnabled,
-            peerConnectionToken: self._signaling._peerConnectionToken,
-            peerConnectionId: self._signaling._peerConnectionId,
-            iceRestart: self._signaling._iceRestart || false,
-            allowExtendedPersistentConnection: self._signaling._allowExtendedPersistentConnection,
-        };
-        self.logger.log('Sending SDP', (0, utils_1.getRedactedSdp)(sdp));
-        self._signaling._signalingChannelManager.send(JSON.stringify({
-            jsonrpc: '2.0', method: rtc_const_1.INVITE_METHOD_NAME, params: inviteParams, id: inviteId,
-        }), self._signaling._connectionId);
-        self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      var self = this;
+      var inviteId = (0, uuid_1.v4)();
+      var inviteParams = {
+        sdp: sdp,
+        candidates: iceCandidates,
+        callContextToken: self._signaling._contactToken,
+        // could be null
+        contactId: typeof self._signaling._callId === "undefined" ? "" : self._signaling._callId,
+        // could be null
+        browserId: self._signaling._browserId,
+        persistentConnection: self._signaling._isPersistentConnectionEnabled,
+        peerConnectionToken: self._signaling._peerConnectionToken,
+        peerConnectionId: self._signaling._peerConnectionId,
+        iceRestart: self._signaling._iceRestart || false,
+        allowExtendedPersistentConnection: self._signaling._allowExtendedPersistentConnection
+      };
+      self.logger.log('Sending SDP', (0, utils_1.getRedactedSdp)(sdp));
+      self._signaling._signalingChannelManager.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.INVITE_METHOD_NAME,
+        params: inviteParams,
+        id: inviteId
+      }), self._signaling._connectionId);
+      self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
     }
     /**
      * Send RTC invite for ICE restart to backend service
@@ -16522,635 +18915,912 @@ class PendingInviteState extends SharedMediaSignalingState {
      * @param sdp
      * @param iceCandidates
      */
-    inviteForIceRestart(sdp, iceCandidates) {
-        var self = this;
-        var inviteId = (0, uuid_1.v4)();
-        var inviteParams = {
-            sdp: sdp,
-            candidates: iceCandidates,
-            browserId: self._signaling._browserId,
-            persistentConnection: self._signaling._isPersistentConnectionEnabled,
-            peerConnectionToken: self._signaling._peerConnectionToken,
-            peerConnectionId: self._signaling._peerConnectionId,
-            iceRestart: true,
-            allowExtendedPersistentConnection: self._signaling._allowExtendedPersistentConnection,
-        };
-        self.logger.log('Sending SDP for ICE restart', (0, utils_1.getRedactedSdp)(sdp));
-        self._signaling._signalingChannelManager.send(JSON.stringify({
-            jsonrpc: '2.0', method: rtc_const_1.INVITE_METHOD_NAME, params: inviteParams, id: inviteId,
-        }), self._signaling._connectionId);
-        self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
+  }, {
+    key: "inviteForIceRestart",
+    value: function inviteForIceRestart(sdp, iceCandidates) {
+      var self = this;
+      var inviteId = (0, uuid_1.v4)();
+      var inviteParams = {
+        sdp: sdp,
+        candidates: iceCandidates,
+        browserId: self._signaling._browserId,
+        persistentConnection: self._signaling._isPersistentConnectionEnabled,
+        peerConnectionToken: self._signaling._peerConnectionToken,
+        peerConnectionId: self._signaling._peerConnectionId,
+        iceRestart: true,
+        allowExtendedPersistentConnection: self._signaling._allowExtendedPersistentConnection
+      };
+      self.logger.log('Sending SDP for ICE restart', (0, utils_1.getRedactedSdp)(sdp));
+      self._signaling._signalingChannelManager.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.INVITE_METHOD_NAME,
+        params: inviteParams,
+        id: inviteId
+      }), self._signaling._connectionId);
+      self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
     }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
     }
-    get name() {
-        return "PendingInviteState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingInviteState";
     }
-}
+  }]);
+}(SharedMediaSignalingState);
 exports.PendingInviteState = PendingInviteState;
-class PendingAnswerState extends FailOnTimeoutState {
-    /**
-     * Creates PendingAnswerState which resolves the answer of invite request
-     *
-     * @param signaling
-     * @param inviteId
-     */
-    constructor(signaling, inviteId, retriesIn) {
-        super(signaling, rtc_const_1.MAX_INVITE_DELAY_MS);
-        this._inviteId = inviteId;
-        this._retries = retriesIn || 0;
-    }
-    /**
-     * RPC message event handler
-     *
-     * @param msg response of invite request sent by backend service
-     * "result": {
-     *                 "candidates": ["List of ICE candidates"]
-     *                 "sdp": "SDP Object",
-     *                 "inactivityDuration": 600000 or 0,
-     *                 "peerConnectionId": "Peer Connection ID",
-     *                 "peerConnectionToken": "Peer Connection Token from RTPS"
-     *             }
-     */
-    onRpcMsg(msg) {
-        var self = this;
-        if (msg.id === this._inviteId) { // TODO: check peer connection id here
-            if (msg.error || !msg.result) {
-                // Retry logic for invite error, currently is disabled
-                if (++this._retries < INVITE_MAX_RETRIES) {
-                    this.transit(new PendingInviteState(this._signaling, this._retries));
-                }
-                else {
-                    this.transit(new FailedState(this._signaling, this.translateInviteError(msg)));
-                }
+var PendingAnswerState = /*#__PURE__*/function (_FailOnTimeoutState2) {
+  /**
+   * Creates PendingAnswerState which resolves the answer of invite request
+   *
+   * @param signaling
+   * @param inviteId
+   */
+  function PendingAnswerState(signaling, inviteId, retriesIn) {
+    var _this4;
+    _classCallCheck(this, PendingAnswerState);
+    _this4 = _callSuper(this, PendingAnswerState, [signaling, rtc_const_1.MAX_INVITE_DELAY_MS]);
+    _this4._inviteId = inviteId;
+    _this4._retries = retriesIn || 0;
+    return _this4;
+  }
+  /**
+   * RPC message event handler
+   *
+   * @param msg response of invite request sent by backend service
+   * "result": {
+   *                 "candidates": ["List of ICE candidates"]
+   *                 "sdp": "SDP Object",
+   *                 "inactivityDuration": 600000 or 0,
+   *                 "peerConnectionId": "Peer Connection ID",
+   *                 "peerConnectionToken": "Peer Connection Token from RTPS"
+   *             }
+   */
+  _inherits(PendingAnswerState, _FailOnTimeoutState2);
+  return _createClass(PendingAnswerState, [{
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      var self = this;
+      if (msg.id === this._inviteId) {
+        // TODO: check peer connection id here
+        if (msg.error || !msg.result) {
+          // Retry logic for invite error, currently is disabled
+          if (++this._retries < INVITE_MAX_RETRIES) {
+            this.transit(new PendingInviteState(this._signaling, this._retries));
+          } else {
+            this.transit(new FailedState(this._signaling, this.translateInviteError(msg)));
+          }
+        } else {
+          new Promise(function notifyAnswered(resolve) {
+            self.logger.log('Received SDP', (0, utils_1.getRedactedSdp)(msg.result.sdp));
+            if (self._signaling) {
+              self._signaling._peerConnectionToken = msg.result.peerConnectionToken;
+              self._signaling._peerConnectionId = msg.result.peerConnectionId;
+              var isRTPSAllowlisted = !!msg.result.peerConnectionId; // if peerConnectionId is defined, isRTPSAllowlisted will be set to true, otherwise, it will remain false
+              self._signaling.isRTPSAllowlisted = isRTPSAllowlisted;
+              self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates, msg.result.inactivityDuration, msg.result.peerConnectionId, msg.result.peerConnectionToken);
+            } else {
+              self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates);
             }
-            else {
-                new Promise(function notifyAnswered(resolve) {
-                    self.logger.log('Received SDP', (0, utils_1.getRedactedSdp)(msg.result.sdp));
-                    if (self._signaling) {
-                        self._signaling._peerConnectionToken = msg.result.peerConnectionToken;
-                        self._signaling._peerConnectionId = msg.result.peerConnectionId;
-                        const isRTPSAllowlisted = !!msg.result.peerConnectionId; // if peerConnectionId is defined, isRTPSAllowlisted will be set to true, otherwise, it will remain false
-                        self._signaling.isRTPSAllowlisted = isRTPSAllowlisted;
-                        self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates, msg.result.inactivityDuration, msg.result.peerConnectionId, msg.result.peerConnectionToken);
-                    }
-                    else {
-                        self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates);
-                    }
-                    self._signaling._isMediaClusterPath = !(msg.result.sdp.includes('AmazonConnect') && msg.result.sdp.includes('silenceSupp'));
-                    resolve();
-                });
-                this.transit(new PendingAcceptState(this._signaling, this._signaling._autoAnswer));
-            }
+            self._signaling._isMediaClusterPath = !(msg.result.sdp.includes('AmazonConnect') && msg.result.sdp.includes('silenceSupp'));
+            resolve();
+          });
+          this.transit(new PendingAcceptState(this._signaling, this._signaling._autoAnswer));
         }
+      }
     }
-    translateInviteError(msg) {
-        if (msg.error && msg.error.code == 403) {
-            return new exceptions_1.AccessDeniedException(msg.error.message);
-        }
-        else if (msg.error && msg.error.code == 486) {
-            return new exceptions_1.BusyException(msg.error.message);
-        }
-        else if (msg.error && msg.error.code == 404) {
-            return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
-        }
-        else if (msg.error && msg.error.code == 400) {
-            return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
-        }
-        else if (msg.error && msg.error.code == 408) {
-            return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
-        }
-        else if (msg.error && msg.error.code == 409) {
-            return new exceptions_1.IdempotencyException(msg.error.message); // IdempotencyException
-        }
-        else if (msg.error && msg.error.code == 500) {
-            return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
-        }
-        else {
-            return new exceptions_1.UnknownSignalingError();
-        }
+  }, {
+    key: "translateInviteError",
+    value: function translateInviteError(msg) {
+      if (msg.error && msg.error.code == 403) {
+        return new exceptions_1.AccessDeniedException(msg.error.message);
+      } else if (msg.error && msg.error.code == 486) {
+        return new exceptions_1.BusyException(msg.error.message);
+      } else if (msg.error && msg.error.code == 404) {
+        return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
+      } else if (msg.error && msg.error.code == 400) {
+        return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
+      } else if (msg.error && msg.error.code == 408) {
+        return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
+      } else if (msg.error && msg.error.code == 409) {
+        return new exceptions_1.IdempotencyException(msg.error.message); // IdempotencyException
+      } else if (msg.error && msg.error.code == 500) {
+        return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
+      } else {
+        return new exceptions_1.UnknownSignalingError();
+      }
     }
-    hangup() {
-        this.transit(new FailedState(this._signaling, "Hangs up in PendingAnswerState"));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.transit(new FailedState(this._signaling, "Hangs up in PendingAnswerState"));
     }
-    get name() {
-        return "PendingAnswerState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingAnswerState";
     }
-}
+  }]);
+}(FailOnTimeoutState);
 exports.PendingAnswerState = PendingAnswerState;
-class PendingAcceptState extends SharedMediaSignalingState {
-    /**
-     * Creates PendingAcceptState which sends accpet request to backend server
-     *
-     * @param signaling - signaling Object
-     * @param autoAnswer - boolean object
-     * @param retriesIn - the number of retry times
-     */
-    constructor(signaling, autoAnswer, retriesIn) {
-        super(signaling);
-        this._autoAnswer = autoAnswer;
-        this._retries = retriesIn;
+var PendingAcceptState = /*#__PURE__*/function (_SharedMediaSignaling3) {
+  /**
+   * Creates PendingAcceptState which sends accpet request to backend server
+   *
+   * @param signaling - signaling Object
+   * @param autoAnswer - boolean object
+   * @param retriesIn - the number of retry times
+   */
+  function PendingAcceptState(signaling, autoAnswer, retriesIn) {
+    var _this5;
+    _classCallCheck(this, PendingAcceptState);
+    _this5 = _callSuper(this, PendingAcceptState, [signaling]);
+    _this5._autoAnswer = autoAnswer;
+    _this5._retries = retriesIn;
+    return _this5;
+  }
+  _inherits(PendingAcceptState, _SharedMediaSignaling3);
+  return _createClass(PendingAcceptState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      if (this._autoAnswer) {
+        this.accept();
+      }
     }
-    onEnter() {
-        if (this._autoAnswer) {
-            this.accept();
-        }
+  }, {
+    key: "accept",
+    value: function accept() {
+      this.sendAcceptRequest();
+      this.transit(new TalkingState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
     }
-    accept() {
-        this.sendAcceptRequest();
-        this.transit(new TalkingState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
     }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingAcceptState";
     }
-    get name() {
-        return "PendingAcceptState";
-    }
-    sendAcceptRequest() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this._acceptId = (0, uuid_1.v4)();
-            var acceptParams = {};
-            acceptParams = {
+  }, {
+    key: "sendAcceptRequest",
+    value: function sendAcceptRequest() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+        var acceptParams;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.n) {
+            case 0:
+              this._acceptId = (0, uuid_1.v4)();
+              acceptParams = {};
+              acceptParams = {
                 contactId: typeof this._signaling.callId === "undefined" ? null : this._signaling.callId,
                 persistentConnection: this._signaling._isPersistentConnectionEnabled,
                 peerConnectionId: this._signaling._peerConnectionId,
                 peerConnectionToken: this._signaling._peerConnectionToken
-            };
-            this._signaling._signalingChannelManager.send(JSON.stringify({
-                jsonrpc: '2.0', method: rtc_const_1.ACCEPT_METHOD_NAME, params: acceptParams, id: this._acceptId
-            }));
-        });
+              };
+              this._signaling._signalingChannelManager.send(JSON.stringify({
+                jsonrpc: '2.0',
+                method: rtc_const_1.ACCEPT_METHOD_NAME,
+                params: acceptParams,
+                id: this._acceptId
+              }));
+            case 1:
+              return _context.a(2);
+          }
+        }, _callee, this);
+      }));
     }
-}
+  }]);
+}(SharedMediaSignalingState);
 exports.PendingAcceptState = PendingAcceptState;
-class TalkingState extends SharedMediaSignalingState {
-    /**
-     *
-     * @param signaling - signaling channel
-     * @param methodId - the id for the accept request
-     * @param retriesIn - the number of retry times
-     * @param retryMethod - the method we want to retry
-     */
-    constructor(signaling, methodId, retriesIn, retryMethod) {
-        super(signaling);
-        this._methodId = methodId;
-        this._retries = retriesIn || 0;
-        this._retryMethod = retryMethod;
+var TalkingState = /*#__PURE__*/function (_SharedMediaSignaling4) {
+  /**
+   *
+   * @param signaling - signaling channel
+   * @param methodId - the id for the accept request
+   * @param retriesIn - the number of retry times
+   * @param retryMethod - the method we want to retry
+   */
+  function TalkingState(signaling, methodId, retriesIn, retryMethod) {
+    var _this6;
+    _classCallCheck(this, TalkingState);
+    _this6 = _callSuper(this, TalkingState, [signaling]);
+    _this6._methodId = methodId;
+    _this6._retries = retriesIn || 0;
+    _this6._retryMethod = retryMethod;
+    return _this6;
+  }
+  _inherits(TalkingState, _SharedMediaSignaling4);
+  return _createClass(TalkingState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyHandshaked(resolve) {
+        self._signaling._handshakedHandler();
+        resolve();
+      });
+      self._signaling._isFirstTimeSetup = false;
     }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyHandshaked(resolve) {
-            self._signaling._handshakedHandler();
-            resolve();
-        });
-        self._signaling._isFirstTimeSetup = false;
-    }
-    hangup(serverInitiated = false) {
-        if (serverInitiated) {
-            // Server already sent PC_BYE, just transition to disconnected without sending BYE back
-            this.logger.log("Server-initiated hangup, skipping BYE message");
-            this.transit(new DisconnectedState(this._signaling));
-        }
-        else {
-            // Client-initiated hangup, send BYE to server
-            this.bye();
-        }
-    }
-    bye() {
-        this._byeId = (0, uuid_1.v4)();
-        var byeParams = {};
-        byeParams = {
-            contactId: this._signaling._callId,
-            persistentConnection: this._signaling._isPersistentConnectionEnabled,
-            peerConnectionId: this._signaling._peerConnectionId,
-            peerConnectionToken: this._signaling._peerConnectionToken,
-            callContextToken: this._signaling._contactToken,
-        };
-        this._signaling._signalingChannelManager.send(JSON.stringify({
-            jsonrpc: '2.0', method: rtc_const_1.BYE_METHOD_NAME, params: byeParams, id: this._byeId
-        }));
-        this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
-    }
-    onRpcMsg(msg) {
-        if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
-            this.transit(new PendingLocalHangupState(this._signaling, msg.id));
-        }
-        else if (this._signaling && msg.error && msg.id === this._methodId) {
-            // Todo: review this error handling. List possible errors
-            this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
-        }
-        // Note: PC_BYE_METHOD_NAME is now handled exclusively by RtcPeerConnectionManagerV2
-    }
-    translateResponseError(msg) {
-        if (msg.error && msg.error.code == 403) { // AccessDeniedException
-            return new exceptions_1.AccessDeniedException(msg.error.message);
-        }
-        else if (msg.error.code == 404) {
-            return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
-        }
-        else if (msg.error.code == 400) {
-            return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
-        }
-        else if (msg.error.code == 408) {
-            return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
-        }
-        else if (msg.error.code == 500) {
-            return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
-        }
-        else {
-            return new exceptions_1.UnknownSignalingError();
-        }
-    }
-    get name() {
-        return "TalkingState";
-    }
-}
-exports.TalkingState = TalkingState;
-class PendingRemoteHangupState extends FailOnTimeoutState {
-    constructor(signaling, byeId) {
-        super(signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS);
-        this._byeId = byeId;
-    }
-    // response
-    onRpcMsg(msg) {
-        if (msg.id === this._byeId || msg.method === rtc_const_1.BYE_METHOD_NAME) {
-            this.transit(new DisconnectedState(this._signaling));
-        }
-    }
-    get name() {
-        return "PendingRemoteHangupState";
-    }
-}
-exports.PendingRemoteHangupState = PendingRemoteHangupState;
-class PendingLocalHangupState extends SharedMediaSignalingState {
-    constructor(signaling, byeId) {
-        super(signaling);
-        this._byeId = byeId;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyRemoteHungup(resolve) {
-            self._signaling._remoteHungupHandler();
-            resolve();
-        });
-    }
-    hangup() {
-        var self = this;
-        self._signaling._signalingChannelManager.send(JSON.stringify({
-            jsonrpc: '2.0',
-            result: {},
-            id: self._byeId
-        }));
-        self.transit(new DisconnectedState(self._signaling));
-    }
-    onRpcMsg() {
-        //Do nothing
-    }
-    channelDown() {
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var serverInitiated = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      if (serverInitiated) {
+        // Server already sent PC_BYE, just transition to disconnected without sending BYE back
+        this.logger.log("Server-initiated hangup, skipping BYE message");
         this.transit(new DisconnectedState(this._signaling));
-    }
-    get name() {
-        return "PendingLocalHangupState";
-    }
-}
-exports.PendingLocalHangupState = PendingLocalHangupState;
-class DisconnectedState extends SharedMediaSignalingState {
-    onEnter() {
-        var self = this;
-        new Promise(function notifyDisconnected(resolve) {
-            self._signaling._disconnectedHandler();
-            resolve();
-        });
-    }
-    channelDown() {
-        //Do nothing
-    }
-    onRpcMsg() {
-        //Do nothing
-    }
-    get name() {
-        return "DisconnectedState";
-    }
-}
-exports.DisconnectedState = DisconnectedState;
-class FailedState extends SharedMediaSignalingState {
-    constructor(signaling, exception) {
-        super(signaling);
-        this._exception = exception;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyFailed(resolve) {
-            // Todo: will we face AccessDeniedExceptionName?
-            self._signaling._failedHandler(self._exception);
-            resolve();
-        });
-    }
-    bye() {
-        this._byeId = (0, uuid_1.v4)();
-        this._signaling._signalingChannelManager.send(JSON.stringify({
-            jsonrpc: '2.0', method: rtc_const_1.BYE_METHOD_NAME, params: {
-                contactId: typeof this._signaling._callId === "undefined" ? null : this._signaling._callId,
-                persistentConnection: this._signaling.isPPCEnabled,
-                peerConnectionId: this._signaling.peerConnectionId,
-                peerConnectionToken: this._signaling.peerConnectionToken,
-                callContextToken: this._signaling.contactToken,
-            }, id: this._byeId
-        }));
-    }
-    hangup() {
+      } else {
+        // Client-initiated hangup, send BYE to server
         this.bye();
+      }
     }
-    onRpcMsg() {
-        // Do nothing
+  }, {
+    key: "bye",
+    value: function bye() {
+      this._byeId = (0, uuid_1.v4)();
+      var byeParams = {};
+      byeParams = {
+        contactId: this._signaling._callId,
+        persistentConnection: this._signaling._isPersistentConnectionEnabled,
+        peerConnectionId: this._signaling._peerConnectionId,
+        peerConnectionToken: this._signaling._peerConnectionToken,
+        callContextToken: this._signaling._contactToken
+      };
+      this._signaling._signalingChannelManager.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.BYE_METHOD_NAME,
+        params: byeParams,
+        id: this._byeId
+      }));
+      this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
     }
-    channelDown() {
-        //Do nothing
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
+        this.transit(new PendingLocalHangupState(this._signaling, msg.id));
+      } else if (this._signaling && msg.error && msg.id === this._methodId) {
+        // Todo: review this error handling. List possible errors
+        this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
+      }
+      // Note: PC_BYE_METHOD_NAME is now handled exclusively by RtcPeerConnectionManagerV2
     }
-    get name() {
-        return "FailedState";
+  }, {
+    key: "translateResponseError",
+    value: function translateResponseError(msg) {
+      if (msg.error && msg.error.code == 403) {
+        // AccessDeniedException
+        return new exceptions_1.AccessDeniedException(msg.error.message);
+      } else if (msg.error.code == 404) {
+        return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
+      } else if (msg.error.code == 400) {
+        return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
+      } else if (msg.error.code == 408) {
+        return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
+      } else if (msg.error.code == 500) {
+        return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
+      } else {
+        return new exceptions_1.UnknownSignalingError();
+      }
     }
-    get exception() {
-        return this._exception;
+  }, {
+    key: "name",
+    get: function get() {
+      return "TalkingState";
     }
-}
+  }]);
+}(SharedMediaSignalingState);
+exports.TalkingState = TalkingState;
+var PendingRemoteHangupState = /*#__PURE__*/function (_FailOnTimeoutState3) {
+  function PendingRemoteHangupState(signaling, byeId) {
+    var _this7;
+    _classCallCheck(this, PendingRemoteHangupState);
+    _this7 = _callSuper(this, PendingRemoteHangupState, [signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS]);
+    _this7._byeId = byeId;
+    return _this7;
+  }
+  // response
+  _inherits(PendingRemoteHangupState, _FailOnTimeoutState3);
+  return _createClass(PendingRemoteHangupState, [{
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.id === this._byeId || msg.method === rtc_const_1.BYE_METHOD_NAME) {
+        this.transit(new DisconnectedState(this._signaling));
+      }
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingRemoteHangupState";
+    }
+  }]);
+}(FailOnTimeoutState);
+exports.PendingRemoteHangupState = PendingRemoteHangupState;
+var PendingLocalHangupState = /*#__PURE__*/function (_SharedMediaSignaling5) {
+  function PendingLocalHangupState(signaling, byeId) {
+    var _this8;
+    _classCallCheck(this, PendingLocalHangupState);
+    _this8 = _callSuper(this, PendingLocalHangupState, [signaling]);
+    _this8._byeId = byeId;
+    return _this8;
+  }
+  _inherits(PendingLocalHangupState, _SharedMediaSignaling5);
+  return _createClass(PendingLocalHangupState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyRemoteHungup(resolve) {
+        self._signaling._remoteHungupHandler();
+        resolve();
+      });
+    }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var self = this;
+      self._signaling._signalingChannelManager.send(JSON.stringify({
+        jsonrpc: '2.0',
+        result: {},
+        id: self._byeId
+      }));
+      self.transit(new DisconnectedState(self._signaling));
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      //Do nothing
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new DisconnectedState(this._signaling));
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingLocalHangupState";
+    }
+  }]);
+}(SharedMediaSignalingState);
+exports.PendingLocalHangupState = PendingLocalHangupState;
+var DisconnectedState = /*#__PURE__*/function (_SharedMediaSignaling6) {
+  function DisconnectedState() {
+    _classCallCheck(this, DisconnectedState);
+    return _callSuper(this, DisconnectedState, arguments);
+  }
+  _inherits(DisconnectedState, _SharedMediaSignaling6);
+  return _createClass(DisconnectedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyDisconnected(resolve) {
+        self._signaling._disconnectedHandler();
+        resolve();
+      });
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      //Do nothing
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      //Do nothing
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "DisconnectedState";
+    }
+  }]);
+}(SharedMediaSignalingState);
+exports.DisconnectedState = DisconnectedState;
+var FailedState = /*#__PURE__*/function (_SharedMediaSignaling7) {
+  function FailedState(signaling, exception) {
+    var _this9;
+    _classCallCheck(this, FailedState);
+    _this9 = _callSuper(this, FailedState, [signaling]);
+    _this9._exception = exception;
+    return _this9;
+  }
+  _inherits(FailedState, _SharedMediaSignaling7);
+  return _createClass(FailedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyFailed(resolve) {
+        // Todo: will we face AccessDeniedExceptionName?
+        self._signaling._failedHandler(self._exception);
+        resolve();
+      });
+    }
+  }, {
+    key: "bye",
+    value: function bye() {
+      this._byeId = (0, uuid_1.v4)();
+      this._signaling._signalingChannelManager.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.BYE_METHOD_NAME,
+        params: {
+          contactId: typeof this._signaling._callId === "undefined" ? null : this._signaling._callId,
+          persistentConnection: this._signaling.isPPCEnabled,
+          peerConnectionId: this._signaling.peerConnectionId,
+          peerConnectionToken: this._signaling.peerConnectionToken,
+          callContextToken: this._signaling.contactToken
+        },
+        id: this._byeId
+      }));
+    }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.bye();
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      // Do nothing
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      //Do nothing
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailedState";
+    }
+  }, {
+    key: "exception",
+    get: function get() {
+      return this._exception;
+    }
+  }]);
+}(SharedMediaSignalingState);
 exports.FailedState = FailedState;
-class AmznRtcSharedMediaSignaling {
-    // TODO: add javaScript doc here
-    constructor(callId, contactToken, logger, connectTimeoutMs, connectionId, signalingChannelManager, iceRestart = false, isPersistentConnectionEnabled, peerConnectionId, peerConnectionToken, browserId, allowExtendedPersistentConnection = false) {
-        this._callId = callId;
-        this._contactToken = contactToken;
-        this._logger = (0, utils_1.wrapLogger)(logger, callId, 'SharedMediaSIGNALING');
-        this._connectTimeoutMs = connectTimeoutMs || rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS;
-        this._autoAnswer = true;
-        this._connectionId = connectionId;
-        this._signalingChannelManager = signalingChannelManager;
-        this._iceRestart = iceRestart;
-        this._isPersistentConnectionEnabled = isPersistentConnectionEnabled;
-        this._peerConnectionId = peerConnectionId;
-        this._peerConnectionToken = peerConnectionToken;
-        this._browserId = browserId;
-        this._allowExtendedPersistentConnection = !!allowExtendedPersistentConnection;
-        //empty event handlers
-        this._connectedHandler = this._answeredHandler = this._handshakedHandler = this._reconnectedHandler = this._remoteHungupHandler = this._disconnectedHandler = this._failedHandler = function noOp() {
-        };
+var AmznRtcSharedMediaSignaling = /*#__PURE__*/function () {
+  // TODO: add javaScript doc here
+  function AmznRtcSharedMediaSignaling(callId, contactToken, logger, connectTimeoutMs, connectionId, signalingChannelManager) {
+    var iceRestart = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : false;
+    var isPersistentConnectionEnabled = arguments.length > 7 ? arguments[7] : undefined;
+    var peerConnectionId = arguments.length > 8 ? arguments[8] : undefined;
+    var peerConnectionToken = arguments.length > 9 ? arguments[9] : undefined;
+    var browserId = arguments.length > 10 ? arguments[10] : undefined;
+    var allowExtendedPersistentConnection = arguments.length > 11 && arguments[11] !== undefined ? arguments[11] : false;
+    _classCallCheck(this, AmznRtcSharedMediaSignaling);
+    this._callId = callId;
+    this._contactToken = contactToken;
+    this._logger = (0, utils_1.wrapLogger)(logger, callId, 'SharedMediaSIGNALING');
+    this._connectTimeoutMs = connectTimeoutMs || rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS;
+    this._autoAnswer = true;
+    this._connectionId = connectionId;
+    this._signalingChannelManager = signalingChannelManager;
+    this._iceRestart = iceRestart;
+    this._isPersistentConnectionEnabled = isPersistentConnectionEnabled;
+    this._peerConnectionId = peerConnectionId;
+    this._peerConnectionToken = peerConnectionToken;
+    this._browserId = browserId;
+    this._allowExtendedPersistentConnection = !!allowExtendedPersistentConnection;
+    //empty event handlers
+    this._connectedHandler = this._answeredHandler = this._handshakedHandler = this._reconnectedHandler = this._remoteHungupHandler = this._disconnectedHandler = this._failedHandler = function noOp() {};
+  }
+  return _createClass(AmznRtcSharedMediaSignaling, [{
+    key: "callId",
+    get: function get() {
+      return this._callId;
     }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "isPersistentConnectionEnabled",
+    get: function get() {
+      return this._isPersistentConnectionEnabled;
     }
-    get isPersistentConnectionEnabled() {
-        return this._isPersistentConnectionEnabled;
+  }, {
+    key: "iceRestart",
+    get: function get() {
+      return this._iceRestart;
     }
-    get iceRestart() {
-        return this._iceRestart;
+  }, {
+    key: "onConnected",
+    set: function set(connectedHandler) {
+      this._connectedHandler = connectedHandler;
     }
-    set onConnected(connectedHandler) {
-        this._connectedHandler = connectedHandler;
+  }, {
+    key: "onAnswered",
+    set: function set(answeredHandler) {
+      this._answeredHandler = answeredHandler;
     }
-    set onAnswered(answeredHandler) {
-        this._answeredHandler = answeredHandler;
+  }, {
+    key: "onHandshaked",
+    set: function set(handshakedHandler) {
+      this._handshakedHandler = handshakedHandler;
     }
-    set onHandshaked(handshakedHandler) {
-        this._handshakedHandler = handshakedHandler;
+  }, {
+    key: "onReconnected",
+    set: function set(reconnectedHandler) {
+      this._reconnectedHandler = reconnectedHandler;
     }
-    set onReconnected(reconnectedHandler) {
-        this._reconnectedHandler = reconnectedHandler;
+  }, {
+    key: "onRemoteHungup",
+    set: function set(remoteHungupHandler) {
+      this._remoteHungupHandler = remoteHungupHandler;
     }
-    set onRemoteHungup(remoteHungupHandler) {
-        this._remoteHungupHandler = remoteHungupHandler;
+  }, {
+    key: "onDisconnected",
+    set: function set(disconnectedHandler) {
+      this._disconnectedHandler = disconnectedHandler;
     }
-    set onDisconnected(disconnectedHandler) {
-        this._disconnectedHandler = disconnectedHandler;
+  }, {
+    key: "onFailed",
+    set: function set(failedHandler) {
+      this._failedHandler = failedHandler;
     }
-    set onFailed(failedHandler) {
-        this._failedHandler = failedHandler;
+  }, {
+    key: "state",
+    get: function get() {
+      return this._state;
     }
-    get state() {
-        return this._state;
+  }, {
+    key: "connect",
+    value: function connect() {
+      this._connect();
+      this.transit(new PendingConnectState(this, this._connectTimeoutMs));
     }
-    connect() {
-        this._connect();
-        this.transit(new PendingConnectState(this, this._connectTimeoutMs));
+  }, {
+    key: "_connect",
+    value: function _connect() {
+      this._signalingChannelManager = this._connectWebSocket();
     }
-    _connect() {
-        this._signalingChannelManager = this._connectWebSocket();
-    }
-    transit(nextState) {
-        try {
-            this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
-            if (this.state && this.state.onExit) {
-                this.state.onExit();
-            }
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      try {
+        this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
+        if (this.state && this.state.onExit) {
+          this.state.onExit();
         }
-        finally {
-            this._state = nextState;
-            if (this._state.onEnter) {
-                this._state.onEnter();
-            }
+      } finally {
+        this._state = nextState;
+        if (this._state.onEnter) {
+          this._state.onEnter();
         }
+      }
     }
-    _connectWebSocket() {
-        let wsConnection;
-        // Note: onOpen will be missing as we are not creating wssConnection again
-        wsConnection = this._signalingChannelManager;
-        // For Amazon Connect Global Resiliency (ACGR) failover: when failover occurs, the underlying
-        // websocket changes to another region's websocket connection where the subscription is not setup yet.
-        // Re-initialize WebSocket event listeners to re-subscribe to SOFTPHONE_ROUTE_KEY.
-        wsConnection._initializeWebSocketEventListeners();
-        wsConnection.onmessage = (0, utils_1.hitch)(this, this._onMessage);
-        wsConnection.onerror = (0, utils_1.hitch)(this, this._onError);
-        wsConnection.onclose = (0, utils_1.hitch)(this, this._onClose);
-        return wsConnection;
+  }, {
+    key: "_connectWebSocket",
+    value: function _connectWebSocket() {
+      var wsConnection;
+      // Note: onOpen will be missing as we are not creating wssConnection again
+      wsConnection = this._signalingChannelManager;
+      // For Amazon Connect Global Resiliency (ACGR) failover: when failover occurs, the underlying
+      // websocket changes to another region's websocket connection where the subscription is not setup yet.
+      // Re-initialize WebSocket event listeners to re-subscribe to SOFTPHONE_ROUTE_KEY.
+      wsConnection._initializeWebSocketEventListeners();
+      wsConnection.onmessage = (0, utils_1.hitch)(this, this._onMessage);
+      wsConnection.onerror = (0, utils_1.hitch)(this, this._onError);
+      wsConnection.onclose = (0, utils_1.hitch)(this, this._onClose);
+      return wsConnection;
     }
-    _onMessage(evt) {
-        this._logger.log("Received Message: ", JSON.stringify(evt));
-        this.state.onRpcMsg(JSON.parse(evt.data));
+  }, {
+    key: "_onMessage",
+    value: function _onMessage(evt) {
+      this._logger.log("Received Message: ", JSON.stringify(evt));
+      this.state.onRpcMsg(JSON.parse(evt.data));
     }
-    _onOpen(evt) {
-        this.state.onOpen(evt);
+  }, {
+    key: "_onOpen",
+    value: function _onOpen(evt) {
+      this.state.onOpen(evt);
     }
-    _onError(evt) {
-        this.state.onError(evt);
+  }, {
+    key: "_onError",
+    value: function _onError(evt) {
+      this.state.onError(evt);
     }
-    _onClose(evt) {
-        this._logger.log('WebSocket onclose code=' + evt.code + ', reason=' + evt.reason);
-        this.state.onClose(evt);
+  }, {
+    key: "_onClose",
+    value: function _onClose(evt) {
+      this._logger.log('WebSocket onclose code=' + evt.code + ', reason=' + evt.reason);
+      this.state.onClose(evt);
     }
-    invite(sdp, iceCandidates) {
-        this.state.invite(sdp, iceCandidates);
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      this.state.invite(sdp, iceCandidates);
     }
-    inviteForIceRestart(sdp, iceCandidates) {
-        this.state.inviteForIceRestart(sdp, iceCandidates);
+  }, {
+    key: "inviteForIceRestart",
+    value: function inviteForIceRestart(sdp, iceCandidates) {
+      this.state.inviteForIceRestart(sdp, iceCandidates);
     }
-    connectContact() {
-        this.state.connectContact();
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      this.state.connectContact();
     }
-    accept() {
-        this.state.accept();
+  }, {
+    key: "accept",
+    value: function accept() {
+      this.state.accept();
     }
-    hangup(serverInitiated = false) {
-        this.state.hangup(serverInitiated);
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var serverInitiated = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+      this.state.hangup(serverInitiated);
     }
-    bye() {
-        this.state.bye();
+  }, {
+    key: "bye",
+    value: function bye() {
+      this.state.bye();
     }
-}
-exports.default = AmznRtcSharedMediaSignaling;
+  }]);
+}();
+exports["default"] = AmznRtcSharedMediaSignaling;
 
-},{"./exceptions":30,"./rtc_const":32,"./utils":54,"uuid":9}],43:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./utils":70,"uuid":9}],59:[function(require,module,exports){
 "use strict";
+
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.FailedState = exports.DisconnectedState = exports.PendingLocalHangupState = exports.PendingRemoteHangupState = exports.PendingReconnectState = exports.TalkingState = exports.IdleState = exports.PendingAcceptAckState = exports.PendingConnectContactState = exports.PendingAcceptState = exports.PendingAnswerState = exports.PendingInviteState = exports.PendingConnectState = exports.FailOnTimeoutState = exports.SignalingState = void 0;
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-const exceptions_1 = require("./exceptions");
-const uuid_1 = require("uuid");
-const virtual_wss_connection_manager_1 = require("./virtual_wss_connection_manager");
-const CONNECT_MAX_RETRIES = 3;
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var exceptions_1 = require("./exceptions");
+var uuid_1 = require("uuid");
+var virtual_wss_connection_manager_1 = require("./virtual_wss_connection_manager");
+var CONNECT_MAX_RETRIES = 3;
 // TODO: Need to discuss with team the retry strategy for invite/accept/connectContact errors
-const INVITE_MAX_RETRIES = 0;
-const ACCEPT_MAX_RETRIES = 0;
-const CONNECT_CONTACT_MAX_RETRIES = 0;
+var INVITE_MAX_RETRIES = 0;
+var ACCEPT_MAX_RETRIES = 0;
+var CONNECT_CONTACT_MAX_RETRIES = 0;
 /**
  * Abstract signaling state class.
  */
-class SignalingState {
-    /**
-     * @param {AmznRtcSignaling} signaling Signaling object.
-     */
-    constructor(signaling) {
-        this._signaling = signaling;
-        this._createTime = new Date().getTime();
+var SignalingState = /*#__PURE__*/function () {
+  /**
+   * @param {AmznRtcSignaling} signaling Signaling object.
+   */
+  function SignalingState(signaling) {
+    _classCallCheck(this, SignalingState);
+    this._signaling = signaling;
+    this._createTime = new Date().getTime();
+  }
+  return _createClass(SignalingState, [{
+    key: "setStateTimeout",
+    value: function setStateTimeout(timeoutMs) {
+      setTimeout((0, utils_1.hitch)(this, this._onTimeoutChecked), timeoutMs);
     }
-    setStateTimeout(timeoutMs) {
-        setTimeout((0, utils_1.hitch)(this, this._onTimeoutChecked), timeoutMs);
+  }, {
+    key: "isCurrentState",
+    get: function get() {
+      return this === this._signaling.state;
     }
-    get isCurrentState() {
-        return this === this._signaling.state;
+  }, {
+    key: "onEnter",
+    value: function onEnter() {}
+  }, {
+    key: "_onTimeoutChecked",
+    value: function _onTimeoutChecked() {
+      if (this.isCurrentState) {
+        this.onTimeout();
+      }
     }
-    onEnter() { }
-    _onTimeoutChecked() {
-        if (this.isCurrentState) {
-            this.onTimeout();
-        }
+  }, {
+    key: "onTimeout",
+    value: function onTimeout() {
+      throw new exceptions_1.UnsupportedOperation();
     }
-    onTimeout() {
-        throw new exceptions_1.UnsupportedOperation();
+  }, {
+    key: "transit",
+    value: function transit(newState) {
+      this._signaling.transit(newState);
     }
-    transit(newState) {
-        this._signaling.transit(newState);
+  }, {
+    key: "onExit",
+    value: function onExit() {}
+  }, {
+    key: "onOpen",
+    value: function onOpen() {
+      throw new exceptions_1.UnsupportedOperation('onOpen not supported by ' + this.name);
     }
-    onExit() { }
-    onOpen() {
-        throw new exceptions_1.UnsupportedOperation('onOpen not supported by ' + this.name);
+  }, {
+    key: "onError",
+    value: function onError() {
+      this.channelDown();
     }
-    onError() {
-        this.channelDown();
+  }, {
+    key: "onClose",
+    value: function onClose() {
+      this.channelDown();
     }
-    onClose() {
-        this.channelDown();
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      throw new exceptions_1.UnsupportedOperation('channelDown not supported by ' + this.name);
     }
-    channelDown() {
-        throw new exceptions_1.UnsupportedOperation('channelDown not supported by ' + this.name);
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg(rpcMsg) {
+      throw new exceptions_1.UnsupportedOperation('onRpcMsg not supported by ' + this.name);
     }
-    onRpcMsg(rpcMsg) {
-        throw new exceptions_1.UnsupportedOperation('onRpcMsg not supported by ' + this.name);
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      throw new exceptions_1.UnsupportedOperation('invite not supported by ' + this.name);
     }
-    invite(sdp, iceCandidates) {
-        throw new exceptions_1.UnsupportedOperation('invite not supported by ' + this.name);
+  }, {
+    key: "accept",
+    value: function accept() {
+      throw new exceptions_1.UnsupportedOperation('accept not supported by ' + this.name);
     }
-    accept() {
-        throw new exceptions_1.UnsupportedOperation('accept not supported by ' + this.name);
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      throw new exceptions_1.UnsupportedOperation('connectContact not supported by ' + this.name);
     }
-    connectContact() {
-        throw new exceptions_1.UnsupportedOperation('connectContact not supported by ' + this.name);
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      // do nothing
     }
-    hangup() {
-        // do nothing
+  }, {
+    key: "bye",
+    value: function bye() {
+      // do nothing
     }
-    bye() {
-        // do nothing
+  }, {
+    key: "name",
+    get: function get() {
+      return "SignalingState";
     }
-    get name() {
-        return "SignalingState";
+  }, {
+    key: "logger",
+    get: function get() {
+      return this._signaling._logger;
     }
-    get logger() {
-        return this._signaling._logger;
-    }
-}
+  }]);
+}();
 exports.SignalingState = SignalingState;
-class FailOnTimeoutState extends SignalingState {
-    constructor(signaling, timeoutMs) {
-        super(signaling);
-        this._timeoutMs = timeoutMs;
+var FailOnTimeoutState = /*#__PURE__*/function (_SignalingState) {
+  function FailOnTimeoutState(signaling, timeoutMs) {
+    var _this;
+    _classCallCheck(this, FailOnTimeoutState);
+    _this = _callSuper(this, FailOnTimeoutState, [signaling]);
+    _this._timeoutMs = timeoutMs;
+    return _this;
+  }
+  _inherits(FailOnTimeoutState, _SignalingState);
+  return _createClass(FailOnTimeoutState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      this.setStateTimeout(this._timeoutMs);
     }
-    onEnter() {
-        this.setStateTimeout(this._timeoutMs);
+  }, {
+    key: "onTimeout",
+    value: function onTimeout() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.Timeout()));
     }
-    onTimeout() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.Timeout()));
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailOnTimeoutState";
     }
-    get name() {
-        return "FailOnTimeoutState";
-    }
-}
+  }]);
+}(SignalingState);
 exports.FailOnTimeoutState = FailOnTimeoutState;
-class PendingConnectState extends FailOnTimeoutState {
-    constructor(signaling, timeoutMs, initialStartTimeIn, retriesIn) {
-        super(signaling, timeoutMs);
-        this._initialStartTime = initialStartTimeIn || new Date().getTime();
-        this._retries = retriesIn || 0;
+var PendingConnectState = /*#__PURE__*/function (_FailOnTimeoutState) {
+  function PendingConnectState(signaling, timeoutMs, initialStartTimeIn, retriesIn) {
+    var _this2;
+    _classCallCheck(this, PendingConnectState);
+    _this2 = _callSuper(this, PendingConnectState, [signaling, timeoutMs]);
+    _this2._initialStartTime = initialStartTimeIn || new Date().getTime();
+    _this2._retries = retriesIn || 0;
+    return _this2;
+  }
+  _inherits(PendingConnectState, _FailOnTimeoutState);
+  return _createClass(PendingConnectState, [{
+    key: "onOpen",
+    value: function onOpen() {
+      if (this._signaling._pcm && this._signaling._pcm.contactToken && this._signaling._pcm.isPersistentConnectionEnabled() && !this._signaling._isFirstTimeSetup) {
+        this.transit(new PendingConnectContactState(this._signaling));
+      } else {
+        this.transit(new PendingInviteState(this._signaling));
+      }
     }
-    onOpen() {
-        if (this._signaling._pcm && this._signaling._pcm.contactToken && this._signaling._pcm.isPersistentConnectionEnabled() && !this._signaling._isFirstTimeSetup) {
-            this.transit(new PendingConnectContactState(this._signaling));
-        }
-        else {
-            this.transit(new PendingInviteState(this._signaling));
-        }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      var now = new Date().getTime();
+      var untilTimeoutMs = this._initialStartTime + this._timeoutMs - now;
+      if (untilTimeoutMs > 0 && ++this._retries < CONNECT_MAX_RETRIES) {
+        this._signaling._connect();
+        this.transit(new PendingConnectState(this._signaling, untilTimeoutMs, this._initialStartTime, this._retries));
+      } else {
+        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+      }
     }
-    channelDown() {
-        var now = new Date().getTime();
-        var untilTimeoutMs = (this._initialStartTime + this._timeoutMs) - now;
-        if (untilTimeoutMs > 0 && ++this._retries < CONNECT_MAX_RETRIES) {
-            this._signaling._connect();
-            this.transit(new PendingConnectState(this._signaling, untilTimeoutMs, this._initialStartTime, this._retries));
-        }
-        else {
-            this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
-        }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingConnectState";
     }
-    get name() {
-        return "PendingConnectState";
-    }
-}
+  }]);
+}(FailOnTimeoutState);
 exports.PendingConnectState = PendingConnectState;
-class PendingInviteState extends SignalingState {
-    constructor(signaling, retiresIn) {
-        super(signaling);
-        this._retries = retiresIn;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyConnected(resolve) {
-            self._signaling._connectedHandler();
-            resolve();
-        });
+var PendingInviteState = /*#__PURE__*/function (_SignalingState2) {
+  function PendingInviteState(signaling, retiresIn) {
+    var _this3;
+    _classCallCheck(this, PendingInviteState);
+    _this3 = _callSuper(this, PendingInviteState, [signaling]);
+    _this3._retries = retiresIn;
+    return _this3;
+  }
+  _inherits(PendingInviteState, _SignalingState2);
+  return _createClass(PendingInviteState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyConnected(resolve) {
+        self._signaling._connectedHandler();
+        resolve();
+      });
     }
     /**
      * Send RTC invite to backend service
@@ -17158,869 +19828,1106 @@ class PendingInviteState extends SignalingState {
      * @param sdp
      * @param iceCandidates
      */
-    invite(sdp, iceCandidates) {
-        var self = this;
-        var inviteId = (0, uuid_1.v4)();
-        var inviteParams;
-        if (self._signaling._pcm) {
-            inviteParams = {
-                sdp: sdp,
-                candidates: iceCandidates,
-                callContextToken: self._signaling._contactToken, // could be null
-                contactId: typeof self._signaling.callId === "undefined" ? "" : self._signaling.callId, // could be null
-                browserId: self._signaling._pcm.browserId, // identical id for browser
-                persistentConnection: self._signaling._pcm.isPPCEnabled, // flag which indicates if persistent connection is enabled in agent configuration
-                peerConnectionId: self._signaling._pcm.peerConnectionId, // generate by peerconnection factory
-                iceRestart: self._signaling._pcm._iceRestart, // will be true, if ice connection failed
-                peerConnectionToken: self._signaling._pcm.peerConnectionToken
-            };
-        }
-        else {
-            inviteParams = {
-                sdp: sdp,
-                candidates: iceCandidates,
-                callContextToken: self._signaling._contactToken
-            };
-        }
-        self.logger.log('Sending SDP', (0, utils_1.getRedactedSdp)(sdp));
-        self._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.INVITE_METHOD_NAME,
-            params: inviteParams,
-            id: inviteId,
-        }));
-        self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      var self = this;
+      var inviteId = (0, uuid_1.v4)();
+      var inviteParams;
+      if (self._signaling._pcm) {
+        inviteParams = {
+          sdp: sdp,
+          candidates: iceCandidates,
+          callContextToken: self._signaling._contactToken,
+          // could be null
+          contactId: typeof self._signaling.callId === "undefined" ? "" : self._signaling.callId,
+          // could be null
+          browserId: self._signaling._pcm.browserId,
+          // identical id for browser
+          persistentConnection: self._signaling._pcm.isPPCEnabled,
+          // flag which indicates if persistent connection is enabled in agent configuration
+          peerConnectionId: self._signaling._pcm.peerConnectionId,
+          // generate by peerconnection factory
+          iceRestart: self._signaling._pcm._iceRestart,
+          // will be true, if ice connection failed
+          peerConnectionToken: self._signaling._pcm.peerConnectionToken
+        };
+      } else {
+        inviteParams = {
+          sdp: sdp,
+          candidates: iceCandidates,
+          callContextToken: self._signaling._contactToken
+        };
+      }
+      self.logger.log('Sending SDP', (0, utils_1.getRedactedSdp)(sdp));
+      self._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.INVITE_METHOD_NAME,
+        params: inviteParams,
+        id: inviteId
+      }));
+      self.transit(new PendingAnswerState(self._signaling, inviteId, this._retries));
     }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
     }
-    get name() {
-        return "PendingInviteState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingInviteState";
     }
-}
+  }]);
+}(SignalingState);
 exports.PendingInviteState = PendingInviteState;
-class PendingAnswerState extends FailOnTimeoutState {
-    /**
-     * Creates PendingAnswerState which resolves the answer of invite request
-     *
-     * @param signaling
-     * @param inviteId
-     */
-    constructor(signaling, inviteId, retriesIn) {
-        super(signaling, rtc_const_1.MAX_INVITE_DELAY_MS);
-        this._inviteId = inviteId;
-        this._retries = retriesIn || 0;
-    }
-    /**
-     * RPC message event handler
-     *
-     * @param msg response of invite request sent by backend service
-     * "result": {
-     *                 "candidates": ["List of ICE candidates"]
-     *                 "sdp": "SDP Object",
-     *                 "inactivityDuration": 600000 or 0,
-     *                 "peerConnectionId": "Peer Connection ID",
-     *                 "peerConnectionToken": "Peer Connection Token from RTPS"
-     *             }
-     */
-    onRpcMsg(msg) {
-        var self = this;
-        if (msg.id === this._inviteId) { // TODO: check peer connection id here
-            if (msg.error || !msg.result) {
-                // Retry logic for invite error, currently is disabled
-                if (++this._retries < INVITE_MAX_RETRIES) {
-                    this.transit(new PendingInviteState(this._signaling, this._retries));
-                }
-                else {
-                    this.transit(new FailedState(this._signaling, this.translateInviteError(msg)));
-                }
+var PendingAnswerState = /*#__PURE__*/function (_FailOnTimeoutState2) {
+  /**
+   * Creates PendingAnswerState which resolves the answer of invite request
+   *
+   * @param signaling
+   * @param inviteId
+   */
+  function PendingAnswerState(signaling, inviteId, retriesIn) {
+    var _this4;
+    _classCallCheck(this, PendingAnswerState);
+    _this4 = _callSuper(this, PendingAnswerState, [signaling, rtc_const_1.MAX_INVITE_DELAY_MS]);
+    _this4._inviteId = inviteId;
+    _this4._retries = retriesIn || 0;
+    return _this4;
+  }
+  /**
+   * RPC message event handler
+   *
+   * @param msg response of invite request sent by backend service
+   * "result": {
+   *                 "candidates": ["List of ICE candidates"]
+   *                 "sdp": "SDP Object",
+   *                 "inactivityDuration": 600000 or 0,
+   *                 "peerConnectionId": "Peer Connection ID",
+   *                 "peerConnectionToken": "Peer Connection Token from RTPS"
+   *             }
+   */
+  _inherits(PendingAnswerState, _FailOnTimeoutState2);
+  return _createClass(PendingAnswerState, [{
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      var self = this;
+      if (msg.id === this._inviteId) {
+        // TODO: check peer connection id here
+        if (msg.error || !msg.result) {
+          // Retry logic for invite error, currently is disabled
+          if (++this._retries < INVITE_MAX_RETRIES) {
+            this.transit(new PendingInviteState(this._signaling, this._retries));
+          } else {
+            this.transit(new FailedState(this._signaling, this.translateInviteError(msg)));
+          }
+        } else {
+          new Promise(function notifyAnswered(resolve) {
+            self.logger.log('Received SDP', (0, utils_1.getRedactedSdp)(msg.result.sdp));
+            if (self._signaling._pcm) {
+              self._signaling._pcm.peerConnectionToken = msg.result.peerConnectionToken;
+              self._signaling._pcm.peerConnectionId = msg.result.peerConnectionId;
+              var isRTPSAllowlisted = !!msg.result.peerConnectionId; // if peerConnectionId is defined, isRTPSAllowlisted will be set to true, otherwise, it will remain false
+              // when isRTPSAllowlisted flip from false to true, we need to close standby/early media connection
+              if (isRTPSAllowlisted !== self._signaling._pcm.isRTPSAllowlisted && isRTPSAllowlisted) {
+                self._signaling._pcm.closeEarlyMediaConnection();
+              }
+              self._signaling._pcm.isRTPSAllowlisted = isRTPSAllowlisted;
+              self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates, msg.result.inactivityDuration, msg.result.peerConnectionId, msg.result.peerConnectionToken);
+            } else {
+              self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates);
             }
-            else {
-                new Promise(function notifyAnswered(resolve) {
-                    self.logger.log('Received SDP', (0, utils_1.getRedactedSdp)(msg.result.sdp));
-                    if (self._signaling._pcm) {
-                        self._signaling._pcm.peerConnectionToken = msg.result.peerConnectionToken;
-                        self._signaling._pcm.peerConnectionId = msg.result.peerConnectionId;
-                        const isRTPSAllowlisted = !!msg.result.peerConnectionId; // if peerConnectionId is defined, isRTPSAllowlisted will be set to true, otherwise, it will remain false
-                        // when isRTPSAllowlisted flip from false to true, we need to close standby/early media connection
-                        if (isRTPSAllowlisted !== self._signaling._pcm.isRTPSAllowlisted && isRTPSAllowlisted) {
-                            self._signaling._pcm.closeEarlyMediaConnection();
-                        }
-                        self._signaling._pcm.isRTPSAllowlisted = isRTPSAllowlisted;
-                        self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates, msg.result.inactivityDuration, msg.result.peerConnectionId, msg.result.peerConnectionToken);
-                    }
-                    else {
-                        self._signaling._answeredHandler(msg.result.sdp, msg.result.candidates);
-                    }
-                    self._signaling._isMediaClusterPath = !(msg.result.sdp.includes('AmazonConnect') && msg.result.sdp.includes('silenceSupp'));
-                    resolve();
-                });
-                this.transit(new PendingAcceptState(this._signaling, this._signaling._autoAnswer));
-            }
+            self._signaling._isMediaClusterPath = !(msg.result.sdp.includes('AmazonConnect') && msg.result.sdp.includes('silenceSupp'));
+            resolve();
+          });
+          this.transit(new PendingAcceptState(this._signaling, this._signaling._autoAnswer));
         }
+      }
     }
-    translateInviteError(msg) {
-        if (msg.error && msg.error.code == 403) {
-            return new exceptions_1.AccessDeniedException(msg.error.message);
-        }
-        else if (msg.error && msg.error.code == 486) {
-            return new exceptions_1.BusyException(msg.error.message);
-        }
-        else if (msg.error && msg.error.code == 404) {
-            return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
-        }
-        else if (msg.error && msg.error.code == 400) {
-            return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
-        }
-        else if (msg.error && msg.error.code == 408) {
-            return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
-        }
-        else if (msg.error && msg.error.code == 409) {
-            return new exceptions_1.IdempotencyException(msg.error.message); // IdempotencyException
-        }
-        else if (msg.error && msg.error.code == 500) {
-            return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
-        }
-        else {
-            return new exceptions_1.UnknownSignalingError();
-        }
+  }, {
+    key: "translateInviteError",
+    value: function translateInviteError(msg) {
+      if (msg.error && msg.error.code == 403) {
+        return new exceptions_1.AccessDeniedException(msg.error.message);
+      } else if (msg.error && msg.error.code == 486) {
+        return new exceptions_1.BusyException(msg.error.message);
+      } else if (msg.error && msg.error.code == 404) {
+        return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
+      } else if (msg.error && msg.error.code == 400) {
+        return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
+      } else if (msg.error && msg.error.code == 408) {
+        return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
+      } else if (msg.error && msg.error.code == 409) {
+        return new exceptions_1.IdempotencyException(msg.error.message); // IdempotencyException
+      } else if (msg.error && msg.error.code == 500) {
+        return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
+      } else {
+        return new exceptions_1.UnknownSignalingError();
+      }
     }
-    hangup() {
-        this.transit(new FailedState(this._signaling, "Hangs up in PendingAnswerState"));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.transit(new FailedState(this._signaling, "Hangs up in PendingAnswerState"));
     }
-    get name() {
-        return "PendingAnswerState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingAnswerState";
     }
-}
+  }]);
+}(FailOnTimeoutState);
 exports.PendingAnswerState = PendingAnswerState;
-class PendingAcceptState extends SignalingState {
-    /**
-     * Creates PendingAcceptState which sends accpet request to backend server
-     *
-     * @param signaling - signaling Object
-     * @param autoAnswer - boolean object
-     * @param retriesIn - the number of retry times
-     */
-    constructor(signaling, autoAnswer, retriesIn) {
-        super(signaling);
-        this._autoAnswer = autoAnswer;
-        this._retries = retriesIn;
+var PendingAcceptState = /*#__PURE__*/function (_SignalingState3) {
+  /**
+   * Creates PendingAcceptState which sends accpet request to backend server
+   *
+   * @param signaling - signaling Object
+   * @param autoAnswer - boolean object
+   * @param retriesIn - the number of retry times
+   */
+  function PendingAcceptState(signaling, autoAnswer, retriesIn) {
+    var _this5;
+    _classCallCheck(this, PendingAcceptState);
+    _this5 = _callSuper(this, PendingAcceptState, [signaling]);
+    _this5._autoAnswer = autoAnswer;
+    _this5._retries = retriesIn;
+    return _this5;
+  }
+  _inherits(PendingAcceptState, _SignalingState3);
+  return _createClass(PendingAcceptState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      if (this._autoAnswer) {
+        this.accept();
+      }
     }
-    onEnter() {
-        if (this._autoAnswer) {
-            this.accept();
-        }
+  }, {
+    key: "accept",
+    value: function accept() {
+      this.sendAcceptRequest();
+      // if contactToken exists, signaling move to talking state. Otherwise, move to Idle state
+      if (this._signaling._pcm && this._signaling._pcm.isPersistentConnectionEnabled() && this._signaling._pcm.contactToken === null && this._signaling._isFirstTimeSetup) {
+        this.transit(new IdleState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
+      } else {
+        this.transit(new TalkingState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
+      }
     }
-    accept() {
-        this.sendAcceptRequest();
-        // if contactToken exists, signaling move to talking state. Otherwise, move to Idle state
-        if (this._signaling._pcm && this._signaling._pcm.isPersistentConnectionEnabled() && this._signaling._pcm.contactToken === null && this._signaling._isFirstTimeSetup) {
-            this.transit(new IdleState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
-        }
-        else {
-            this.transit(new TalkingState(this._signaling, this._acceptId, this._retries, rtc_const_1.ACCEPT_METHOD_NAME));
-        }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
     }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingAcceptState";
     }
-    get name() {
-        return "PendingAcceptState";
-    }
-    sendAcceptRequest() {
-        return __awaiter(this, void 0, void 0, function* () {
-            this._acceptId = (0, uuid_1.v4)();
-            var acceptParams = {};
-            if (this._signaling._pcm) {
+  }, {
+    key: "sendAcceptRequest",
+    value: function sendAcceptRequest() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+        var acceptParams;
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.n) {
+            case 0:
+              this._acceptId = (0, uuid_1.v4)();
+              acceptParams = {};
+              if (this._signaling._pcm) {
                 acceptParams = {
-                    contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
-                    persistentConnection: this._signaling._pcm.isPPCEnabled,
-                    peerConnectionId: this._signaling._pcm.peerConnectionId,
-                    peerConnectionToken: this._signaling._pcm.peerConnectionToken
+                  contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
+                  persistentConnection: this._signaling._pcm.isPPCEnabled,
+                  peerConnectionId: this._signaling._pcm.peerConnectionId,
+                  peerConnectionToken: this._signaling._pcm.peerConnectionToken
                 };
-            }
-            this._signaling._wss.send(JSON.stringify({
+              }
+              this._signaling._wss.send(JSON.stringify({
                 jsonrpc: '2.0',
                 method: rtc_const_1.ACCEPT_METHOD_NAME,
                 params: acceptParams,
                 id: this._acceptId
-            }));
-        });
+              }));
+            case 1:
+              return _context.a(2);
+          }
+        }, _callee, this);
+      }));
     }
-}
+  }]);
+}(SignalingState);
 exports.PendingAcceptState = PendingAcceptState;
 /**
  * PendingConnectContactState sends connectContact request to backend service
  * when the peer connection has already established instead of sending a new invite request.
  *
  */
-class PendingConnectContactState extends SignalingState {
-    constructor(signaling, retriesIn) {
-        super(signaling);
-        this._retries = retriesIn;
+var PendingConnectContactState = /*#__PURE__*/function (_SignalingState4) {
+  function PendingConnectContactState(signaling, retriesIn) {
+    var _this6;
+    _classCallCheck(this, PendingConnectContactState);
+    _this6 = _callSuper(this, PendingConnectContactState, [signaling]);
+    _this6._retries = retriesIn;
+    return _this6;
+  }
+  _inherits(PendingConnectContactState, _SignalingState4);
+  return _createClass(PendingConnectContactState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      _superPropGet(PendingConnectContactState, "onEnter", this, 3)([]);
+      var self = this;
+      self.connectContact();
     }
-    onEnter() {
-        super.onEnter();
-        var self = this;
-        self.connectContact();
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      this._connectContactId = (0, uuid_1.v4)();
+      var connectContactParams = {
+        contactId: this._signaling._pcm.callId,
+        persistentConnection: this._signaling._pcm.isPPCEnabled,
+        peerConnectionId: this._signaling._pcm.peerConnectionId,
+        peerConnectionToken: this._signaling._pcm.peerConnectionToken,
+        callContextToken: this._signaling._pcm.contactToken
+      };
+      this._signaling._wss._connectionId = this._signaling._pcm.connectionId;
+      this._signaling._connectionId = this._signaling._pcm.connectionId;
+      this._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.CONNECT_CONTACT_METHOD_NAME,
+        params: connectContactParams,
+        id: this._connectContactId
+      }));
+      this.transit(new TalkingState(this._signaling, this._connectContactId, this._retries, rtc_const_1.CONNECT_CONTACT_METHOD_NAME));
     }
-    connectContact() {
-        this._connectContactId = (0, uuid_1.v4)();
-        var connectContactParams = {
-            contactId: this._signaling._pcm.callId,
-            persistentConnection: this._signaling._pcm.isPPCEnabled,
-            peerConnectionId: this._signaling._pcm.peerConnectionId,
-            peerConnectionToken: this._signaling._pcm.peerConnectionToken,
-            callContextToken: this._signaling._pcm.contactToken,
-        };
-        this._signaling._wss._connectionId = this._signaling._pcm.connectionId;
-        this._signaling._connectionId = this._signaling._pcm.connectionId;
-        this._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.CONNECT_CONTACT_METHOD_NAME,
-            params: connectContactParams,
-            id: this._connectContactId
-        }));
-        this.transit(new TalkingState(this._signaling, this._connectContactId, this._retries, rtc_const_1.CONNECT_CONTACT_METHOD_NAME));
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingConnectContactState";
     }
-    get name() {
-        return "PendingConnectContactState";
-    }
-}
+  }]);
+}(SignalingState);
 exports.PendingConnectContactState = PendingConnectContactState;
 // This State has never been initialized. (Can be deleted)
-class PendingAcceptAckState extends FailOnTimeoutState {
-    constructor(signaling, acceptId) {
-        super(signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS);
-        this._acceptId = acceptId;
-    }
-    onRpcMsg(msg) {
-        if (msg.id === this._acceptId) {
-            if (msg.error) {
-                this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
-            }
-            else {
-                this._signaling._clientToken = msg.result.clientToken;
-                this.transit(new TalkingState(this._signaling));
-            }
+var PendingAcceptAckState = /*#__PURE__*/function (_FailOnTimeoutState3) {
+  function PendingAcceptAckState(signaling, acceptId) {
+    var _this7;
+    _classCallCheck(this, PendingAcceptAckState);
+    _this7 = _callSuper(this, PendingAcceptAckState, [signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS]);
+    _this7._acceptId = acceptId;
+    return _this7;
+  }
+  _inherits(PendingAcceptAckState, _FailOnTimeoutState3);
+  return _createClass(PendingAcceptAckState, [{
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.id === this._acceptId) {
+        if (msg.error) {
+          this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+        } else {
+          this._signaling._clientToken = msg.result.clientToken;
+          this.transit(new TalkingState(this._signaling));
         }
+      }
     }
-    get name() {
-        return "PendingAcceptAckState";
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingAcceptAckState";
     }
-}
+  }]);
+}(FailOnTimeoutState);
 exports.PendingAcceptAckState = PendingAcceptAckState;
 /**
  * After signaling handshake completes, if persistent connection is enabled, signaling channel moves to Idle state
  *
  */
-class IdleState extends SignalingState {
-    /**
-     *
-     * @param signaling - signaling channel
-     * @param methodId - the id for the accept request
-     * @param retriesIn - the number of retry times
-     * @param retryMethod - the method we want to retry
-     */
-    constructor(signaling, methodId, retriesIn, retryMethod) {
-        super(signaling);
-        this._methodId = methodId;
-        this._retries = retriesIn || 0;
-        this._retryMethod = retryMethod;
+var IdleState = /*#__PURE__*/function (_SignalingState5) {
+  /**
+   *
+   * @param signaling - signaling channel
+   * @param methodId - the id for the accept request
+   * @param retriesIn - the number of retry times
+   * @param retryMethod - the method we want to retry
+   */
+  function IdleState(signaling, methodId, retriesIn, retryMethod) {
+    var _this8;
+    _classCallCheck(this, IdleState);
+    _this8 = _callSuper(this, IdleState, [signaling]);
+    _this8._methodId = methodId;
+    _this8._retries = retriesIn || 0;
+    _this8._retryMethod = retryMethod;
+    return _this8;
+  }
+  _inherits(IdleState, _SignalingState5);
+  return _createClass(IdleState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyHandshaked(resolve) {
+        self._signaling._handshakedHandler();
+        resolve();
+      });
+      self._signaling._pcm.startInactivityTimer();
     }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyHandshaked(resolve) {
-            self._signaling._handshakedHandler();
-            resolve();
-        });
-        self._signaling._pcm.startInactivityTimer();
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      this.transit(new PendingConnectContactState(this._signaling));
     }
-    connectContact() {
-        this.transit(new PendingConnectContactState(this._signaling));
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.bye();
     }
-    hangup() {
-        this.bye();
+  }, {
+    key: "bye",
+    value: function bye() {
+      this._byeId = (0, uuid_1.v4)();
+      this._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.BYE_METHOD_NAME,
+        params: {
+          contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
+          persistentConnection: this._signaling._pcm.isPPCEnabled,
+          peerConnectionId: this._signaling._pcm.peerConnectionId,
+          peerConnectionToken: this._signaling._pcm.peerConnectionToken,
+          callContextToken: this._signaling._pcm.contactToken
+        },
+        id: this._byeId
+      }));
+      this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
     }
-    bye() {
-        this._byeId = (0, uuid_1.v4)();
-        this._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.BYE_METHOD_NAME,
-            params: {
-                contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
-                persistentConnection: this._signaling._pcm.isPPCEnabled,
-                peerConnectionId: this._signaling._pcm.peerConnectionId,
-                peerConnectionToken: this._signaling._pcm.peerConnectionToken,
-                callContextToken: this._signaling._pcm.contactToken,
-            },
-            id: this._byeId
-        }));
-        this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
-    }
-    onRpcMsg(msg) {
-        if (msg.method === rtc_const_1.PC_BYE_METHOD_NAME) {
-            this.logger.log("Received PC bye from server, tear down the peer connection");
-            this.tearDownPeerConnection(msg.peerConnectionId);
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.method === rtc_const_1.PC_BYE_METHOD_NAME) {
+        this.logger.log("Received PC bye from server, tear down the peer connection");
+        this.tearDownPeerConnection(msg.peerConnectionId);
+      } else if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
+        this.transit(new PendingLocalHangupState(this._signaling, msg.id));
+      } else if (msg.method === 'renewClientToken') {
+        this._signaling._clientToken = msg.params.clientToken;
+      } else if (this._signaling._pcm && msg.error && msg.id === this._methodId) {
+        if (this._retryMethod === rtc_const_1.ACCEPT_METHOD_NAME && ++this._retries < ACCEPT_MAX_RETRIES) {
+          this.transit(new PendingAcceptState(this._signaling, this._retries));
+        } else if (this._signaling._pcm._rtcSession) {
+          // destroy signaling channel and peer connection when receives DisconnectContact error
+          this._signaling._pcm.destroy();
+        } else {
+          this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
         }
-        else if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
-            this.transit(new PendingLocalHangupState(this._signaling, msg.id));
-        }
-        else if (msg.method === 'renewClientToken') {
-            this._signaling._clientToken = msg.params.clientToken;
-        }
-        else if (this._signaling._pcm && msg.error && msg.id === this._methodId) {
-            if (this._retryMethod === rtc_const_1.ACCEPT_METHOD_NAME && ++this._retries < ACCEPT_MAX_RETRIES) {
-                this.transit(new PendingAcceptState(this._signaling, this._retries));
-            }
-            else if (this._signaling._pcm._rtcSession) { // destroy signaling channel and peer connection when receives DisconnectContact error
-                this._signaling._pcm.destroy();
-            }
-            else {
-                this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
-            }
-        }
+      }
     }
-    tearDownPeerConnection(peerConnectionId) {
-        if (peerConnectionId === this._signaling._pcm.peerConnectionId) {
-            this._signaling._pcm.destroy(peerConnectionId);
-            this.transit(new DisconnectedState(this._signaling));
-        }
-        else {
-            this.logger.log("peerConnectionId in the PCBye request does NOT match the peerConnectionId of the existing peer connection, failed to tear down peer connection");
-        }
-    }
-    translateResponseError(msg) {
-        if (msg.error && msg.error.code == 403) {
-            return new exceptions_1.AccessDeniedException(msg.error.message);
-        }
-        else if (msg.error && msg.error.code == 404) {
-            return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
-        }
-        else if (msg.error && msg.error.code == 400) {
-            return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
-        }
-        else if (msg.error && msg.error.code == 408) {
-            return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
-        }
-        else if (msg.error && msg.error.code == 500) {
-            return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
-        }
-        else {
-            return new exceptions_1.UnknownSignalingError();
-        }
-    }
-    channelDown() {
-        this._signaling._reconnect();
-        this._signaling.transit(new PendingReconnectState(this._signaling));
-    }
-    get name() {
-        return "IdleState";
-    }
-}
-exports.IdleState = IdleState;
-class TalkingState extends SignalingState {
-    /**
-     *
-     * @param signaling - signaling channel
-     * @param methodId - the id for the accept request
-     * @param retriesIn - the number of retry times
-     * @param retryMethod - the method we want to retry
-     */
-    constructor(signaling, methodId, retriesIn, retryMethod) {
-        super(signaling);
-        this._methodId = methodId;
-        this._retries = retriesIn || 0;
-        this._retryMethod = retryMethod;
-    }
-    onEnter() {
-        var self = this;
-        if (!self._signaling._pcm || !self._signaling._pcm.isPersistentConnectionEnabled() || self._signaling._isFirstTimeSetup) {
-            new Promise(function notifyHandshaked(resolve) {
-                self._signaling._handshakedHandler();
-                resolve();
-            });
-        }
-        self._signaling._isFirstTimeSetup = false;
-    }
-    hangup() {
-        if (this._signaling._pcm && this._signaling._pcm.isPersistentConnectionEnabled()) {
-            this.disconnectContact();
-        }
-        else {
-            this.bye();
-        }
-    }
-    bye() {
-        this._byeId = (0, uuid_1.v4)();
-        var byeParams = {};
-        if (this._signaling._pcm) {
-            byeParams = {
-                contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
-                persistentConnection: this._signaling._pcm.isPPCEnabled,
-                peerConnectionId: this._signaling._pcm.peerConnectionId,
-                peerConnectionToken: this._signaling._pcm.peerConnectionToken,
-                callContextToken: this._signaling._pcm.contactToken,
-            };
-        }
-        else {
-            byeParams = { callContextToken: this._signaling._contactToken };
-        }
-        this._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.BYE_METHOD_NAME,
-            params: byeParams,
-            id: this._byeId
-        }));
-        this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
-    }
-    disconnectContact() {
-        this._disconnectContactId = (0, uuid_1.v4)();
-        var self = this;
-        this._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.DISCONNECT_CONTACT_METHOD_NAME,
-            params: {
-                contactId: self._signaling._pcm.callId,
-                peerConnectionId: self._signaling._pcm.peerConnectionId,
-                peerConnectionToken: self._signaling._pcm.peerConnectionToken,
-            },
-            id: this._disconnectContactId
-        }));
-        this.transit(new IdleState(this._signaling, this._disconnectContactId));
-    }
-    onRpcMsg(msg) {
-        if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
-            this.transit(new PendingLocalHangupState(this._signaling, msg.id));
-        }
-        else if (msg.method === 'renewClientToken') {
-            this._signaling._clientToken = msg.params.clientToken;
-        }
-        else if (this._signaling._pcm && msg.error && msg.id === this._methodId) {
-            if (this._retryMethod === rtc_const_1.CONNECT_CONTACT_METHOD_NAME && ++this._retries < CONNECT_CONTACT_MAX_RETRIES) {
-                this.transit(new PendingConnectContactState(this._signaling, this._retries));
-            }
-            else if (this._retryMethod === rtc_const_1.ACCEPT_METHOD_NAME && ++this._retries < ACCEPT_MAX_RETRIES) {
-                this.transit(new PendingAcceptState(this._signaling, this._retries));
-            }
-            else {
-                this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
-            }
-        }
-    }
-    translateResponseError(msg) {
-        if (msg.error && msg.error.code == 403) { // AccessDeniedException
-            return new exceptions_1.AccessDeniedException(msg.error.message);
-        }
-        else if (msg.error.code == 404) {
-            return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
-        }
-        else if (msg.error.code == 400) {
-            return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
-        }
-        else if (msg.error.code == 408) {
-            return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
-        }
-        else if (msg.error.code == 500) {
-            return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
-        }
-        else {
-            return new exceptions_1.UnknownSignalingError();
-        }
-    }
-    channelDown() {
-        this._signaling._reconnect();
-        this._signaling.transit(new PendingReconnectState(this._signaling));
-    }
-    get name() {
-        return "TalkingState";
-    }
-}
-exports.TalkingState = TalkingState;
-class PendingReconnectState extends FailOnTimeoutState {
-    constructor(signaling) {
-        super(signaling, rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS);
-    }
-    onOpen() {
-        this.transit(new TalkingState(this._signaling));
-    }
-    channelDown() {
-        this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
-    }
-    get name() {
-        return "PendingReconnectState";
-    }
-}
-exports.PendingReconnectState = PendingReconnectState;
-class PendingRemoteHangupState extends FailOnTimeoutState {
-    constructor(signaling, byeId) {
-        super(signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS);
-        this._byeId = byeId;
-    }
-    // response
-    onRpcMsg(msg) {
-        if (msg.id === this._byeId || msg.method === rtc_const_1.BYE_METHOD_NAME) {
-            this.transit(new DisconnectedState(this._signaling));
-        }
-    }
-    get name() {
-        return "PendingRemoteHangupState";
-    }
-}
-exports.PendingRemoteHangupState = PendingRemoteHangupState;
-class PendingLocalHangupState extends SignalingState {
-    constructor(signaling, byeId) {
-        super(signaling);
-        this._byeId = byeId;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyRemoteHungup(resolve) {
-            self._signaling._remoteHungupHandler();
-            resolve();
-        });
-    }
-    hangup() {
-        var self = this;
-        self._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            result: {},
-            id: self._byeId
-        }));
-        self.transit(new DisconnectedState(self._signaling));
-    }
-    onRpcMsg() {
-        //Do nothing
-    }
-    channelDown() {
+  }, {
+    key: "tearDownPeerConnection",
+    value: function tearDownPeerConnection(peerConnectionId) {
+      if (peerConnectionId === this._signaling._pcm.peerConnectionId) {
+        this._signaling._pcm.destroy(peerConnectionId);
         this.transit(new DisconnectedState(this._signaling));
+      } else {
+        this.logger.log("peerConnectionId in the PCBye request does NOT match the peerConnectionId of the existing peer connection, failed to tear down peer connection");
+      }
     }
-    get name() {
-        return "PendingLocalHangupState";
+  }, {
+    key: "translateResponseError",
+    value: function translateResponseError(msg) {
+      if (msg.error && msg.error.code == 403) {
+        return new exceptions_1.AccessDeniedException(msg.error.message);
+      } else if (msg.error && msg.error.code == 404) {
+        return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
+      } else if (msg.error && msg.error.code == 400) {
+        return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
+      } else if (msg.error && msg.error.code == 408) {
+        return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
+      } else if (msg.error && msg.error.code == 500) {
+        return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
+      } else {
+        return new exceptions_1.UnknownSignalingError();
+      }
     }
-}
-exports.PendingLocalHangupState = PendingLocalHangupState;
-class DisconnectedState extends SignalingState {
-    onEnter() {
-        var self = this;
-        new Promise(function notifyDisconnected(resolve) {
-            self._signaling._disconnectedHandler();
-            resolve();
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this._signaling._reconnect();
+      this._signaling.transit(new PendingReconnectState(this._signaling));
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "IdleState";
+    }
+  }]);
+}(SignalingState);
+exports.IdleState = IdleState;
+var TalkingState = /*#__PURE__*/function (_SignalingState6) {
+  /**
+   *
+   * @param signaling - signaling channel
+   * @param methodId - the id for the accept request
+   * @param retriesIn - the number of retry times
+   * @param retryMethod - the method we want to retry
+   */
+  function TalkingState(signaling, methodId, retriesIn, retryMethod) {
+    var _this9;
+    _classCallCheck(this, TalkingState);
+    _this9 = _callSuper(this, TalkingState, [signaling]);
+    _this9._methodId = methodId;
+    _this9._retries = retriesIn || 0;
+    _this9._retryMethod = retryMethod;
+    return _this9;
+  }
+  _inherits(TalkingState, _SignalingState6);
+  return _createClass(TalkingState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      if (!self._signaling._pcm || !self._signaling._pcm.isPersistentConnectionEnabled() || self._signaling._isFirstTimeSetup) {
+        new Promise(function notifyHandshaked(resolve) {
+          self._signaling._handshakedHandler();
+          resolve();
         });
-        this._signaling._wss.close();
+      }
+      self._signaling._isFirstTimeSetup = false;
     }
-    channelDown() {
-        //Do nothing
-    }
-    onRpcMsg() {
-        //Do nothing
-    }
-    get name() {
-        return "DisconnectedState";
-    }
-}
-exports.DisconnectedState = DisconnectedState;
-class FailedState extends SignalingState {
-    constructor(signaling, exception) {
-        super(signaling);
-        this._exception = exception;
-    }
-    onEnter() {
-        var self = this;
-        new Promise(function notifyFailed(resolve) {
-            if (self._signaling._pcm && self._exception.name === exceptions_1.AccessDeniedExceptionName) {
-                self._signaling._pcm.isRTPSAllowlisted = false;
-                self._signaling._pcm.closeEarlyMediaConnection();
-            }
-            self._signaling._failedHandler(self._exception);
-            resolve();
-        });
-        if (!self._signaling._pcm) {
-            self._signaling._wss.close();
-        }
-    }
-    bye() {
-        this._byeId = (0, uuid_1.v4)();
-        this._signaling._wss.send(JSON.stringify({
-            jsonrpc: '2.0',
-            method: rtc_const_1.BYE_METHOD_NAME,
-            params: {
-                contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
-                persistentConnection: this._signaling._pcm.isPPCEnabled,
-                peerConnectionId: this._signaling._pcm.peerConnectionId,
-                peerConnectionToken: this._signaling._pcm.peerConnectionToken,
-                callContextToken: this._signaling._pcm.contactToken,
-            },
-            id: this._byeId
-        }));
-    }
-    hangup() {
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      if (this._signaling._pcm && this._signaling._pcm.isPersistentConnectionEnabled()) {
+        this.disconnectContact();
+      } else {
         this.bye();
+      }
     }
-    onRpcMsg() {
-        // Do nothing
+  }, {
+    key: "bye",
+    value: function bye() {
+      this._byeId = (0, uuid_1.v4)();
+      var byeParams = {};
+      if (this._signaling._pcm) {
+        byeParams = {
+          contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
+          persistentConnection: this._signaling._pcm.isPPCEnabled,
+          peerConnectionId: this._signaling._pcm.peerConnectionId,
+          peerConnectionToken: this._signaling._pcm.peerConnectionToken,
+          callContextToken: this._signaling._pcm.contactToken
+        };
+      } else {
+        byeParams = {
+          callContextToken: this._signaling._contactToken
+        };
+      }
+      this._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.BYE_METHOD_NAME,
+        params: byeParams,
+        id: this._byeId
+      }));
+      this.transit(new PendingRemoteHangupState(this._signaling, this._byeId));
     }
-    channelDown() {
-        //Do nothing
+  }, {
+    key: "disconnectContact",
+    value: function disconnectContact() {
+      this._disconnectContactId = (0, uuid_1.v4)();
+      var self = this;
+      this._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.DISCONNECT_CONTACT_METHOD_NAME,
+        params: {
+          contactId: self._signaling._pcm.callId,
+          peerConnectionId: self._signaling._pcm.peerConnectionId,
+          peerConnectionToken: self._signaling._pcm.peerConnectionToken
+        },
+        id: this._disconnectContactId
+      }));
+      this.transit(new IdleState(this._signaling, this._disconnectContactId));
     }
-    get name() {
-        return "FailedState";
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.method === rtc_const_1.BYE_METHOD_NAME) {
+        this.transit(new PendingLocalHangupState(this._signaling, msg.id));
+      } else if (msg.method === 'renewClientToken') {
+        this._signaling._clientToken = msg.params.clientToken;
+      } else if (this._signaling._pcm && msg.error && msg.id === this._methodId) {
+        if (this._retryMethod === rtc_const_1.CONNECT_CONTACT_METHOD_NAME && ++this._retries < CONNECT_CONTACT_MAX_RETRIES) {
+          this.transit(new PendingConnectContactState(this._signaling, this._retries));
+        } else if (this._retryMethod === rtc_const_1.ACCEPT_METHOD_NAME && ++this._retries < ACCEPT_MAX_RETRIES) {
+          this.transit(new PendingAcceptState(this._signaling, this._retries));
+        } else {
+          this.transit(new FailedState(this._signaling, this.translateResponseError(msg)));
+        }
+      }
     }
-    get exception() {
-        return this._exception;
+  }, {
+    key: "translateResponseError",
+    value: function translateResponseError(msg) {
+      if (msg.error && msg.error.code == 403) {
+        // AccessDeniedException
+        return new exceptions_1.AccessDeniedException(msg.error.message);
+      } else if (msg.error.code == 404) {
+        return new exceptions_1.CallNotFoundException(msg.error.message); // ResourceNotFoundException
+      } else if (msg.error.code == 400) {
+        return new exceptions_1.BadRequestException(msg.error.message); // BadRequestException
+      } else if (msg.error.code == 408) {
+        return new exceptions_1.RequestTimeoutException(msg.error.message); // RequestTimeoutException
+      } else if (msg.error.code == 500) {
+        return new exceptions_1.InternalServerException(msg.error.message); // InternalServerException
+      } else {
+        return new exceptions_1.UnknownSignalingError();
+      }
     }
-}
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this._signaling._reconnect();
+      this._signaling.transit(new PendingReconnectState(this._signaling));
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "TalkingState";
+    }
+  }]);
+}(SignalingState);
+exports.TalkingState = TalkingState;
+var PendingReconnectState = /*#__PURE__*/function (_FailOnTimeoutState4) {
+  function PendingReconnectState(signaling) {
+    _classCallCheck(this, PendingReconnectState);
+    return _callSuper(this, PendingReconnectState, [signaling, rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS]);
+  }
+  _inherits(PendingReconnectState, _FailOnTimeoutState4);
+  return _createClass(PendingReconnectState, [{
+    key: "onOpen",
+    value: function onOpen() {
+      this.transit(new TalkingState(this._signaling));
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new FailedState(this._signaling, new exceptions_1.SignalingChannelDownError()));
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingReconnectState";
+    }
+  }]);
+}(FailOnTimeoutState);
+exports.PendingReconnectState = PendingReconnectState;
+var PendingRemoteHangupState = /*#__PURE__*/function (_FailOnTimeoutState5) {
+  function PendingRemoteHangupState(signaling, byeId) {
+    var _this0;
+    _classCallCheck(this, PendingRemoteHangupState);
+    _this0 = _callSuper(this, PendingRemoteHangupState, [signaling, rtc_const_1.MAX_ACCEPT_BYE_DELAY_MS]);
+    _this0._byeId = byeId;
+    return _this0;
+  }
+  // response
+  _inherits(PendingRemoteHangupState, _FailOnTimeoutState5);
+  return _createClass(PendingRemoteHangupState, [{
+    key: "onRpcMsg",
+    value: function onRpcMsg(msg) {
+      if (msg.id === this._byeId || msg.method === rtc_const_1.BYE_METHOD_NAME) {
+        this.transit(new DisconnectedState(this._signaling));
+      }
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingRemoteHangupState";
+    }
+  }]);
+}(FailOnTimeoutState);
+exports.PendingRemoteHangupState = PendingRemoteHangupState;
+var PendingLocalHangupState = /*#__PURE__*/function (_SignalingState7) {
+  function PendingLocalHangupState(signaling, byeId) {
+    var _this1;
+    _classCallCheck(this, PendingLocalHangupState);
+    _this1 = _callSuper(this, PendingLocalHangupState, [signaling]);
+    _this1._byeId = byeId;
+    return _this1;
+  }
+  _inherits(PendingLocalHangupState, _SignalingState7);
+  return _createClass(PendingLocalHangupState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyRemoteHungup(resolve) {
+        self._signaling._remoteHungupHandler();
+        resolve();
+      });
+    }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      var self = this;
+      self._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        result: {},
+        id: self._byeId
+      }));
+      self.transit(new DisconnectedState(self._signaling));
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      //Do nothing
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      this.transit(new DisconnectedState(this._signaling));
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "PendingLocalHangupState";
+    }
+  }]);
+}(SignalingState);
+exports.PendingLocalHangupState = PendingLocalHangupState;
+var DisconnectedState = /*#__PURE__*/function (_SignalingState8) {
+  function DisconnectedState() {
+    _classCallCheck(this, DisconnectedState);
+    return _callSuper(this, DisconnectedState, arguments);
+  }
+  _inherits(DisconnectedState, _SignalingState8);
+  return _createClass(DisconnectedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyDisconnected(resolve) {
+        self._signaling._disconnectedHandler();
+        resolve();
+      });
+      this._signaling._wss.close();
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      //Do nothing
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      //Do nothing
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "DisconnectedState";
+    }
+  }]);
+}(SignalingState);
+exports.DisconnectedState = DisconnectedState;
+var FailedState = /*#__PURE__*/function (_SignalingState9) {
+  function FailedState(signaling, exception) {
+    var _this10;
+    _classCallCheck(this, FailedState);
+    _this10 = _callSuper(this, FailedState, [signaling]);
+    _this10._exception = exception;
+    return _this10;
+  }
+  _inherits(FailedState, _SignalingState9);
+  return _createClass(FailedState, [{
+    key: "onEnter",
+    value: function onEnter() {
+      var self = this;
+      new Promise(function notifyFailed(resolve) {
+        if (self._signaling._pcm && self._exception.name === exceptions_1.AccessDeniedExceptionName) {
+          self._signaling._pcm.isRTPSAllowlisted = false;
+          self._signaling._pcm.closeEarlyMediaConnection();
+        }
+        self._signaling._failedHandler(self._exception);
+        resolve();
+      });
+      if (!self._signaling._pcm) {
+        self._signaling._wss.close();
+      }
+    }
+  }, {
+    key: "bye",
+    value: function bye() {
+      this._byeId = (0, uuid_1.v4)();
+      this._signaling._wss.send(JSON.stringify({
+        jsonrpc: '2.0',
+        method: rtc_const_1.BYE_METHOD_NAME,
+        params: {
+          contactId: typeof this._signaling._pcm.callId === "undefined" ? null : this._signaling._pcm.callId,
+          persistentConnection: this._signaling._pcm.isPPCEnabled,
+          peerConnectionId: this._signaling._pcm.peerConnectionId,
+          peerConnectionToken: this._signaling._pcm.peerConnectionToken,
+          callContextToken: this._signaling._pcm.contactToken
+        },
+        id: this._byeId
+      }));
+    }
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.bye();
+    }
+  }, {
+    key: "onRpcMsg",
+    value: function onRpcMsg() {
+      // Do nothing
+    }
+  }, {
+    key: "channelDown",
+    value: function channelDown() {
+      //Do nothing
+    }
+  }, {
+    key: "name",
+    get: function get() {
+      return "FailedState";
+    }
+  }, {
+    key: "exception",
+    get: function get() {
+      return this._exception;
+    }
+  }]);
+}(SignalingState);
 exports.FailedState = FailedState;
-class AmznRtcSignaling {
-    // TODO: add javaScript doc here
-    constructor(callId, signalingUri, contactToken, logger, connectTimeoutMs, connectionId, wssManager, iceRestart = false, persistentConnectionManager = null) {
-        this._callId = callId;
-        this._connectTimeoutMs = connectTimeoutMs || rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS;
-        this._autoAnswer = true;
-        this._signalingUri = signalingUri;
-        this._contactToken = contactToken;
-        this._logger = (0, utils_1.wrapLogger)(logger, callId, 'SIGNALING');
-        this._connectionId = connectionId;
-        this._wssManager = wssManager;
-        this._iceRestart = iceRestart;
-        this._pcm = persistentConnectionManager;
-        this._isFirstTimeSetup = true;
-        //empty event handlers
-        this._connectedHandler =
-            this._answeredHandler =
-                this._handshakedHandler =
-                    this._reconnectedHandler =
-                        this._remoteHungupHandler =
-                            this._disconnectedHandler =
-                                this._failedHandler = function noOp() { };
+var AmznRtcSignaling = /*#__PURE__*/function () {
+  // TODO: add javaScript doc here
+  function AmznRtcSignaling(callId, signalingUri, contactToken, logger, connectTimeoutMs, connectionId, wssManager) {
+    var iceRestart = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : false;
+    var persistentConnectionManager = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : null;
+    _classCallCheck(this, AmznRtcSignaling);
+    this._callId = callId;
+    this._connectTimeoutMs = connectTimeoutMs || rtc_const_1.DEFAULT_CONNECT_TIMEOUT_MS;
+    this._autoAnswer = true;
+    this._signalingUri = signalingUri;
+    this._contactToken = contactToken;
+    this._logger = (0, utils_1.wrapLogger)(logger, callId, 'SIGNALING');
+    this._connectionId = connectionId;
+    this._wssManager = wssManager;
+    this._iceRestart = iceRestart;
+    this._pcm = persistentConnectionManager;
+    this._isFirstTimeSetup = true;
+    //empty event handlers
+    this._connectedHandler = this._answeredHandler = this._handshakedHandler = this._reconnectedHandler = this._remoteHungupHandler = this._disconnectedHandler = this._failedHandler = function noOp() {};
+  }
+  return _createClass(AmznRtcSignaling, [{
+    key: "callId",
+    get: function get() {
+      return this._callId;
     }
-    get callId() {
-        return this._callId;
+  }, {
+    key: "iceRestart",
+    get: function get() {
+      return this._iceRestart;
     }
-    get iceRestart() {
-        return this._iceRestart;
+  }, {
+    key: "onConnected",
+    set: function set(connectedHandler) {
+      this._connectedHandler = connectedHandler;
     }
-    set onConnected(connectedHandler) {
-        this._connectedHandler = connectedHandler;
+  }, {
+    key: "onAnswered",
+    set: function set(answeredHandler) {
+      this._answeredHandler = answeredHandler;
     }
-    set onAnswered(answeredHandler) {
-        this._answeredHandler = answeredHandler;
+  }, {
+    key: "onHandshaked",
+    set: function set(handshakedHandler) {
+      this._handshakedHandler = handshakedHandler;
     }
-    set onHandshaked(handshakedHandler) {
-        this._handshakedHandler = handshakedHandler;
+  }, {
+    key: "onReconnected",
+    set: function set(reconnectedHandler) {
+      this._reconnectedHandler = reconnectedHandler;
     }
-    set onReconnected(reconnectedHandler) {
-        this._reconnectedHandler = reconnectedHandler;
+  }, {
+    key: "onRemoteHungup",
+    set: function set(remoteHungupHandler) {
+      this._remoteHungupHandler = remoteHungupHandler;
     }
-    set onRemoteHungup(remoteHungupHandler) {
-        this._remoteHungupHandler = remoteHungupHandler;
+  }, {
+    key: "onDisconnected",
+    set: function set(disconnectedHandler) {
+      this._disconnectedHandler = disconnectedHandler;
     }
-    set onDisconnected(disconnectedHandler) {
-        this._disconnectedHandler = disconnectedHandler;
+  }, {
+    key: "onFailed",
+    set: function set(failedHandler) {
+      this._failedHandler = failedHandler;
     }
-    set onFailed(failedHandler) {
-        this._failedHandler = failedHandler;
+  }, {
+    key: "state",
+    get: function get() {
+      return this._state;
     }
-    get state() {
-        return this._state;
+  }, {
+    key: "connect",
+    value: function connect() {
+      this._connect();
+      this.transit(new PendingConnectState(this, this._connectTimeoutMs));
     }
-    connect() {
-        this._connect();
-        this.transit(new PendingConnectState(this, this._connectTimeoutMs));
+  }, {
+    key: "_connect",
+    value: function _connect() {
+      this._wss = this._connectWebSocket(this._buildInviteUri());
     }
-    _connect() {
-        this._wss = this._connectWebSocket(this._buildInviteUri());
-    }
-    transit(nextState) {
-        try {
-            this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
-            if (this.state && this.state.onExit) {
-                this.state.onExit();
-            }
+  }, {
+    key: "transit",
+    value: function transit(nextState) {
+      try {
+        this._logger.info((this._state ? this._state.name : 'null') + ' => ' + nextState.name);
+        if (this.state && this.state.onExit) {
+          this.state.onExit();
         }
-        finally {
-            this._state = nextState;
-            if (this._state.onEnter) {
-                this._state.onEnter();
-            }
+      } finally {
+        this._state = nextState;
+        if (this._state.onEnter) {
+          this._state.onEnter();
         }
+      }
     }
-    _connectWebSocket(uri) {
-        let wsConnection;
-        if (this._wssManager) {
-            wsConnection = new virtual_wss_connection_manager_1.default(this._logger, this._connectionId, this._wssManager);
-        }
-        else {
-            wsConnection = new WebSocket(uri);
-        }
-        wsConnection.onopen = (0, utils_1.hitch)(this, this._onOpen);
-        wsConnection.onmessage = (0, utils_1.hitch)(this, this._onMessage);
-        wsConnection.onerror = (0, utils_1.hitch)(this, this._onError);
-        wsConnection.onclose = (0, utils_1.hitch)(this, this._onClose);
-        return wsConnection;
+  }, {
+    key: "_connectWebSocket",
+    value: function _connectWebSocket(uri) {
+      var wsConnection;
+      if (this._wssManager) {
+        wsConnection = new virtual_wss_connection_manager_1["default"](this._logger, this._connectionId, this._wssManager);
+      } else {
+        wsConnection = new WebSocket(uri);
+      }
+      wsConnection.onopen = (0, utils_1.hitch)(this, this._onOpen);
+      wsConnection.onmessage = (0, utils_1.hitch)(this, this._onMessage);
+      wsConnection.onerror = (0, utils_1.hitch)(this, this._onError);
+      wsConnection.onclose = (0, utils_1.hitch)(this, this._onClose);
+      return wsConnection;
     }
-    _buildInviteUri() {
-        if (this._contactToken) {
-            return this._buildUriBase() + '&contactCtx=' + encodeURIComponent(this._contactToken);
-        }
-        else {
-            return this._buildUriBase();
-        }
+  }, {
+    key: "_buildInviteUri",
+    value: function _buildInviteUri() {
+      if (this._contactToken) {
+        return this._buildUriBase() + '&contactCtx=' + encodeURIComponent(this._contactToken);
+      } else {
+        return this._buildUriBase();
+      }
     }
-    _buildReconnectUri() {
-        return this._buildUriBase() + '&clientToken=' + encodeURIComponent(this._clientToken);
+  }, {
+    key: "_buildReconnectUri",
+    value: function _buildReconnectUri() {
+      return this._buildUriBase() + '&clientToken=' + encodeURIComponent(this._clientToken);
     }
-    _buildUriBase() {
-        var separator = '?';
-        if (!this._pcm && this._signalingUri.indexOf(separator) > -1) {
-            separator = '&';
-        }
-        return this._signalingUri + separator + 'callId=' + encodeURIComponent(this._callId);
+  }, {
+    key: "_buildUriBase",
+    value: function _buildUriBase() {
+      var separator = '?';
+      if (!this._pcm && this._signalingUri.indexOf(separator) > -1) {
+        separator = '&';
+      }
+      return this._signalingUri + separator + 'callId=' + encodeURIComponent(this._callId);
     }
-    _onMessage(evt) {
-        this.state.onRpcMsg(JSON.parse(evt.data));
+  }, {
+    key: "_onMessage",
+    value: function _onMessage(evt) {
+      this.state.onRpcMsg(JSON.parse(evt.data));
     }
-    _onOpen(evt) {
-        this.state.onOpen(evt);
+  }, {
+    key: "_onOpen",
+    value: function _onOpen(evt) {
+      this.state.onOpen(evt);
     }
-    _onError(evt) {
-        this.state.onError(evt);
+  }, {
+    key: "_onError",
+    value: function _onError(evt) {
+      this.state.onError(evt);
     }
-    _onClose(evt) {
-        this._logger.log('WebSocket onclose code=' + evt.code + ', reason=' + evt.reason);
-        this.state.onClose(evt);
+  }, {
+    key: "_onClose",
+    value: function _onClose(evt) {
+      this._logger.log('WebSocket onclose code=' + evt.code + ', reason=' + evt.reason);
+      this.state.onClose(evt);
     }
-    _reconnect() {
-        this._wss = this._connectWebSocket(this._buildReconnectUri());
+  }, {
+    key: "_reconnect",
+    value: function _reconnect() {
+      this._wss = this._connectWebSocket(this._buildReconnectUri());
     }
-    invite(sdp, iceCandidates) {
-        this.state.invite(sdp, iceCandidates);
+  }, {
+    key: "invite",
+    value: function invite(sdp, iceCandidates) {
+      this.state.invite(sdp, iceCandidates);
     }
-    connectContact() {
-        this.state.connectContact();
+  }, {
+    key: "connectContact",
+    value: function connectContact() {
+      this.state.connectContact();
     }
-    accept() {
-        this.state.accept();
+  }, {
+    key: "accept",
+    value: function accept() {
+      this.state.accept();
     }
-    hangup() {
-        this.state.hangup();
+  }, {
+    key: "hangup",
+    value: function hangup() {
+      this.state.hangup();
     }
-    bye() {
-        this.state.bye();
+  }, {
+    key: "bye",
+    value: function bye() {
+      this.state.bye();
     }
-}
-exports.default = AmznRtcSignaling;
+  }]);
+}();
+exports["default"] = AmznRtcSignaling;
 
-},{"./exceptions":30,"./rtc_const":32,"./utils":54,"./virtual_wss_connection_manager":55,"uuid":9}],44:[function(require,module,exports){
+},{"./exceptions":46,"./rtc_const":48,"./utils":70,"./virtual_wss_connection_manager":71,"uuid":9}],60:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-class SignalingChannelManager {
-    constructor(logger, connectionId, wssManager) {
-        this._logger = logger;
-        this._connectionId = connectionId;
-        this._wssManager = wssManager;
-        this._sessionCallbacks = new Map(); // Maps connectionId -> callbacks
-        this._pcByeHandler = null; // Handler for PC_BYE messages
-        this._initializeWebSocketEventListeners();
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var SignalingChannelManager = /*#__PURE__*/function () {
+  function SignalingChannelManager(logger, connectionId, wssManager) {
+    _classCallCheck(this, SignalingChannelManager);
+    this._logger = logger;
+    this._connectionId = connectionId;
+    this._wssManager = wssManager;
+    this._sessionCallbacks = new Map(); // Maps connectionId -> callbacks
+    this._pcByeHandler = null; // Handler for PC_BYE messages
+    this._initializeWebSocketEventListeners();
+  }
+  return _createClass(SignalingChannelManager, [{
+    key: "_initializeWebSocketEventListeners",
+    value: function _initializeWebSocketEventListeners() {
+      // Cleanup existing subscription if any to prevent duplicate message handlers
+      if (this._unSubscribe) {
+        this._unSubscribe();
+      }
+      this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
+      this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
     }
-    _initializeWebSocketEventListeners() {
-        // Cleanup existing subscription if any to prevent duplicate message handlers
-        if (this._unSubscribe) {
-            this._unSubscribe();
+  }, {
+    key: "_webSocketManagerOnMessage",
+    value: function _webSocketManagerOnMessage(event) {
+      var content;
+      if (event.content) {
+        content = JSON.parse(event.content);
+      }
+      this._logger.log("Signaling Channel Manager Received Message: ", JSON.stringify(content));
+      // Check if this is a PC_BYE message and handle it specially
+      if (content && content.jsonRpcMsg && content.jsonRpcMsg.method === rtc_const_1.PC_BYE_METHOD_NAME) {
+        this._logger.log("Signaling Channel Manager received PC_BYE message");
+        if (this._pcByeHandler) {
+          this._pcByeHandler(content.jsonRpcMsg);
         }
-        this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
-        this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
-    }
-    _webSocketManagerOnMessage(event) {
-        let content;
-        if (event.content) {
-            content = JSON.parse(event.content);
+      }
+      // Original behavior: notify main handler if connectionId matches
+      if (this._onMessage && content) {
+        this._logger.log("Signaling Channel Manager Invoking OnMessage: ", JSON.stringify(content.jsonRpcMsg));
+        this._onMessage({
+          data: JSON.stringify(content.jsonRpcMsg)
+        });
+      }
+      // Added behavior: route to specific session callback
+      if (content) {
+        var connectionId = content.connectionId;
+        var jsonRpcMsg = content.jsonRpcMsg;
+        if (connectionId && this._sessionCallbacks.has(connectionId)) {
+          var callbacks = this._sessionCallbacks.get(connectionId);
+          if (callbacks.onMessage) {
+            callbacks.onMessage(jsonRpcMsg);
+          }
         }
-        this._logger.log("Signaling Channel Manager Received Message: ", JSON.stringify(content));
-        // Check if this is a PC_BYE message and handle it specially
-        if (content && content.jsonRpcMsg && content.jsonRpcMsg.method === rtc_const_1.PC_BYE_METHOD_NAME) {
-            this._logger.log("Signaling Channel Manager received PC_BYE message");
-            if (this._pcByeHandler) {
-                this._pcByeHandler(content.jsonRpcMsg);
-            }
-        }
-        // Original behavior: notify main handler if connectionId matches
-        if (this._onMessage && content) {
-            this._logger.log("Signaling Channel Manager Invoking OnMessage: ", JSON.stringify(content.jsonRpcMsg));
-            this._onMessage({ data: JSON.stringify(content.jsonRpcMsg) });
-        }
-        // Added behavior: route to specific session callback
-        if (content) {
-            const connectionId = content.connectionId;
-            const jsonRpcMsg = content.jsonRpcMsg;
-            if (connectionId && this._sessionCallbacks.has(connectionId)) {
-                const callbacks = this._sessionCallbacks.get(connectionId);
-                if (callbacks.onMessage) {
-                    callbacks.onMessage(jsonRpcMsg);
-                }
-            }
-        }
+      }
     }
-    set onmessage(callBack) {
-        this._onMessage = callBack;
+  }, {
+    key: "onmessage",
+    set: function set(callBack) {
+      this._onMessage = callBack;
     }
-    set onopen(callBack) {
-        this._onOpen = callBack;
+  }, {
+    key: "onopen",
+    set: function set(callBack) {
+      this._onOpen = callBack;
     }
-    set onerror(callBack) {
-        this._onError = callBack;
+  }, {
+    key: "onerror",
+    set: function set(callBack) {
+      this._onError = callBack;
     }
-    set onclose(callBack) {
-        this._onClose = callBack;
+  }, {
+    key: "onclose",
+    set: function set(callBack) {
+      this._onClose = callBack;
     }
     // Updated to use the payload's connectionId as is
-    send(webSocketPayload, connectionId = this._connectionId) {
-        const payload = {};
-        try {
-            payload.topic = rtc_const_1.SOFTPHONE_ROUTE_KEY;
-            payload.connectionId = connectionId;
-            payload.jsonRpcMsg = JSON.parse(webSocketPayload);
-            this._logger.log("Signaling Channel Manager sending payload: ", JSON.stringify(payload));
-            this._wssManager.sendMessage(payload);
-        }
-        catch (error) {
-            this._logger.error("Error in sendMessage ", error);
-        }
+  }, {
+    key: "send",
+    value: function send(webSocketPayload) {
+      var connectionId = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this._connectionId;
+      var payload = {};
+      try {
+        payload.topic = rtc_const_1.SOFTPHONE_ROUTE_KEY;
+        payload.connectionId = connectionId;
+        payload.jsonRpcMsg = JSON.parse(webSocketPayload);
+        this._logger.log("Signaling Channel Manager sending payload: ", JSON.stringify(payload));
+        this._wssManager.sendMessage(payload);
+      } catch (error) {
+        this._logger.error("Error in sendMessage ", error);
+      }
     }
-    close() {
-        this._logger.info("closing virtual connection");
-        this._unSubscribe();
+  }, {
+    key: "close",
+    value: function close() {
+      this._logger.info("closing virtual connection");
+      this._unSubscribe();
     }
     // Added methods for session management
-    registerCallSession(connectionId, callbacks) {
-        this._sessionCallbacks.set(connectionId, callbacks);
+  }, {
+    key: "registerCallSession",
+    value: function registerCallSession(connectionId, callbacks) {
+      this._sessionCallbacks.set(connectionId, callbacks);
     }
-    unregisterCallSession(connectionId) {
-        this._sessionCallbacks.delete(connectionId);
+  }, {
+    key: "unregisterCallSession",
+    value: function unregisterCallSession(connectionId) {
+      this._sessionCallbacks["delete"](connectionId);
     }
-    clearCallSessionCallbacks() {
-        this._sessionCallbacks.clear();
+  }, {
+    key: "clearCallSessionCallbacks",
+    value: function clearCallSessionCallbacks() {
+      this._sessionCallbacks.clear();
     }
     /**
      * Register a handler for PC_BYE messages
      * PC_BYE messages are sent by the server to tear down the peer connection
      * @param {Function} handler - The handler function to call when PC_BYE is received
      */
-    registerPCByeHandler(handler) {
-        this._pcByeHandler = handler;
+  }, {
+    key: "registerPCByeHandler",
+    value: function registerPCByeHandler(handler) {
+      this._pcByeHandler = handler;
     }
     /**
      * Unregister the PC_BYE handler
      */
-    unregisterPCByeHandler() {
-        this._pcByeHandler = null;
+  }, {
+    key: "unregisterPCByeHandler",
+    value: function unregisterPCByeHandler() {
+      this._pcByeHandler = null;
     }
-}
-exports.default = SignalingChannelManager;
+  }]);
+}();
+exports["default"] = SignalingChannelManager;
 
-},{"./rtc_const":32,"./utils":54}],45:[function(require,module,exports){
+},{"./rtc_const":48,"./utils":70}],61:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.StandbyPeerConnectionManager = void 0;
@@ -18137,8 +21044,7 @@ class StandbyPeerConnectionManager {
 }
 exports.StandbyPeerConnectionManager = StandbyPeerConnectionManager;
 
-},{"./rtc_const":32}],46:[function(require,module,exports){
-(function (global){(function (){
+},{"./rtc_const":48}],62:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const StandardStrategy_1 = require("./StandardStrategy");
@@ -18156,19 +21062,19 @@ class AzureVDIStrategy extends StandardStrategy_1.default {
         this._validateRedirectionActive();
         this._onConnectionNeedingCleanupHandler = () => { };
         // Azure validates redirection is active at construction; start already-connected.
+        // (this._logger is set by CCPInitiationStrategyInterface; getLog() directly, not wrapLogger.)
         this._connectedPromise = Promise.resolve();
         this._connectedResolve = null;
-        this._logger = global.connect && global.connect.getLog
-            ? (0, utils_1.wrapLogger)(global.connect.getLog(), 'softphone', '[AzureVDIStrategy] %s')
-            : null;
+        this._recordConnectionStatusChange('connected');
         this._metadata = this._collectMetadata();
         this._mmrClientVersion = this._sanitize(navigator.mediaDevices.mmrClientVersion);
         this._registerReconnectionListener();
     }
     whenConnected() {
+        this._logger.info(`${this.getStrategyName()}: whenConnected called; connection ${this._connectionStatusSummary()}`).sendInternalLogToServer();
         return Promise.race([
             this._connectedPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`${this.getStrategyName()} did not connect within ${AzureVDIStrategy.AZURE_READY_TIMEOUT_MS}ms`)), AzureVDIStrategy.AZURE_READY_TIMEOUT_MS))
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`${this.getStrategyName()} did not connect within ${AzureVDIStrategy.AZURE_READY_TIMEOUT_MS}ms; connection ${this._connectionStatusSummary()}`)), AzureVDIStrategy.AZURE_READY_TIMEOUT_MS))
         ]);
     }
     _validateBrowser() {
@@ -18183,8 +21089,7 @@ class AzureVDIStrategy extends StandardStrategy_1.default {
     }
     // Strips characters not in the allowlist (alphanumeric, '.', '-', '_', '(', ')', space).
     // Accepts strings and numbers; rejects objects, booleans, null, undefined.
-    // Without filtering, curly braces in GUIDs like "{52416FB9-BA17}" cause a JSON parsing
-    // error in the telemetry service's event publisher.
+    // Without filtering, curly braces in GUIDs like "{52416FB9-BA17}" cause a JSON parsing error.
     // e.g. "{52416FB9-BA17}" -> "52416FB9-BA17", "1.0.2601<script>" -> "1.0.2601script"
     _sanitize(value) {
         if (typeof value !== 'string' && typeof value !== 'number')
@@ -18215,16 +21120,14 @@ class AzureVDIStrategy extends StandardStrategy_1.default {
     _handleRdpStateChange(event) {
         const state = event.detail && event.detail.state;
         if (state === 'disconnected') {
-            if (this._logger) {
-                this._logger.warn('AzureVDIStrategy: RDP client disconnected').sendInternalLogToServer();
-            }
+            this._recordConnectionStatusChange('disconnected');
+            this._logger.warn('AzureVDIStrategy: RDP client disconnected').sendInternalLogToServer();
             this._resetConnectedPromise();
             this._onConnectionNeedingCleanupHandler(this);
         }
         else if (state === 'connected') {
-            if (this._logger) {
-                this._logger.info('AzureVDIStrategy: RDP client reconnected').sendInternalLogToServer();
-            }
+            this._recordConnectionStatusChange('connected');
+            this._logger.info('AzureVDIStrategy: RDP client reconnected').sendInternalLogToServer();
             this._metadata = this._collectMetadata();
             this._mmrClientVersion = this._sanitize(navigator.mediaDevices.mmrClientVersion);
             if (this._connectedResolve) {
@@ -18253,14 +21156,70 @@ class AzureVDIStrategy extends StandardStrategy_1.default {
 AzureVDIStrategy.AZURE_READY_TIMEOUT_MS = 10000;
 exports.default = AzureVDIStrategy;
 
-}).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../config/constants":27,"../utils":54,"./StandardStrategy":52}],47:[function(require,module,exports){
+},{"../config/constants":43,"../utils":70,"./StandardStrategy":68}],63:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class CCPInitiationStrategyInterface {
-    constructor() {
-        console.log("CCPInitiationStrategyInterface initialized");
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resolveStrategyLogger = resolveStrategyLogger;
+// Resolve the CCP server logger, falling back to a no-op when constructing a strategy
+// outside a CCP runtime (e.g. unit tests) so subclasses can log unconditionally.
+// getLog().info(text) sends text to the CCP server log via .sendInternalLogToServer().
+function resolveStrategyLogger() {
+  var noopLog = function noopLog() {
+    return {
+      sendInternalLogToServer: function sendInternalLogToServer() {}
+    };
+  };
+  return global.connect && global.connect.getLog ? global.connect.getLog() : {
+    log: noopLog,
+    info: noopLog,
+    warn: noopLog,
+    error: noopLog
+  };
+}
+var CCPInitiationStrategyInterface = /*#__PURE__*/function () {
+  function CCPInitiationStrategyInterface() {
+    _classCallCheck(this, CCPInitiationStrategyInterface);
+    this._logger = resolveStrategyLogger();
+    // Last observed connection status and the UTC time it last changed. Subclasses that
+    // wait on an underlying client connection (VDI strategies) call
+    // _recordConnectionStatusChange() on connect/disconnect; whenConnected() surfaces it.
+    this._connectionStatus = 'unknown';
+    this._connectionStatusChangedAt = null;
+    this._logger.info("".concat(this.getStrategyName(), ": initialized")).sendInternalLogToServer();
+  }
+  /**
+   * Record a connection status change ('connected' | 'disconnected') and the UTC time it
+   * happened, then log it. Lets whenConnected() and other callers report when the underlying
+   * client connection last changed.
+   * @param {string} status
+   */
+  return _createClass(CCPInitiationStrategyInterface, [{
+    key: "_recordConnectionStatusChange",
+    value: function _recordConnectionStatusChange(status) {
+      this._connectionStatus = status;
+      this._connectionStatusChangedAt = new Date().toISOString();
+      this._logger.info("".concat(this.getStrategyName(), ": connection ").concat(status, " at ").concat(this._connectionStatusChangedAt, " UTC")).sendInternalLogToServer();
+    }
+    /**
+     * Human-readable summary of the last known connection status and when it changed.
+     */
+  }, {
+    key: "_connectionStatusSummary",
+    value: function _connectionStatusSummary() {
+      if (!this._connectionStatusChangedAt) {
+        return "status ".concat(this._connectionStatus, " (no change observed yet)");
+      }
+      return "last ".concat(this._connectionStatus, " at ").concat(this._connectionStatusChangedAt, " UTC");
     }
     /**
      * Returns a promise that resolves when the strategy's underlying platform is connected
@@ -18272,698 +21231,969 @@ class CCPInitiationStrategyInterface {
      *
      * @returns {Promise<void>}
      */
-    whenConnected() {
-        return Promise.resolve();
+  }, {
+    key: "whenConnected",
+    value: function whenConnected() {
+      this._logger.info("".concat(this.getStrategyName(), ": whenConnected called; connection ").concat(this._connectionStatusSummary())).sendInternalLogToServer();
+      return Promise.resolve();
     }
-    getStrategyName() {
-        console.error("getStrategyName needs to be overridden");
+  }, {
+    key: "getStrategyName",
+    value: function getStrategyName() {
+      this._logger.error("CCPInitiationStrategyInterface: getStrategyName needs to be overridden").sendInternalLogToServer();
     }
     // the following functions are rtc_peer_connection_factory related functions
     // check if the browser supports early media connection
-    _isEarlyMediaConnectionSupported() {
-        console.error("_isEarlyMediaConnectionSupported needs to be overridden");
+  }, {
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      this._logger.error("CCPInitiationStrategyInterface: _isEarlyMediaConnectionSupported needs to be overridden").sendInternalLogToServer();
     }
-    _createRtcPeerConnection() {
-        global.connect.activePeerConnectionCount++;
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection() {
+      global.connect.activePeerConnectionCount++;
     }
     // the following functions are rtc_session related functions
-    _gUM() {
-        console.error("_gUM needs to be overridden");
+  }, {
+    key: "_gUM",
+    value: function _gUM() {
+      this._logger.error("CCPInitiationStrategyInterface: _gUM needs to be overridden").sendInternalLogToServer();
     }
     // the following functions are rtc_session related functions
-    _createMediaStream() {
-        console.error("_createMediaStream needs to be overridden");
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream() {
+      this._logger.error("CCPInitiationStrategyInterface: _createMediaStream needs to be overridden").sendInternalLogToServer();
     }
-    addStream() {
-        console.error("addStream needs to be overridden");
+  }, {
+    key: "addStream",
+    value: function addStream() {
+      this._logger.error("CCPInitiationStrategyInterface: addStream needs to be overridden").sendInternalLogToServer();
     }
-    setRemoteDescription() {
-        console.error("setRemoteDescription needs to be overridden");
+  }, {
+    key: "setRemoteDescription",
+    value: function setRemoteDescription() {
+      this._logger.error("CCPInitiationStrategyInterface: setRemoteDescription needs to be overridden").sendInternalLogToServer();
     }
-    setRemoteDescriptionForIceRestart() {
-        console.error("setRemoteDescriptionForIceRestart needs to be overridden");
+  }, {
+    key: "setRemoteDescriptionForIceRestart",
+    value: function setRemoteDescriptionForIceRestart() {
+      this._logger.error("CCPInitiationStrategyInterface: setRemoteDescriptionForIceRestart needs to be overridden").sendInternalLogToServer();
     }
-    onIceStateChange() {
-        console.error("onIceStateChange needs to be overridden");
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange() {
+      this._logger.error("CCPInitiationStrategyInterface: onIceStateChange needs to be overridden").sendInternalLogToServer();
     }
-    onPeerConnectionStateChange() {
-        console.error("onPeerConnectionStateChange needs to be overridden");
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange() {
+      this._logger.error("CCPInitiationStrategyInterface: onPeerConnectionStateChange needs to be overridden").sendInternalLogToServer();
     }
     /**
      * Register a handler for connection cleanup events
      */
     // eslint-disable-next-line no-unused-vars
-    onConnectionNeedingCleanup(handler) {
-        console.error('onConnectionNeedingCleanup needs to be overridden');
+  }, {
+    key: "onConnectionNeedingCleanup",
+    value: function onConnectionNeedingCleanup(handler) {
+      this._logger.error("CCPInitiationStrategyInterface: onConnectionNeedingCleanup needs to be overridden").sendInternalLogToServer();
     }
-    _createPeerConnection() {
-        global.connect.activePeerConnectionCount++;
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection() {
+      global.connect.activePeerConnectionCount++;
     }
-    connect() {
-        console.error("connect needs to be overridden");
+  }, {
+    key: "connect",
+    value: function connect() {
+      this._logger.error("CCPInitiationStrategyInterface: connect needs to be overridden").sendInternalLogToServer();
     }
-    _ontrack() {
-        console.error("_ontrack needs to be overridden");
+  }, {
+    key: "_ontrack",
+    value: function _ontrack() {
+      this._logger.error("CCPInitiationStrategyInterface: _ontrack needs to be overridden").sendInternalLogToServer();
     }
-    close(pc) {
-        global.connect.activePeerConnectionCount--;
-        pc.close();
+  }, {
+    key: "close",
+    value: function close(pc) {
+      global.connect.activePeerConnectionCount--;
+      pc.close();
     }
-    _enumerateDevices() {
-        console.error("_enumerateDevices needs to be overridden");
+  }, {
+    key: "_enumerateDevices",
+    value: function _enumerateDevices() {
+      this._logger.error("CCPInitiationStrategyInterface: _enumerateDevices needs to be overridden").sendInternalLogToServer();
     }
-    _addDeviceChangeListener() {
-        console.error("_addDeviceChangeListener needs to be overridden");
+  }, {
+    key: "_addDeviceChangeListener",
+    value: function _addDeviceChangeListener() {
+      this._logger.error("CCPInitiationStrategyInterface: _addDeviceChangeListener needs to be overridden").sendInternalLogToServer();
     }
-    _removeDeviceChangeListener() {
-        console.error("_removeDeviceChangeListener needs to be overridden");
+  }, {
+    key: "_removeDeviceChangeListener",
+    value: function _removeDeviceChangeListener() {
+      this._logger.error("CCPInitiationStrategyInterface: _removeDeviceChangeListener needs to be overridden").sendInternalLogToServer();
     }
-}
-exports.default = CCPInitiationStrategyInterface;
+  }]);
+}();
+exports["default"] = CCPInitiationStrategyInterface;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],48:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
+
 /**
  * By using the Citrix ucsdk (https://www.npmjs.com/package/@citrix/ucsdk), you are accepting the Citrix Developer Terms of Use  located here: https://www.cloud.com/terms-of-use.
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _wrapNativeSuper(t) { var r = "function" == typeof Map ? new Map() : void 0; return _wrapNativeSuper = function _wrapNativeSuper(t) { if (null === t || !_isNativeFunction(t)) return t; if ("function" != typeof t) throw new TypeError("Super expression must either be null or a function"); if (void 0 !== r) { if (r.has(t)) return r.get(t); r.set(t, Wrapper); } function Wrapper() { return _construct(t, arguments, _getPrototypeOf(this).constructor); } return Wrapper.prototype = Object.create(t.prototype, { constructor: { value: Wrapper, enumerable: !1, writable: !0, configurable: !0 } }), _setPrototypeOf(Wrapper, t); }, _wrapNativeSuper(t); }
+function _construct(t, e, r) { if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments); var o = [null]; o.push.apply(o, e); var p = new (t.bind.apply(t, o))(); return r && _setPrototypeOf(p, r.prototype), p; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _isNativeFunction(t) { try { return -1 !== Function.toString.call(t).indexOf("[native code]"); } catch (n) { return "function" == typeof t; } }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
-const CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
-const rtc_session_1 = require("../rtc_session");
-const rtc_const_1 = require("../rtc_const");
-const constants_1 = require("../config/constants");
-const utils_1 = require("../utils");
-const CITRIX_READY_TIMEOUT_MS = 10000;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
+var rtc_session_1 = require("../rtc_session");
+var rtc_const_1 = require("../rtc_const");
+var constants_1 = require("../config/constants");
+var CITRIX_READY_TIMEOUT_MS = 10000;
 /**
  * Custom error class for timeout scenarios
  */
-class TimeoutError extends Error {
-    constructor(message) {
-        super(message);
-        this.name = 'TimeoutError';
-        this.isTimeout = false;
-    }
-}
-class CitrixVDIStrategy extends CCPInitiationStrategyInterface_1.default {
-    /**
-     * @param {boolean} useRealCitrix - Whether to use real Citrix SDK or a mock
-     * @param {string} vdiPlatform - The VDI platform type, e.g. "CITRIX", "CITRIX_413".
-     *                              Defaults to "CITRIX" which uses the 3.1 SDK.
-     */
-    constructor(vdiPlatform = constants_1.CITRIX, useRealCitrix = true) {
-        super();
-        this._logger = global.connect && global.connect.getLog
-            ? (0, utils_1.wrapLogger)(global.connect.getLog(), 'CitrixVDI', 'CitrixVDIStrategy')
-            : null;
-        this._loadedSdkVersion = null;
-        if (useRealCitrix) {
-            // SDK Version Selection Logic:
-            // - Use 3.1 as default
-            // - Use 4.1 opt in with CITRIX_413 VDIPlatform parameter
-            try {
-                // Only use CITRIX_413 if explicitly specified via parameter, otherwise default to CITRIX 310
-                if (vdiPlatform === constants_1.CITRIX_413) {
-                    require("@citrix/ucsdk_4.1/CitrixWebRTC");
-                    require("@citrix/ucsdk_4.1/CitrixBootstrap");
-                    console.log("CitrixVDIStrategy initializing with SDK version: citrix 4.1");
-                    this._loadedSDKVersion = constants_1.CITRIX_SDK_413;
-                    if (this._logger && this._logger.info) {
-                        this._logger.info(`Initializing CitrixVDIStrategy with SDK version 4.1 (${constants_1.CITRIX_SDK_413})`).sendInternalLogToServer();
-                    }
-                }
-                else {
-                    require("@citrix/ucsdk/CitrixWebRTC");
-                    console.log("CitrixVDIStrategy initializing with SDK version: citrix 3.1");
-                    this._loadedSDKVersion = constants_1.CITRIX_SDK_310;
-                    if (this._logger && this._logger.info) {
-                        this._logger.info(`Initializing CitrixVDIStrategy with SDK version 3.1 (${constants_1.CITRIX_SDK_310})`).sendInternalLogToServer();
-                    }
-                }
-            }
-            catch (error) {
-                require("@citrix/ucsdk/CitrixWebRTC");
-                this._loadedSDKVersion = constants_1.CITRIX_SDK_310;
-                console.error("Fallback to citrix 3.1 SDK due to error : ", error);
-            }
+var TimeoutError = /*#__PURE__*/function (_Error) {
+  function TimeoutError(message) {
+    var _this;
+    _classCallCheck(this, TimeoutError);
+    _this = _callSuper(this, TimeoutError, [message]);
+    _this.name = 'TimeoutError';
+    _this.isTimeout = false;
+    return _this;
+  }
+  _inherits(TimeoutError, _Error);
+  return _createClass(TimeoutError);
+}(/*#__PURE__*/_wrapNativeSuper(Error));
+var CitrixVDIStrategy = /*#__PURE__*/function (_CCPInitiationStrateg) {
+  /**
+   * @param {boolean} useRealCitrix - Whether to use real Citrix SDK or a mock
+   * @param {string} vdiPlatform - The VDI platform type, e.g. "CITRIX", "CITRIX_413".
+   *                              Defaults to "CITRIX" which uses the 3.1 SDK.
+   */
+  function CitrixVDIStrategy() {
+    var _this2;
+    var vdiPlatform = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : constants_1.CITRIX;
+    var useRealCitrix = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+    _classCallCheck(this, CitrixVDIStrategy);
+    _this2 = _callSuper(this, CitrixVDIStrategy); // sets this._logger to the CCP server logger (getLog(), no-op fallback in tests)
+    _this2._loadedSdkVersion = null;
+    if (useRealCitrix) {
+      // SDK Version Selection Logic:
+      // - Use 3.1 as default
+      // - Use 4.1 opt in with CITRIX_413 VDIPlatform parameter
+      try {
+        // Only use CITRIX_413 if explicitly specified via parameter, otherwise default to CITRIX 310
+        if (vdiPlatform === constants_1.CITRIX_413) {
+          require("@citrix/ucsdk_4.1/CitrixWebRTC");
+          require("@citrix/ucsdk_4.1/CitrixBootstrap");
+          _this2._loadedSDKVersion = constants_1.CITRIX_SDK_413;
+          _this2._logger.info("CitrixVDIStrategy: Initializing with SDK version 4.1 (".concat(constants_1.CITRIX_SDK_413, ")")).sendInternalLogToServer();
+        } else {
+          require("@citrix/ucsdk/CitrixWebRTC");
+          _this2._loadedSDKVersion = constants_1.CITRIX_SDK_310;
+          _this2._logger.info("CitrixVDIStrategy: Initializing with SDK version 3.1 (".concat(constants_1.CITRIX_SDK_310, ")")).sendInternalLogToServer();
         }
-        this._onConnectionNeedingCleanupHandler = () => { };
-        // Connection-readiness state: resolved when vdiClientConnected event fires.
-        this._resetConnectedPromise();
-        this.initializeCitrix();
-        // version is an Citrix object in following format
-        // "version": {
-        //     "type_script": "3.1.0",
-        //         "webrpc": "1.7.0.0",
-        //         "webrtc_codecs": "0.0.0.0",
-        //         "receiver": "24.11.0.51",
-        //         "vda": "0.0.0.0",
-        //         "endpoint": "0.0.0.0",
-        //         "osinfo": {
-        //         "family": "Browser",
-        //             "version": "15.3.1",
-        //             "architecture": "",
-        //             "distro": "",
-        //             "edition": "Mac-Chrome(version:133.0.0.0, userAgent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)"
-        //     },
-        //     "clientPlatform": "Browser"
-        // }
-        this.version = "UNKNOWN";
+      } catch (error) {
+        require("@citrix/ucsdk/CitrixWebRTC");
+        _this2._loadedSDKVersion = constants_1.CITRIX_SDK_310;
+        _this2._logger.error("CitrixVDIStrategy: Fallback to citrix 3.1 SDK due to error: ".concat(error)).sendInternalLogToServer();
+      }
     }
-    /**
-     * Helper function to wrap getRedirectionState with a timeout
-     * @param {number} timeoutMs - Timeout in milliseconds
-     * @returns {Promise} Promise that resolves with redirection state or rejects on timeout
-     */
-    getRedirectionStateWithTimeout() {
-        return __awaiter(this, arguments, void 0, function* (timeoutMs = constants_1.ONE_SEC_IN_MILLIS) {
-            return new Promise((resolve, reject) => {
-                const timeoutId = setTimeout(() => {
-                    const timeoutError = new TimeoutError(`getRedirectionState timed out after ${timeoutMs}ms`);
+    _this2._onConnectionNeedingCleanupHandler = function () {};
+    // Connection-readiness state: resolved when vdiClientConnected event fires.
+    _this2._resetConnectedPromise();
+    _this2.initializeCitrix();
+    // version is an Citrix object in following format
+    // "version": {
+    //     "type_script": "3.1.0",
+    //         "webrpc": "1.7.0.0",
+    //         "webrtc_codecs": "0.0.0.0",
+    //         "receiver": "24.11.0.51",
+    //         "vda": "0.0.0.0",
+    //         "endpoint": "0.0.0.0",
+    //         "osinfo": {
+    //         "family": "Browser",
+    //             "version": "15.3.1",
+    //             "architecture": "",
+    //             "distro": "",
+    //             "edition": "Mac-Chrome(version:133.0.0.0, userAgent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36)"
+    //     },
+    //     "clientPlatform": "Browser"
+    // }
+    _this2.version = "UNKNOWN";
+    return _this2;
+  }
+  /**
+   * Helper function to wrap getRedirectionState with a timeout
+   * @param {number} timeoutMs - Timeout in milliseconds
+   * @returns {Promise} Promise that resolves with redirection state or rejects on timeout
+   */
+  _inherits(CitrixVDIStrategy, _CCPInitiationStrateg);
+  return _createClass(CitrixVDIStrategy, [{
+    key: "getRedirectionStateWithTimeout",
+    value: function getRedirectionStateWithTimeout() {
+      return __awaiter(this, arguments, void 0, function () {
+        var timeoutMs = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 10 * constants_1.ONE_SEC_IN_MILLIS;
+        return /*#__PURE__*/_regenerator().m(function _callee() {
+          return _regenerator().w(function (_context) {
+            while (1) switch (_context.n) {
+              case 0:
+                return _context.a(2, new Promise(function (resolve, reject) {
+                  var timeoutId = setTimeout(function () {
+                    var timeoutError = new TimeoutError("getRedirectionState timed out after ".concat(timeoutMs, "ms"));
                     timeoutError.isTimeout = true;
                     reject(timeoutError);
-                }, timeoutMs);
-                window.CitrixBootstrap.getRedirectionState()
-                    .then(result => {
+                  }, timeoutMs);
+                  window.CitrixBootstrap.getRedirectionState().then(function (result) {
                     clearTimeout(timeoutId);
                     resolve(result);
-                })
-                    .catch(error => {
+                  })["catch"](function (error) {
                     clearTimeout(timeoutId);
                     reject(error);
-                });
-            });
-        });
-    }
-    initializeCitrix() {
-        return __awaiter(this, void 0, void 0, function* () {
-            console.log("CitrixVDIStrategy: Starting initialization process with SDK :", this._loadedSDKVersion);
-            if (this._loadedSDKVersion === constants_1.CITRIX_SDK_413) {
-                try {
-                    if (window.CitrixBootstrap && typeof window.CitrixBootstrap.getRedirectionState === 'function') {
-                        console.log("CitrixVDIStrategy: Bootstrap available, initializing...");
-                        // Initialize Bootstrap - it will handle automatic session reconnection
-                        window.CitrixBootstrap.initBootstrap("AmazonConnect");
-                        window.CitrixBootstrap.initLog(global.connect.getLog(), true);
-                        console.log("CitrixVDIStrategy: Bootstrap initialized, checking redirection state...");
-                        const redirectionState = yield this.getRedirectionStateWithTimeout(constants_1.ONE_SEC_IN_MILLIS);
-                        console.log("Bootstrap redirection state:", redirectionState);
-                        // RedirectionState -2 denotes unsupported VDA for bootstrap
-                        if (redirectionState !== -2) {
-                            console.log("Initializing citrix bootstrap");
-                            this.initCitrixWebRTC();
-                            this.initLog();
-                            return;
-                        }
-                        // If we reach here, either Bootstrap isn't available or getRedirectionState returned unsupported state
-                        console.log("Citrix VDA incompatible for bootstrap, falling back to standard initialization");
-                        if (this._logger && this._logger.info) {
-                            this._logger.info("Citrix VDA incompatible for bootstrap, falling back to standard initialization").sendInternalLogToServer();
-                        }
-                    }
-                    console.log("Initializing Citrix SDK without bootstrap support");
-                    this.initializeWithoutBootstrap();
-                }
-                catch (error) {
-                    if (error instanceof TimeoutError || error.isTimeout) {
-                        console.log("Bootstrap redirection state check timed out, falling back to standard initialization");
-                        if (this._logger && this._logger.info) {
-                            this._logger.info("Bootstrap redirection state check timed out, falling back to standard initialization").sendInternalLogToServer();
-                        }
-                    }
-                    else {
-                        console.error("Error during citrix bootstrap initialization, falling back to standard initialization:", error);
-                    }
-                    console.log("Initializing without bootstrap support");
-                    this.initializeWithoutBootstrap();
-                }
+                  });
+                }));
             }
-            else {
-                console.log("Initializing default Citrix 3.1 SDK");
-                this.initializeWithoutBootstrap();
-            }
-            console.log("CitrixVDIStrategy: Initialization process completed");
-        });
+          }, _callee);
+        })();
+      });
     }
-    initializeWithoutBootstrap() {
-        this.deInitializeBootstrap();
-        this.initCitrixWebRTC();
-        this.initGetCitrixWebrtcRedir();
-        this.initLog();
+  }, {
+    key: "initializeCitrix",
+    value: function initializeCitrix() {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee2() {
+        var redirectionCheckStartedAt, redirectionState, elapsed, _t;
+        return _regenerator().w(function (_context2) {
+          while (1) switch (_context2.p = _context2.n) {
+            case 0:
+              this._logger.info("CitrixVDIStrategy: [init] START (SDK: ".concat(this._loadedSDKVersion, ")")).sendInternalLogToServer();
+              if (!(this._loadedSDKVersion === constants_1.CITRIX_SDK_413)) {
+                _context2.n = 8;
+                break;
+              }
+              redirectionCheckStartedAt = null;
+              _context2.p = 1;
+              if (!(window.CitrixBootstrap && typeof window.CitrixBootstrap.getRedirectionState === 'function')) {
+                _context2.n = 4;
+                break;
+              }
+              // Initialize Bootstrap - it will handle automatic session reconnection
+              window.CitrixBootstrap.initBootstrap("AmazonConnect");
+              window.CitrixBootstrap.initLog(global.connect.getLog(), true);
+              redirectionCheckStartedAt = Date.now();
+              this._logger.info("CitrixVDIStrategy: [bootstrap redirection-state check] START").sendInternalLogToServer();
+              _context2.n = 2;
+              return this.getRedirectionStateWithTimeout(10 * constants_1.ONE_SEC_IN_MILLIS);
+            case 2:
+              redirectionState = _context2.v;
+              this._logger.info("CitrixVDIStrategy: [bootstrap redirection-state check] SUCCEEDED after ".concat(Date.now() - redirectionCheckStartedAt, "ms (redirectionState: ").concat(redirectionState, ")")).sendInternalLogToServer();
+              // RedirectionState -2 denotes unsupported VDA for bootstrap
+              if (!(redirectionState !== -2)) {
+                _context2.n = 3;
+                break;
+              }
+              this._bootstrapEnabled = true;
+              this._logger.info("CitrixVDIStrategy: [init] using bootstrap path (VDA supports bootstrap)").sendInternalLogToServer();
+              this.initCitrixWebRTC();
+              this.initLog();
+              this._logger.info("CitrixVDIStrategy: [init] DONE (bootstrap path)").sendInternalLogToServer();
+              return _context2.a(2);
+            case 3:
+              // redirectionState === -2: VDA does not support bootstrap
+              this._logger.info("CitrixVDIStrategy: [init] VDA incompatible with bootstrap (redirectionState -2), falling back to standard initialization").sendInternalLogToServer();
+              _context2.n = 5;
+              break;
+            case 4:
+              this._logger.info("CitrixVDIStrategy: [init] Bootstrap SDK unavailable, falling back to standard initialization").sendInternalLogToServer();
+            case 5:
+              this.initializeWithoutBootstrap();
+              this._logger.info("CitrixVDIStrategy: [init] DONE (standard fallback path)").sendInternalLogToServer();
+              _context2.n = 7;
+              break;
+            case 6:
+              _context2.p = 6;
+              _t = _context2.v;
+              elapsed = redirectionCheckStartedAt !== null ? "".concat(Date.now() - redirectionCheckStartedAt, "ms") : "n/a";
+              if (_t instanceof TimeoutError || _t.isTimeout) {
+                this._logger.info("CitrixVDIStrategy: [bootstrap redirection-state check] TIMED OUT after ".concat(elapsed, ", falling back to standard initialization")).sendInternalLogToServer();
+              } else {
+                this._logger.error("CitrixVDIStrategy: [bootstrap redirection-state check] FAILED after ".concat(elapsed, ", falling back to standard initialization: ").concat(_t)).sendInternalLogToServer();
+              }
+              this.initializeWithoutBootstrap();
+              this._logger.info("CitrixVDIStrategy: [init] DONE (standard fallback path after bootstrap error)").sendInternalLogToServer();
+            case 7:
+              _context2.n = 9;
+              break;
+            case 8:
+              this._logger.info("CitrixVDIStrategy: [init] using default Citrix 3.1 SDK (no bootstrap)").sendInternalLogToServer();
+              this.initializeWithoutBootstrap();
+              this._logger.info("CitrixVDIStrategy: [init] DONE (Citrix 3.1 path)").sendInternalLogToServer();
+            case 9:
+              return _context2.a(2);
+          }
+        }, _callee2, this, [[1, 6]]);
+      }));
     }
-    deInitializeBootstrap() {
-        if (window.CitrixBootstrap) {
-            window.CitrixBootstrap.deinitBootstrap("AmazonConnect");
+  }, {
+    key: "initializeWithoutBootstrap",
+    value: function initializeWithoutBootstrap() {
+      this.deInitializeBootstrap();
+      this.initCitrixWebRTC();
+      this.initGetCitrixWebrtcRedir();
+      this.initLog();
+    }
+  }, {
+    key: "deInitializeBootstrap",
+    value: function deInitializeBootstrap() {
+      if (window.CitrixBootstrap) {
+        window.CitrixBootstrap.deinitBootstrap("AmazonConnect");
+      }
+    }
+  }, {
+    key: "initCitrixWebRTC",
+    value: function initCitrixWebRTC() {
+      var _this3 = this;
+      window.CitrixWebRTC.setVMEventCallback(function (event) {
+        if (event.event === 'vdiClientConnected') {
+          _this3._recordConnectionStatusChange('connected');
+          _this3._logger.info("CitrixVDIStrategy: vdiClientConnected event received").sendInternalLogToServer();
+          if (!window.CitrixWebRTC.isFeatureOn("webrtc1.0")) {
+            var errorMsg = 'Citrix WebRTC redirection feature is NOT supported!';
+            _this3._logger.error("CitrixVDIStrategy: ".concat(errorMsg)).sendInternalLogToServer();
+            _this3._connectedReject(new Error(errorMsg));
+            throw new Error(errorMsg);
+          }
+          _this3._logger.info("CitrixVDIStrategy: initialized").sendInternalLogToServer();
+          _this3.version = event.version;
+          _this3._connectedResolve();
+        } else if (event.event === 'vdiClientDisconnected') {
+          _this3._recordConnectionStatusChange('disconnected');
+          _this3._logger.info("CitrixVDIStrategy: vdiClientDisconnected event received. reason: ".concat(event.reason, ", msg: ").concat(event.msg)).sendInternalLogToServer();
+          _this3._resetConnectedPromise();
+          try {
+            _this3._onConnectionNeedingCleanupHandler(_this3);
+            _this3._logger.info("CitrixVDIStrategy: VDI disconnection event triggered for cleanup").sendInternalLogToServer();
+          } catch (error) {
+            _this3._logger.error("CitrixVDIStrategy: Error triggering VDI disconnection event for cleanup: ".concat(error)).sendInternalLogToServer();
+          }
         }
+      });
+      window.CitrixWebRTC.initUCSDK("AmazonConnect");
     }
-    initCitrixWebRTC() {
-        window.CitrixWebRTC.setVMEventCallback((event) => {
-            if (event.event === 'vdiClientConnected') {
-                console.log("vdiClientConnected Event received");
-                if (!window.CitrixWebRTC.isFeatureOn("webrtc1.0")) {
-                    const errorMsg = 'Citrix WebRTC redirection feature is NOT supported!';
-                    if (this._logger && this._logger.error) {
-                        this._logger.error(errorMsg).sendInternalLogToServer();
-                    }
-                    this._connectedReject(new Error(errorMsg));
-                    throw new Error(errorMsg);
-                }
-                console.log("CitrixVDIStrategy initialized");
-                this.version = event.version;
-                this._connectedResolve();
-            }
-            else if (event.event === 'vdiClientDisconnected') {
-                console.log("vdiClientDisconnected Event received");
-                this._resetConnectedPromise();
-                try {
-                    this._onConnectionNeedingCleanupHandler(this);
-                    console.log("VDI disconnection event triggered");
-                }
-                catch (error) {
-                    console.error("Error triggering VDI disconnection event for cleanup:", error);
-                }
-            }
-        });
-        window.CitrixWebRTC.initUCSDK("AmazonConnect");
+  }, {
+    key: "initGetCitrixWebrtcRedir",
+    value: function initGetCitrixWebrtcRedir() {
+      window.getCitrixWebrtcRedir = function () {
+        return Promise.resolve(1);
+      };
     }
-    initGetCitrixWebrtcRedir() {
-        window.getCitrixWebrtcRedir = () => Promise.resolve(1);
-    }
-    initLog() {
-        window.CitrixWebRTC.initLog(global.connect.getLog());
+  }, {
+    key: "initLog",
+    value: function initLog() {
+      window.CitrixWebRTC.initLog(global.connect.getLog());
     }
     /**
      * Handler for connection cleanup event.
      * @param {Function} handler - The handler function to be called when connection needs cleanup
      */
-    onConnectionNeedingCleanup(handler) {
-        console.log("CitrixVDIStrategy: Setting VDI disconnection handler");
-        if (typeof handler === 'function') {
-            this._onConnectionNeedingCleanupHandler = handler;
-            console.log("CitrixVDIStrategy: Handler set successfully");
-        }
-        else {
-            console.error("CitrixVDIStrategy: Invalid handler provided");
-        }
+  }, {
+    key: "onConnectionNeedingCleanup",
+    value: function onConnectionNeedingCleanup(handler) {
+      this._logger.info("CitrixVDIStrategy: Setting VDI disconnection handler").sendInternalLogToServer();
+      if (typeof handler === 'function') {
+        this._onConnectionNeedingCleanupHandler = handler;
+        this._logger.info("CitrixVDIStrategy: Handler set successfully").sendInternalLogToServer();
+      } else {
+        this._logger.error("CitrixVDIStrategy: Invalid handler provided").sendInternalLogToServer();
+      }
     }
     // the following functions are rtc_peer_connection_factory related functions
     // check if the browser supports early media connection
-    _isEarlyMediaConnectionSupported() {
-        // Citrix WebRTC SDK doesn't support early media connection
-        return false;
+  }, {
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      // Citrix WebRTC SDK doesn't support early media connection
+      return false;
     }
-    _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
-        super._createRtcPeerConnection();
-        return new window.CitrixWebRTC.CitrixPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
+      _superPropGet(CitrixVDIStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return new window.CitrixWebRTC.CitrixPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
     }
     // the following functions are rtc_session related functions
-    _gUM(constraints) {
-        return window.CitrixWebRTC.getUserMedia(constraints);
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return window.CitrixWebRTC.getUserMedia(constraints);
     }
-    _enumerateDevices() {
-        return window.CitrixWebRTC.enumerateDevices();
+  }, {
+    key: "_enumerateDevices",
+    value: function _enumerateDevices() {
+      return window.CitrixWebRTC.enumerateDevices();
     }
-    _addDeviceChangeListener(listener) {
-        // Citrix fires the event on the navigator.mediaDevices event listener.
-        window.navigator.mediaDevices.addEventListener("devicechange", listener);
+  }, {
+    key: "_addDeviceChangeListener",
+    value: function _addDeviceChangeListener(listener) {
+      // Citrix fires the event on the navigator.mediaDevices event listener.
+      window.navigator.mediaDevices.addEventListener("devicechange", listener);
     }
-    _removeDeviceChangeListener(listener) {
-        // Citrix fires the event on the navigator.mediaDevices event listener.
-        window.navigator.mediaDevices.removeEventListener("devicechange", listener);
+  }, {
+    key: "_removeDeviceChangeListener",
+    value: function _removeDeviceChangeListener(listener) {
+      // Citrix fires the event on the navigator.mediaDevices event listener.
+      window.navigator.mediaDevices.removeEventListener("devicechange", listener);
     }
-    _createMediaStream(track) {
-        return window.CitrixWebRTC.createMediaStream([track]);
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream(track) {
+      return window.CitrixWebRTC.createMediaStream([track]);
     }
-    addStream(_pc, stream) {
-        stream.getTracks().forEach(track => {
-            _pc.addTransceiver(track, {});
+  }, {
+    key: "addStream",
+    value: function addStream(_pc, stream) {
+      stream.getTracks().forEach(function (track) {
+        _pc.addTransceiver(track, {});
+      });
+    }
+  }, {
+    key: "setRemoteDescription",
+    value: function setRemoteDescription(self, rtcSession) {
+      if (this.version && this.version.clientPlatform === "Browser") {
+        // ChromeOS does not support addIceCandidate yet.
+        self._candidates.forEach(function (candidate) {
+          if (candidate && typeof candidate.candidate === 'string' && candidate.candidate.trim() !== '') {
+            self._sdp += "a=".concat(candidate.candidate, "\n");
+            self.logger.info('Updated SDP for ChromeOS', "a=".concat(candidate.candidate, "\n"));
+          }
         });
-    }
-    setRemoteDescription(self, rtcSession) {
-        if (this.version && this.version.clientPlatform === "Browser") {
-            // ChromeOS does not support addIceCandidate yet.
-            self._candidates.forEach(candidate => {
-                if (candidate && typeof candidate.candidate === 'string' && candidate.candidate.trim() !== '') {
-                    self._sdp += `a=${candidate.candidate}\n`;
-                    self.logger.info('Updated SDP for ChromeOS', `a=${candidate.candidate}\n`);
-                }
-            });
-        }
-        const answerSessionDescription = self._createSessionDescription({ type: 'answer', sdp: self._sdp });
-        rtcSession._pc.setRemoteDescription(answerSessionDescription, () => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            rtcSession._sessionReport.setRemoteDescriptionFailure = false;
-            self._remoteDescriptionSet = true;
-            self._checkAndTransit();
-        }, () => {
-            rtcSession._stopSession();
-            rtcSession._sessionReport.setRemoteDescriptionFailure = true;
-            self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+      }
+      var answerSessionDescription = self._createSessionDescription({
+        type: 'answer',
+        sdp: self._sdp
+      });
+      rtcSession._pc.setRemoteDescription(answerSessionDescription, function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
+        }));
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
+        rtcSession._sessionReport.setRemoteDescriptionFailure = false;
+        self._remoteDescriptionSet = true;
+        self._checkAndTransit();
+      }, function () {
+        rtcSession._stopSession();
+        rtcSession._sessionReport.setRemoteDescriptionFailure = true;
+        self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+      });
     }
     // Todo: modify the sdp for ChromeOS here by adding a=candidate line, once pc.setConfiguration is supported for IceRestart
-    setRemoteDescriptionForIceRestart(self, rtcSession) {
-        const answerSessionDescription = self._createSessionDescription({ type: 'answer', sdp: self._sdp });
-        rtcSession._pc.setRemoteDescription(answerSessionDescription, () => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            self._remoteDescriptionSetForIceRestart = true;
-            self._checkAndTransit();
-        }, () => {
-            if (self.logger && self.logger.error) {
-                self.logger.error('Ice restart failed').sendInternalLogToServer();
-            }
-            self.onIceRestartFailure();
+  }, {
+    key: "setRemoteDescriptionForIceRestart",
+    value: function setRemoteDescriptionForIceRestart(self, rtcSession) {
+      var answerSessionDescription = self._createSessionDescription({
+        type: 'answer',
+        sdp: self._sdp
+      });
+      rtcSession._pc.setRemoteDescription(answerSessionDescription, function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
+        }));
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
-    }
-    onIceStateChange(evt, _pc) {
-        return _pc.iceConnectionState;
-    }
-    onPeerConnectionStateChange(_pc) {
-        return _pc.connectionState_;
-    }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        super._createRtcPeerConnection();
-        return new window.CitrixWebRTC.CitrixPeerConnection(configuration, optionalConfiguration);
-    }
-    _ontrack(self, evt) {
-        window.CitrixWebRTC.mapAudioElement(self._remoteAudioElement);
-        if (evt.streams.length > 1) {
-            self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
-                evt.streams.map(stream => stream.id).join(','));
+        self._remoteDescriptionSetForIceRestart = true;
+        self._checkAndTransit();
+      }, function () {
+        if (self.logger && self.logger.error) {
+          self.logger.error('Ice restart failed').sendInternalLogToServer();
         }
-        if (evt.track.kind === 'video' && self._remoteVideoElement) {
-            self._remoteVideoElement.srcObject = evt.streams[0];
-            self._remoteVideoStream = evt.streams[0];
-        }
-        else if (evt.track.kind === 'audio' && self._remoteAudioElement) {
-            self._remoteAudioElement.srcObject = evt.streams[0];
-            self._remoteAudioStream = evt.streams[0];
-        }
-        self._remoteAudioElement.play();
+        self.onIceRestartFailure();
+      });
+    }
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt, _pc) {
+      return _pc.iceConnectionState;
+    }
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange(_pc) {
+      return _pc.connectionState_;
+    }
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      _superPropGet(CitrixVDIStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return new window.CitrixWebRTC.CitrixPeerConnection(configuration, optionalConfiguration);
+    }
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(self, evt) {
+      window.CitrixWebRTC.mapAudioElement(self._remoteAudioElement);
+      if (evt.streams.length > 1) {
+        self._logger.warn('CitrixVDIStrategy: Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' + evt.streams.map(function (stream) {
+          return stream.id;
+        }).join(','));
+      }
+      if (evt.track.kind === 'video' && self._remoteVideoElement) {
+        self._remoteVideoElement.srcObject = evt.streams[0];
+        self._remoteVideoStream = evt.streams[0];
+      } else if (evt.track.kind === 'audio' && self._remoteAudioElement) {
+        self._remoteAudioElement.srcObject = evt.streams[0];
+        self._remoteAudioStream = evt.streams[0];
+      }
+      self._remoteAudioElement.play();
+    }
+    /**
+     * Overrides the base summary to add Citrix-specific context: the loaded SDK version,
+     * the VDI client version, and whether the bootstrap reconnection path is enabled.
+     * (_recordConnectionStatusChange is inherited from CCPInitiationStrategyInterface.)
+     */
+  }, {
+    key: "_connectionStatusSummary",
+    value: function _connectionStatusSummary() {
+      var context = "SDK: ".concat(this._loadedSDKVersion || 'unknown', ", clientVersion: ").concat(this.getVdiClientVersion() || 'unknown', ", bootstrapEnabled: ").concat(!!this._bootstrapEnabled);
+      if (!this._connectionStatusChangedAt) {
+        return "status ".concat(this._connectionStatus, " (no change observed yet); ").concat(context);
+      }
+      return "last ".concat(this._connectionStatus, " at ").concat(this._connectionStatusChangedAt, " UTC; ").concat(context);
     }
     /**
      * Resolves when the Citrix VDI client is connected and ready for WebRTC operations.
      * Rejects if the client does not connect within CITRIX_READY_TIMEOUT_MS.
      */
-    whenConnected() {
-        return Promise.race([
-            this._connectedPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`${this.getStrategyName()} did not connect within ${CITRIX_READY_TIMEOUT_MS}ms`)), CITRIX_READY_TIMEOUT_MS))
-        ]);
+  }, {
+    key: "whenConnected",
+    value: function whenConnected() {
+      var _this4 = this;
+      this._logger.info("CitrixVDIStrategy: whenConnected called; VDI connection ".concat(this._connectionStatusSummary())).sendInternalLogToServer();
+      return Promise.race([this._connectedPromise, new Promise(function (_, reject) {
+        return setTimeout(function () {
+          return reject(new Error("".concat(_this4.getStrategyName(), " did not connect within ").concat(CITRIX_READY_TIMEOUT_MS, "ms; VDI connection ").concat(_this4._connectionStatusSummary())));
+        }, CITRIX_READY_TIMEOUT_MS);
+      })]);
     }
-    _resetConnectedPromise() {
-        this._connectedPromise = new Promise((resolve, reject) => {
-            this._connectedResolve = resolve;
-            this._connectedReject = reject;
-        });
+  }, {
+    key: "_resetConnectedPromise",
+    value: function _resetConnectedPromise() {
+      var _this5 = this;
+      this._connectedPromise = new Promise(function (resolve, reject) {
+        _this5._connectedResolve = resolve;
+        _this5._connectedReject = reject;
+      });
     }
-    getStrategyName() {
-        return constants_1.CITRIX_VDI_STRATEGY;
+  }, {
+    key: "getStrategyName",
+    value: function getStrategyName() {
+      return constants_1.CITRIX_VDI_STRATEGY;
     }
-    getVdiClientVersion() {
-        return (this.version && this.version.receiver) || null;
+  }, {
+    key: "getVdiClientVersion",
+    value: function getVdiClientVersion() {
+      return this.version && this.version.receiver || null;
     }
-}
-exports.default = CitrixVDIStrategy;
+  }]);
+}(CCPInitiationStrategyInterface_1["default"]);
+exports["default"] = CitrixVDIStrategy;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../config/constants":27,"../rtc_const":32,"../rtc_session":36,"../utils":54,"./CCPInitiationStrategyInterface":47,"@citrix/ucsdk/CitrixWebRTC":1,"@citrix/ucsdk_4.1/CitrixBootstrap":2,"@citrix/ucsdk_4.1/CitrixWebRTC":3}],49:[function(require,module,exports){
+},{"../config/constants":43,"../rtc_const":48,"../rtc_session":52,"./CCPInitiationStrategyInterface":63,"@citrix/ucsdk/CitrixWebRTC":1,"@citrix/ucsdk_4.1/CitrixBootstrap":2,"@citrix/ucsdk_4.1/CitrixWebRTC":3}],65:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
-const rtc_session_1 = require("../rtc_session");
-const rtc_const_1 = require("../rtc_const");
-const constants_1 = require("../config/constants");
-const CHROME_SUPPORTED_VERSION = 59;
-const DCV_READY_TIMEOUT_MS = 10000;
-const HEARTBEAT_CONFIG = Object.freeze({
-    heartbeatTimeoutMs: 5000,
-    heartbeatIntervalPeriodMs: 500
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
-class DCVWebRTCStrategy extends CCPInitiationStrategyInterface_1.default {
-    constructor() {
-        super();
-        this._isV2 = false;
-        // Connection-readiness state: resolved in V1/V2 init callback, reset on 'unavailable'.
-        this._resetConnectedPromise();
-        if (globalThis.DCVWebRTCPeerConnectionProxyV2) {
-            this._initV2();
-        }
-        else if (window.DCVWebRTCPeerConnectionProxy) {
-            this._initV1();
-        }
-        else {
-            throw new Error('DCV WebRTC redirection feature is NOT supported!');
-        }
+var CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
+var rtc_session_1 = require("../rtc_session");
+var rtc_const_1 = require("../rtc_const");
+var constants_1 = require("../config/constants");
+var CHROME_SUPPORTED_VERSION = 59;
+var DCV_READY_TIMEOUT_MS = 10000;
+var HEARTBEAT_CONFIG = Object.freeze({
+  heartbeatTimeoutMs: 5000,
+  heartbeatIntervalPeriodMs: 500
+});
+var DCVWebRTCStrategy = /*#__PURE__*/function (_CCPInitiationStrateg) {
+  function DCVWebRTCStrategy() {
+    var _this;
+    _classCallCheck(this, DCVWebRTCStrategy);
+    _this = _callSuper(this, DCVWebRTCStrategy);
+    _this._isV2 = false;
+    // Connection-readiness state: resolved in V1/V2 init callback, reset on 'unavailable'.
+    _this._resetConnectedPromise();
+    if (globalThis.DCVWebRTCPeerConnectionProxyV2) {
+      _this._initV2();
+    } else if (window.DCVWebRTCPeerConnectionProxy) {
+      _this._initV1();
+    } else {
+      throw new Error('DCV WebRTC redirection feature is NOT supported!');
     }
-    _initV2() {
-        globalThis.DCVWebRTCPeerConnectionProxyV2.setInitCallback((result) => {
-            if (result.success) {
-                this.proxy = result.proxy;
-                this.proxy.overrideWebRTC();
-                console.log('DCVStrategy initialized (V2), version:', this.proxy.getVersion());
-                this._setupReconnectionHandling();
-                this._isV2 = true;
-                this._connectedResolve();
-            }
-            else {
-                const err = new Error('DCV WebRTC redirection feature is NOT supported!');
-                this._connectedReject(err);
-                throw err;
-            }
-        }, 5000);
+    return _this;
+  }
+  _inherits(DCVWebRTCStrategy, _CCPInitiationStrateg);
+  return _createClass(DCVWebRTCStrategy, [{
+    key: "_initV2",
+    value: function _initV2() {
+      var _this2 = this;
+      globalThis.DCVWebRTCPeerConnectionProxyV2.setInitCallback(function (result) {
+        if (result.success) {
+          _this2.proxy = result.proxy;
+          _this2.proxy.overrideWebRTC();
+          _this2._logger.info("DCVStrategy: initialized (V2), version: ".concat(_this2.proxy.getVersion())).sendInternalLogToServer();
+          _this2._setupReconnectionHandling();
+          _this2._isV2 = true;
+          _this2._recordConnectionStatusChange('connected');
+          _this2._connectedResolve();
+        } else {
+          var err = new Error('DCV WebRTC redirection feature is NOT supported!');
+          _this2._connectedReject(err);
+          throw err;
+        }
+      }, 5000);
     }
-    _initV1() {
-        window.DCVWebRTCPeerConnectionProxy.setInitCallback((result) => {
-            if (result.success) {
-                this.proxy = window.DCVWebRTCRedirProxy;
-                this.proxy.overrideWebRTC();
-                console.log('DCVStrategy initialized (V1)');
-                this._connectedResolve();
-            }
-            else {
-                const err = new Error('DCV WebRTC redirection feature is NOT supported!');
-                this._connectedReject(err);
-                throw err;
-            }
-        }, 5000);
+  }, {
+    key: "_initV1",
+    value: function _initV1() {
+      var _this3 = this;
+      window.DCVWebRTCPeerConnectionProxy.setInitCallback(function (result) {
+        if (result.success) {
+          _this3.proxy = window.DCVWebRTCRedirProxy;
+          _this3.proxy.overrideWebRTC();
+          _this3._logger.info('DCVStrategy: initialized (V1)').sendInternalLogToServer();
+          _this3._recordConnectionStatusChange('connected');
+          _this3._connectedResolve();
+        } else {
+          var err = new Error('DCV WebRTC redirection feature is NOT supported!');
+          _this3._connectedReject(err);
+          throw err;
+        }
+      }, 5000);
     }
-    _setupReconnectionHandling() {
-        this.proxy.resetHeartbeat(HEARTBEAT_CONFIG);
-        this.proxy.addStatusChangeEventListener((event) => {
-            if (event.status === 'unavailable') {
-                console.error('DCV redirection unavailable. Last heartbeat:', Date.now() - event.lastHeartbeat, 'ms ago');
-                this._resetConnectedPromise();
-                this._handleRedirectionLost();
-            }
-            else if (event.status === 'available') {
-                console.info('DCV redirection restored');
-                this._handleRedirectionRestored();
-                this._connectedResolve();
-            }
+  }, {
+    key: "_setupReconnectionHandling",
+    value: function _setupReconnectionHandling() {
+      var _this4 = this;
+      this.proxy.resetHeartbeat(HEARTBEAT_CONFIG);
+      this.proxy.addStatusChangeEventListener(function (event) {
+        if (event.status === 'unavailable') {
+          _this4._recordConnectionStatusChange('disconnected');
+          _this4._logger.error("DCVStrategy: DCV redirection unavailable. Last heartbeat: ".concat(Date.now() - event.lastHeartbeat, "ms ago")).sendInternalLogToServer();
+          _this4._resetConnectedPromise();
+          _this4._handleRedirectionLost();
+        } else if (event.status === 'available') {
+          _this4._recordConnectionStatusChange('connected');
+          _this4._logger.info('DCVStrategy: DCV redirection restored').sendInternalLogToServer();
+          _this4._handleRedirectionRestored();
+          _this4._connectedResolve();
+        }
+      });
+      this._mediaDevicesProxy = this.proxy.makeMediaDevicesProxy();
+    }
+  }, {
+    key: "_handleRedirectionLost",
+    value: function _handleRedirectionLost() {
+      if (this._onConnectionNeedingCleanupHandler) {
+        try {
+          this._onConnectionNeedingCleanupHandler();
+        } catch (e) {
+          this._logger.error("DCVStrategy: Error during connection cleanup: ".concat(e)).sendInternalLogToServer();
+        }
+      }
+    }
+  }, {
+    key: "_handleRedirectionRestored",
+    value: function _handleRedirectionRestored() {
+      this.proxy.overrideWebRTC();
+      this.proxy.resetHeartbeat(HEARTBEAT_CONFIG);
+    }
+  }, {
+    key: "isChromeBrowser",
+    value: function isChromeBrowser() {
+      if (!this.proxy || !this.proxy.clientInfo || !this.proxy.clientInfo.browserDetails) {
+        return false;
+      }
+      return this.proxy.clientInfo.browserDetails.browser === constants_1.CHROME;
+    }
+  }, {
+    key: "getChromeBrowserVersion",
+    value: function getChromeBrowserVersion() {
+      return this.proxy.clientInfo.browserDetails.version;
+    }
+  }, {
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      return this.isChromeBrowser() && this.getChromeBrowserVersion() >= CHROME_SUPPORTED_VERSION;
+    }
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
+      _superPropGet(DCVWebRTCStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return this.proxy.createPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
+    }
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return this.proxy.getUserMedia(constraints);
+    }
+  }, {
+    key: "_enumerateDevices",
+    value: function _enumerateDevices() {
+      if (this._isV2) {
+        return this._mediaDevicesProxy.enumerateDevices();
+      }
+      return this.proxy.enumerateDevices();
+    }
+  }, {
+    key: "_addDeviceChangeListener",
+    value: function _addDeviceChangeListener(listener) {
+      if (this._isV2) {
+        this._mediaDevicesProxy.addEventListener("devicechange", listener);
+      } else {
+        this.proxy.addEventListener("devicechange", listener);
+      }
+    }
+  }, {
+    key: "_removeDeviceChangeListener",
+    value: function _removeDeviceChangeListener(listener) {
+      if (this._isV2) {
+        this._mediaDevicesProxy.removeEventListener("devicechange", listener);
+      } else {
+        this.proxy.removeEventListener("devicechange", listener);
+      }
+    }
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream(track) {
+      return new MediaStream([track]);
+    }
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      _superPropGet(DCVWebRTCStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return this.proxy.createPeerConnection(configuration, optionalConfiguration);
+    }
+  }, {
+    key: "addStream",
+    value: function addStream(_pc, stream) {
+      stream.getTracks().forEach(function (track) {
+        var transceiver = _pc.addTransceiver(track.kind, {
+          streams: [stream]
         });
-        this._mediaDevicesProxy = this.proxy.makeMediaDevicesProxy();
+        transceiver.sender.replaceTrack(track);
+      });
     }
-    _handleRedirectionLost() {
-        if (this._onConnectionNeedingCleanupHandler) {
-            try {
-                this._onConnectionNeedingCleanupHandler();
-            }
-            catch (e) {
-                console.error('Error during connection cleanup:', e);
-            }
-        }
-    }
-    _handleRedirectionRestored() {
-        this.proxy.overrideWebRTC();
-        this.proxy.resetHeartbeat(HEARTBEAT_CONFIG);
-    }
-    isChromeBrowser() {
-        return this.proxy.clientInfo.browserDetails.browser === constants_1.CHROME;
-    }
-    getChromeBrowserVersion() {
-        return this.proxy.clientInfo.browserDetails.version;
-    }
-    _isEarlyMediaConnectionSupported() {
-        return this.isChromeBrowser() && this.getChromeBrowserVersion() >= CHROME_SUPPORTED_VERSION;
-    }
-    _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
-        super._createRtcPeerConnection();
-        return this.proxy.createPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
-    }
-    _gUM(constraints) {
-        return this.proxy.getUserMedia(constraints);
-    }
-    _enumerateDevices() {
-        if (this._isV2) {
-            return this._mediaDevicesProxy.enumerateDevices();
-        }
-        return this.proxy.enumerateDevices();
-    }
-    _addDeviceChangeListener(listener) {
-        if (this._isV2) {
-            this._mediaDevicesProxy.addEventListener("devicechange", listener);
-        }
-        else {
-            this.proxy.addEventListener("devicechange", listener);
-        }
-    }
-    _removeDeviceChangeListener(listener) {
-        if (this._isV2) {
-            this._mediaDevicesProxy.removeEventListener("devicechange", listener);
-        }
-        else {
-            this.proxy.removeEventListener("devicechange", listener);
-        }
-    }
-    _createMediaStream(track) {
-        return new MediaStream([track]);
-    }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        super._createRtcPeerConnection();
-        return this.proxy.createPeerConnection(configuration, optionalConfiguration);
-    }
-    addStream(_pc, stream) {
-        stream.getTracks().forEach(track => {
-            let transceiver = _pc.addTransceiver(track.kind, {
-                streams: [stream]
-            });
-            transceiver.sender.replaceTrack(track);
-        });
-    }
-    setRemoteDescription(self, rtcSession) {
-        var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-            type: constants_1.ANSWER,
-            sdp: self._sdp
+  }, {
+    key: "setRemoteDescription",
+    value: function setRemoteDescription(self, rtcSession) {
+      var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+        type: constants_1.ANSWER,
+        sdp: self._sdp
+      }));
+      setRemoteDescriptionPromise["catch"](function (e) {
+        self.logger.error('SetRemoteDescription failed', e);
+      });
+      setRemoteDescriptionPromise.then(function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
         }));
-        setRemoteDescriptionPromise.catch(e => {
-            self.logger.error('SetRemoteDescription failed', e);
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
-        setRemoteDescriptionPromise.then(() => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            return remoteCandidatePromises;
-        }).then(() => {
-            rtcSession._sessionReport.setRemoteDescriptionFailure = false;
-            self._remoteDescriptionSet = true;
-            self._checkAndTransit();
-        }).catch(() => {
-            rtcSession._stopSession();
-            rtcSession._sessionReport.setRemoteDescriptionFailure = true;
-            self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
-        });
+        return remoteCandidatePromises;
+      }).then(function () {
+        rtcSession._sessionReport.setRemoteDescriptionFailure = false;
+        self._remoteDescriptionSet = true;
+        self._checkAndTransit();
+      })["catch"](function () {
+        rtcSession._stopSession();
+        rtcSession._sessionReport.setRemoteDescriptionFailure = true;
+        self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+      });
     }
-    setRemoteDescriptionForIceRestart(self, rtcSession) {
-        var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-            type: constants_1.ANSWER,
-            sdp: self._sdp
+  }, {
+    key: "setRemoteDescriptionForIceRestart",
+    value: function setRemoteDescriptionForIceRestart(self, rtcSession) {
+      var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+        type: constants_1.ANSWER,
+        sdp: self._sdp
+      }));
+      setRemoteDescriptionPromise["catch"](function (e) {
+        self.logger.error('SetRemoteDescription failed', e);
+      });
+      setRemoteDescriptionPromise.then(function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
         }));
-        setRemoteDescriptionPromise.catch(e => {
-            self.logger.error('SetRemoteDescription failed', e);
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
-        setRemoteDescriptionPromise.then(() => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            return remoteCandidatePromises;
-        }).then(() => {
-            self._remoteDescriptionSetForIceRestart = true;
-            self._checkAndTransit();
-        }).catch(() => {
-            self.onIceRestartFailure();
-        });
+        return remoteCandidatePromises;
+      }).then(function () {
+        self._remoteDescriptionSetForIceRestart = true;
+        self._checkAndTransit();
+      })["catch"](function () {
+        self.onIceRestartFailure();
+      });
     }
-    onIceStateChange(evt, _pc) {
-        return _pc.iceConnectionState;
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt, _pc) {
+      return _pc.iceConnectionState;
     }
-    onPeerConnectionStateChange(_pc) {
-        return _pc.connectionState;
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange(_pc) {
+      return _pc.connectionState;
     }
-    _ontrack(self, evt) {
-        if (evt.streams.length > 1) {
-            console.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
-                evt.streams.map(stream => stream.id).join(','));
-        }
-        let stream = evt.streams[0];
-        self._remoteAudioElement = this.createMediaElement(stream);
-        self._remoteAudioStream = stream;
-        self._remoteAudioElement.srcObject = stream;
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(self, evt) {
+      if (evt.streams.length > 1) {
+        this._logger.warn('DCVStrategy: Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' + evt.streams.map(function (stream) {
+          return stream.id;
+        }).join(',')).sendInternalLogToServer();
+      }
+      var stream = evt.streams[0];
+      self._remoteAudioElement = this.createMediaElement(stream);
+      self._remoteAudioStream = stream;
+      self._remoteAudioElement.srcObject = stream;
     }
-    createMediaElement(stream) {
-        let props = {
-            kind: constants_1.AUDIO,
-            autoplay: true,
-        };
-        let element = stream.createMediaElement(props);
-        console.log("Creating proxied media element.");
-        return element;
+  }, {
+    key: "createMediaElement",
+    value: function createMediaElement(stream) {
+      var props = {
+        kind: constants_1.AUDIO,
+        autoplay: true
+      };
+      var element = stream.createMediaElement(props);
+      this._logger.info("DCVStrategy: Creating proxied media element.").sendInternalLogToServer();
+      return element;
     }
     /**
      * Register a handler for connection cleanup events
      * @param {Function} handler - The handler function to be called when connection needs cleanup
      */
-    onConnectionNeedingCleanup(handler) {
-        if (typeof handler === 'function') {
-            this._onConnectionNeedingCleanupHandler = handler;
-        }
+  }, {
+    key: "onConnectionNeedingCleanup",
+    value: function onConnectionNeedingCleanup(handler) {
+      if (typeof handler === 'function') {
+        this._onConnectionNeedingCleanupHandler = handler;
+      }
     }
     /**
      * Resolves when the DCV proxy init callback fires successfully.
      * Rejects if it does not complete within DCV_READY_TIMEOUT_MS.
      */
-    whenConnected() {
-        return Promise.race([
-            this._connectedPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`${this.getStrategyName()} did not connect within ${DCV_READY_TIMEOUT_MS}ms`)), DCV_READY_TIMEOUT_MS))
-        ]);
+  }, {
+    key: "whenConnected",
+    value: function whenConnected() {
+      var _this5 = this;
+      this._logger.info("".concat(this.getStrategyName(), ": whenConnected called; connection ").concat(this._connectionStatusSummary())).sendInternalLogToServer();
+      return Promise.race([this._connectedPromise, new Promise(function (_, reject) {
+        return setTimeout(function () {
+          return reject(new Error("".concat(_this5.getStrategyName(), " did not connect within ").concat(DCV_READY_TIMEOUT_MS, "ms; connection ").concat(_this5._connectionStatusSummary())));
+        }, DCV_READY_TIMEOUT_MS);
+      })]);
     }
-    _resetConnectedPromise() {
-        this._connectedPromise = new Promise((resolve, reject) => {
-            this._connectedResolve = resolve;
-            this._connectedReject = reject;
-        });
+  }, {
+    key: "_resetConnectedPromise",
+    value: function _resetConnectedPromise() {
+      var _this6 = this;
+      this._connectedPromise = new Promise(function (resolve, reject) {
+        _this6._connectedResolve = resolve;
+        _this6._connectedReject = reject;
+      });
     }
-    getStrategyName() {
-        return constants_1.DCV_STRATEGY;
+  }, {
+    key: "getStrategyName",
+    value: function getStrategyName() {
+      return constants_1.DCV_STRATEGY;
     }
-}
-exports.default = DCVWebRTCStrategy;
+  }]);
+}(CCPInitiationStrategyInterface_1["default"]);
+exports["default"] = DCVWebRTCStrategy;
 
-},{"../config/constants":27,"../rtc_const":32,"../rtc_session":36,"./CCPInitiationStrategyInterface":47}],50:[function(require,module,exports){
+},{"../config/constants":43,"../rtc_const":48,"../rtc_session":52,"./CCPInitiationStrategyInterface":63}],66:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
@@ -19011,111 +22241,171 @@ class FailedVDIStrategy extends CCPInitiationStrategyInterface_1.default {
 }
 exports.default = FailedVDIStrategy;
 
-},{"./CCPInitiationStrategyInterface":47}],51:[function(require,module,exports){
+},{"./CCPInitiationStrategyInterface":63}],67:[function(require,module,exports){
 (function (global){(function (){
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
-const rtc_session_1 = require("../rtc_session");
-const rtc_const_1 = require("../rtc_const");
-const OMNISSA_READY_TIMEOUT_MS = 10000;
-class OmnissaVDIStrategy extends CCPInitiationStrategyInterface_1.default {
-    constructor(useRealOmnissa = true) {
-        super();
-        const self = this;
-        self.topWindowName = "UNKNOWN";
-        self.hasRequestedTitle = false;
-        if (useRealOmnissa) {
-            // Initialize Omnissa SDK dependencies
-            const HorizonWebRTCExtension = require('@euc-releases/horizon-webrtc-redir-sdk/HorizonWebRTCExtension');
-            const HorizonWebRtcRedirectionAPI = require('@euc-releases/horizon-webrtc-redir-sdk/HorizonSDKforWebRTCRedir');
-            // Attach SDK instances to window for global access
-            window.HorizonWebRTCExtension = HorizonWebRTCExtension;
-            window.HorizonWebRtcRedirectionAPI = HorizonWebRtcRedirectionAPI;
-        }
-        this.globalWindowReference = null;
-        window.getHorizonClientID = function () {
-            return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    window.HorizonWebRTCExtension.getHorizonClientID()
-                        .then((clientID) => {
-                        console.log("getHorizonClientID resolved with:", clientID);
-                        resolve(clientID);
-                    })
-                        .catch((error) => {
-                        console.error(`Failed to get client ID: ${error}`);
-                        reject(`Failed to get client ID: ${error}`);
-                    });
-                });
-            });
-        };
-        window.getHorizonWSSPort = function () {
-            return __awaiter(this, void 0, void 0, function* () {
-                return new Promise((resolve, reject) => {
-                    window.HorizonWebRTCExtension.getHorizonWSSPort()
-                        .then((wssPort) => {
-                        console.log("getHorizonWSSPort resolved with:", wssPort);
-                        resolve(wssPort);
-                    })
-                        .catch((error) => {
-                        console.error(`Failed to get WSS port: ${error}`);
-                        reject(`Failed to get WSS port: ${error}`);
-                    });
-                });
-            });
-        };
-        window.getHorizonWindowTitle = function () {
-            if (self.topWindowName.endsWith(rtc_const_1.ACITVE_SOFTPHONE_TAB)) {
-                return self.topWindowName;
-            }
-            const currentTime = self.getCurrentTimeString();
-            try {
-                return self.setTopWindowName(top.document.title + currentTime + rtc_const_1.ACITVE_SOFTPHONE_TAB);
-            }
-            catch (error) {
-                self.setupMessageListener();
-                return self.topWindowName;
-            }
-        };
-        // Initialize SDK with logging and event handling
-        const prefix = "OmnissaVDI";
-        const appLogger = {
-            error: (msg) => global.connect.getLog().error(prefix + ": " + msg),
-            info: (msg) => global.connect.getLog().info(prefix + ": " + msg),
-            warn: (msg) => global.connect.getLog().warn(prefix + ": " + msg)
-        };
-        const appName = "AmazonConnect";
-        // Connection-readiness state: resolved when vdiClientConnected event fires.
-        this._resetConnectedPromise();
-        const initResult = window.HorizonWebRtcRedirectionAPI.initSDK(appLogger, appName, this.vmEventHandler.bind(this));
-        if (!initResult) {
-            throw new Error('Omnissa WebRTC Redirection API failed to initialize');
-        }
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
     }
-    vmEventHandler(event) {
-        let eventType = event.event;
-        console.log("Horizon WebRTCRedirSDK Event:", JSON.stringify(event));
-        switch (eventType) {
-            case "vdiClientConnected":
-                console.log("Got event from WebRTCRedirSDK: vdiClientConnected");
-                this._connectedResolve();
-                break;
-            case "vdiClientDisconnected":
-                console.log("Got event from WebRTCRedirSDK: vdiClientDisconnected");
-                this._resetConnectedPromise();
-                break;
-            default:
-                console.log("Got an unknown event from WebRTCRedirSDK: " + JSON.stringify(event));
-        }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
+};
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
+var rtc_session_1 = require("../rtc_session");
+var rtc_const_1 = require("../rtc_const");
+var OMNISSA_READY_TIMEOUT_MS = 10000;
+var OmnissaVDIStrategy = /*#__PURE__*/function (_CCPInitiationStrateg) {
+  function OmnissaVDIStrategy() {
+    var _this;
+    var useRealOmnissa = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : true;
+    _classCallCheck(this, OmnissaVDIStrategy);
+    _this = _callSuper(this, OmnissaVDIStrategy);
+    var self = _this;
+    var logger = _this._logger; // captured for the window.* closures below
+    self.topWindowName = "UNKNOWN";
+    self.hasRequestedTitle = false;
+    if (useRealOmnissa) {
+      // Initialize Omnissa SDK dependencies
+      var HorizonWebRTCExtension = require('@euc-releases/horizon-webrtc-redir-sdk/HorizonWebRTCExtension');
+      var HorizonWebRtcRedirectionAPI = require('@euc-releases/horizon-webrtc-redir-sdk/HorizonSDKforWebRTCRedir');
+      // Attach SDK instances to window for global access
+      window.HorizonWebRTCExtension = HorizonWebRTCExtension;
+      window.HorizonWebRtcRedirectionAPI = HorizonWebRtcRedirectionAPI;
+    }
+    _this.globalWindowReference = null;
+    window.getHorizonClientID = function () {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+        return _regenerator().w(function (_context) {
+          while (1) switch (_context.n) {
+            case 0:
+              return _context.a(2, new Promise(function (resolve, reject) {
+                window.HorizonWebRTCExtension.getHorizonClientID().then(function (clientID) {
+                  logger.info("OmnissaVDI: getHorizonClientID resolved with: ".concat(clientID)).sendInternalLogToServer();
+                  resolve(clientID);
+                })["catch"](function (error) {
+                  logger.error("OmnissaVDI: Failed to get client ID: ".concat(error)).sendInternalLogToServer();
+                  reject("Failed to get client ID: ".concat(error));
+                });
+              }));
+          }
+        }, _callee);
+      }));
+    };
+    window.getHorizonWSSPort = function () {
+      return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee2() {
+        return _regenerator().w(function (_context2) {
+          while (1) switch (_context2.n) {
+            case 0:
+              return _context2.a(2, new Promise(function (resolve, reject) {
+                window.HorizonWebRTCExtension.getHorizonWSSPort().then(function (wssPort) {
+                  logger.info("OmnissaVDI: getHorizonWSSPort resolved with: ".concat(wssPort)).sendInternalLogToServer();
+                  resolve(wssPort);
+                })["catch"](function (error) {
+                  logger.error("OmnissaVDI: Failed to get WSS port: ".concat(error)).sendInternalLogToServer();
+                  reject("Failed to get WSS port: ".concat(error));
+                });
+              }));
+          }
+        }, _callee2);
+      }));
+    };
+    window.getHorizonWindowTitle = function () {
+      if (self.topWindowName.endsWith(rtc_const_1.ACITVE_SOFTPHONE_TAB)) {
+        return self.topWindowName;
+      }
+      var currentTime = self.getCurrentTimeString();
+      try {
+        return self.setTopWindowName(top.document.title + currentTime + rtc_const_1.ACITVE_SOFTPHONE_TAB);
+      } catch (error) {
+        self.setupMessageListener();
+        return self.topWindowName;
+      }
+    };
+    // Initialize SDK with logging and event handling
+    var prefix = "OmnissaVDI";
+    var appLogger = {
+      error: function error(msg) {
+        return global.connect.getLog().error(prefix + ": " + msg);
+      },
+      info: function info(msg) {
+        return global.connect.getLog().info(prefix + ": " + msg);
+      },
+      warn: function warn(msg) {
+        return global.connect.getLog().warn(prefix + ": " + msg);
+      }
+    };
+    var appName = "AmazonConnect";
+    // Connection-readiness state: resolved when vdiClientConnected event fires.
+    _this._resetConnectedPromise();
+    var initResult = window.HorizonWebRtcRedirectionAPI.initSDK(appLogger, appName, _this.vmEventHandler.bind(_this));
+    if (!initResult) {
+      throw new Error('Omnissa WebRTC Redirection API failed to initialize');
+    }
+    return _this;
+  }
+  _inherits(OmnissaVDIStrategy, _CCPInitiationStrateg);
+  return _createClass(OmnissaVDIStrategy, [{
+    key: "vmEventHandler",
+    value: function vmEventHandler(event) {
+      var eventType = event.event;
+      this._logger.info("OmnissaVDI: Horizon WebRTCRedirSDK Event: ".concat(JSON.stringify(event))).sendInternalLogToServer();
+      switch (eventType) {
+        case "vdiClientConnected":
+          this._recordConnectionStatusChange('connected');
+          this._logger.info("OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientConnected").sendInternalLogToServer();
+          this._connectedResolve();
+          break;
+        case "vdiClientDisconnected":
+          this._recordConnectionStatusChange('disconnected');
+          this._logger.info("OmnissaVDI: Got event from WebRTCRedirSDK: vdiClientDisconnected").sendInternalLogToServer();
+          this._resetConnectedPromise();
+          break;
+        default:
+          this._logger.info("OmnissaVDI: Got an unknown event from WebRTCRedirSDK: ".concat(JSON.stringify(event))).sendInternalLogToServer();
+      }
     }
     /**
      * Checks if early/standby media connection is supported
@@ -19125,470 +22415,631 @@ class OmnissaVDIStrategy extends CCPInitiationStrategyInterface_1.default {
      * This indicates Omnissa SDK does not support early media connections.
      * Any changes to this value should be coordinated with Omnissa team and thoroughly tested.
      */
-    _isEarlyMediaConnectionSupported() {
-        return false;
+  }, {
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      return false;
     }
-    _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
-        super._createRtcPeerConnection();
-        return window.HorizonWebRtcRedirectionAPI.newPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
+      _superPropGet(OmnissaVDIStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return window.HorizonWebRtcRedirectionAPI.newPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
     }
-    _gUM(constraints) {
-        return window.HorizonWebRtcRedirectionAPI.getUserMedia(constraints);
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return window.HorizonWebRtcRedirectionAPI.getUserMedia(constraints);
     }
-    _enumerateDevices() {
-        return window.HorizonWebRtcRedirectionAPI.enumerateDevices();
+  }, {
+    key: "_enumerateDevices",
+    value: function _enumerateDevices() {
+      return window.HorizonWebRtcRedirectionAPI.enumerateDevices();
     }
-    _addDeviceChangeListener(listener) {
-        // Omnissa fires the event on the navigator.mediaDevices event listener.
-        window.navigator.mediaDevices.addEventListener("devicechange", listener);
+  }, {
+    key: "_addDeviceChangeListener",
+    value: function _addDeviceChangeListener(listener) {
+      // Omnissa fires the event on the navigator.mediaDevices event listener.
+      window.navigator.mediaDevices.addEventListener("devicechange", listener);
     }
-    _removeDeviceChangeListener(listener) {
-        // Omnissa fires the event on the navigator.mediaDevices event listener.
-        window.navigator.mediaDevices.removeEventListener("devicechange", listener);
+  }, {
+    key: "_removeDeviceChangeListener",
+    value: function _removeDeviceChangeListener(listener) {
+      // Omnissa fires the event on the navigator.mediaDevices event listener.
+      window.navigator.mediaDevices.removeEventListener("devicechange", listener);
     }
-    _createMediaStream(track) {
-        return window.HorizonWebRtcRedirectionAPI.newMediaStream([track]);
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream(track) {
+      return window.HorizonWebRtcRedirectionAPI.newMediaStream([track]);
     }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        super._createRtcPeerConnection();
-        return window.HorizonWebRtcRedirectionAPI.newPeerConnection(configuration, optionalConfiguration);
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      _superPropGet(OmnissaVDIStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return window.HorizonWebRtcRedirectionAPI.newPeerConnection(configuration, optionalConfiguration);
     }
-    onIceStateChange(evt, _pc) {
-        return _pc.iceConnectionState;
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt, _pc) {
+      return _pc.iceConnectionState;
     }
-    onPeerConnectionStateChange(_pc) {
-        return _pc.connectionState;
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange(_pc) {
+      return _pc.connectionState;
     }
-    addStream(_pc, stream) {
-        stream.getTracks().forEach(function (track) {
-            _pc.addTrack(track, stream);
-        });
+  }, {
+    key: "addStream",
+    value: function addStream(_pc, stream) {
+      stream.getTracks().forEach(function (track) {
+        _pc.addTrack(track, stream);
+      });
     }
-    setRemoteDescription(self, rtcSession) {
-        const setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-            type: 'answer',
-            sdp: self._sdp
+  }, {
+    key: "setRemoteDescription",
+    value: function setRemoteDescription(self, rtcSession) {
+      var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+        type: 'answer',
+        sdp: self._sdp
+      }));
+      setRemoteDescriptionPromise.then(function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
         }));
-        setRemoteDescriptionPromise.then(() => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            return remoteCandidatePromises;
-        }).then(() => {
-            rtcSession._sessionReport.setRemoteDescriptionFailure = false;
-            self._remoteDescriptionSet = true;
-            self._checkAndTransit();
-        }).catch(() => {
-            self.logger.error('Stopping session due to setRemoteDescription failure');
-            rtcSession._stopSession();
-            rtcSession._sessionReport.setRemoteDescriptionFailure = true;
-            self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
+        return remoteCandidatePromises;
+      }).then(function () {
+        rtcSession._sessionReport.setRemoteDescriptionFailure = false;
+        self._remoteDescriptionSet = true;
+        self._checkAndTransit();
+      })["catch"](function () {
+        self.logger.error('Stopping session due to setRemoteDescription failure');
+        rtcSession._stopSession();
+        rtcSession._sessionReport.setRemoteDescriptionFailure = true;
+        self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+      });
     }
-    setRemoteDescriptionForIceRestart(self, rtcSession) {
-        /**
-         * Check for Horizon client version compatibility
-         *
-         * Background:
-         * - Omnissa creates setConfiguration() method only in newer Horizon clients
-         * - Older clients won't have this method on the peerConnection object
-         *
-         * Why this check:
-         * 1. Different Horizon client versions have different capabilities
-         * 2. ICE restart feature is only available in newer versions (2503 and above)
-         * 3. Attempting ICE restart on older clients could cause errors
-         *
-         * Behavior:
-         * - If setConfiguration exists: Client supports ICE restart (proceed)
-         * - If not: Older client version (skip ICE restart)
-         */
-        if (rtcSession._pc.setConfiguration) {
-            self.logger.info('Modern Horizon client detected, proceeding with ICE restart');
-            const setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-                type: 'answer',
-                sdp: self._sdp
-            }));
-            setRemoteDescriptionPromise.then(() => {
-                var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                    var remoteCandidate = self._createRemoteCandidate(candidate);
-                    self.logger.info('Adding remote candidate', remoteCandidate);
-                    return rtcSession._pc.addIceCandidate(remoteCandidate);
-                }));
-                remoteCandidatePromises.catch(reason => {
-                    self.logger.warn('Error adding remote candidate', reason);
-                });
-                return remoteCandidatePromises;
-            }).then(() => {
-                self._remoteDescriptionSetForIceRestart = true;
-                self._checkAndTransit();
-            }).catch((error) => {
-                self.logger.error('ICE restart failed', {
-                    error: error,
-                    peerConnectionState: rtcSession._pc.connectionState,
-                    iceConnectionState: rtcSession._pc.iceConnectionState,
-                    signalingState: rtcSession._pc.signalingState
-                });
-                self.onIceRestartFailure();
-            });
-        }
-        else {
-            self.logger.error('Legacy Horizon client detected, skipping ICE restart');
-            self.onIceRestartFailure();
-        }
+  }, {
+    key: "setRemoteDescriptionForIceRestart",
+    value: function setRemoteDescriptionForIceRestart(self, rtcSession) {
+      /**
+       * Check for Horizon client version compatibility
+       *
+       * Background:
+       * - Omnissa creates setConfiguration() method only in newer Horizon clients
+       * - Older clients won't have this method on the peerConnection object
+       *
+       * Why this check:
+       * 1. Different Horizon client versions have different capabilities
+       * 2. ICE restart feature is only available in newer versions (2503 and above)
+       * 3. Attempting ICE restart on older clients could cause errors
+       *
+       * Behavior:
+       * - If setConfiguration exists: Client supports ICE restart (proceed)
+       * - If not: Older client version (skip ICE restart)
+       */
+      if (rtcSession._pc.setConfiguration) {
+        self.logger.info('Modern Horizon client detected, proceeding with ICE restart');
+        var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+          type: 'answer',
+          sdp: self._sdp
+        }));
+        setRemoteDescriptionPromise.then(function () {
+          var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+            var remoteCandidate = self._createRemoteCandidate(candidate);
+            self.logger.info('Adding remote candidate', remoteCandidate);
+            return rtcSession._pc.addIceCandidate(remoteCandidate);
+          }));
+          remoteCandidatePromises["catch"](function (reason) {
+            self.logger.warn('Error adding remote candidate', reason);
+          });
+          return remoteCandidatePromises;
+        }).then(function () {
+          self._remoteDescriptionSetForIceRestart = true;
+          self._checkAndTransit();
+        })["catch"](function (error) {
+          self.logger.error('ICE restart failed', {
+            error: error,
+            peerConnectionState: rtcSession._pc.connectionState,
+            iceConnectionState: rtcSession._pc.iceConnectionState,
+            signalingState: rtcSession._pc.signalingState
+          });
+          self.onIceRestartFailure();
+        });
+      } else {
+        self.logger.error('Legacy Horizon client detected, skipping ICE restart');
+        self.onIceRestartFailure();
+      }
     }
-    _ontrack(self, evt) {
-        // Check for empty streams
-        if (evt.streams.length === 0) {
-            self._logger.warn('No streams found in the event');
-            return;
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(self, evt) {
+      // Check for empty streams
+      if (evt.streams.length === 0) {
+        self._logger.warn('No streams found in the event');
+        return;
+      }
+      // Check for multiple streams
+      if (evt.streams.length > 1) {
+        self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' + evt.streams.map(function (stream) {
+          return stream.id;
+        }).join(','));
+      }
+      var stream = evt.streams[0];
+      var audioTrack = stream.getAudioTracks()[0];
+      this._logger.info("OmnissaVDI: Audio Track: ".concat(audioTrack)).sendInternalLogToServer();
+      this._logger.info("OmnissaVDI: Checking value of stream: ".concat(JSON.stringify(stream, null, 2))).sendInternalLogToServer();
+      // Set up remote audio element
+      if (stream.track[0].kind === 'audio' && self._remoteAudioElement) {
+        try {
+          // TODO: Optimize audio element creation. Either use the same audio element or implement a cleanup mechanism
+          // Currently creating a new element for each call.
+          var remoteAudio = document.createElement('audio');
+          remoteAudio.id = "remoteAudioElement" + 0;
+          window.HorizonWebRtcRedirectionAPI.onAudioCreated(remoteAudio, this.globalWindowReference);
+          remoteAudio.srcObject = stream;
+          self._remoteAudioElement = remoteAudio;
+          self._remoteAudioStream = stream;
+        } catch (e) {
+          this._logger.error("OmnissaVDI: Failed to set srcObject on _remoteAudioElement: ".concat(e)).sendInternalLogToServer();
+          return; // Return after error since we can't proceed
         }
-        // Check for multiple streams
-        if (evt.streams.length > 1) {
-            self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
-                evt.streams.map(stream => stream.id).join(','));
-        }
-        let stream = evt.streams[0];
-        let audioTrack = stream.getAudioTracks()[0];
-        console.log("Audio Track:", audioTrack);
-        console.log("Checking value of stream: ", JSON.stringify(stream, null, 2));
-        // Set up remote audio element
-        if (stream.track[0].kind === 'audio' && self._remoteAudioElement) {
-            try {
-                // TODO: Optimize audio element creation. Either use the same audio element or implement a cleanup mechanism
-                // Currently creating a new element for each call.
-                let remoteAudio = document.createElement('audio');
-                remoteAudio.id = "remoteAudioElement" + 0;
-                window.HorizonWebRtcRedirectionAPI.onAudioCreated(remoteAudio, this.globalWindowReference);
-                remoteAudio.srcObject = stream;
-                self._remoteAudioElement = remoteAudio;
-                self._remoteAudioStream = stream;
-            }
-            catch (e) {
-                console.error("Failed to set srcObject on _remoteAudioElement:", e);
-                return; // Return after error since we can't proceed
-            }
-        }
-        self._remoteAudioElement.autoplay = true;
-        self._remoteAudioElement.playsInline = true;
+      }
+      self._remoteAudioElement.autoplay = true;
+      self._remoteAudioElement.playsInline = true;
     }
     /**
      * Resolves when the Omnissa VDI client is connected and ready for WebRTC operations.
      * Rejects if the client does not connect within OMNISSA_READY_TIMEOUT_MS.
      */
-    whenConnected() {
-        return Promise.race([
-            this._connectedPromise,
-            new Promise((_, reject) => setTimeout(() => reject(new Error(`${this.getStrategyName()} did not connect within ${OMNISSA_READY_TIMEOUT_MS}ms`)), OMNISSA_READY_TIMEOUT_MS))
-        ]);
+  }, {
+    key: "whenConnected",
+    value: function whenConnected() {
+      var _this2 = this;
+      this._logger.info("".concat(this.getStrategyName(), ": whenConnected called; connection ").concat(this._connectionStatusSummary())).sendInternalLogToServer();
+      return Promise.race([this._connectedPromise, new Promise(function (_, reject) {
+        return setTimeout(function () {
+          return reject(new Error("".concat(_this2.getStrategyName(), " did not connect within ").concat(OMNISSA_READY_TIMEOUT_MS, "ms; connection ").concat(_this2._connectionStatusSummary())));
+        }, OMNISSA_READY_TIMEOUT_MS);
+      })]);
     }
-    _resetConnectedPromise() {
-        this._connectedPromise = new Promise((resolve, reject) => {
-            this._connectedResolve = resolve;
-            this._connectedReject = reject;
-        });
+  }, {
+    key: "_resetConnectedPromise",
+    value: function _resetConnectedPromise() {
+      var _this3 = this;
+      this._connectedPromise = new Promise(function (resolve, reject) {
+        _this3._connectedResolve = resolve;
+        _this3._connectedReject = reject;
+      });
     }
-    getStrategyName() {
-        return 'OmnissaVDIStrategy';
+  }, {
+    key: "getStrategyName",
+    value: function getStrategyName() {
+      return 'OmnissaVDIStrategy';
     }
-    getCurrentTimeString() {
-        const currentTime = new Date();
-        return ` ${currentTime.getHours()}${currentTime.getMinutes()}${currentTime.getSeconds()} `;
+  }, {
+    key: "getCurrentTimeString",
+    value: function getCurrentTimeString() {
+      var currentTime = new Date();
+      return " ".concat(currentTime.getHours()).concat(currentTime.getMinutes()).concat(currentTime.getSeconds(), " ");
     }
-    setTopWindowName(title) {
-        const self = this;
-        top.document.title = title;
-        self.topWindowName = title;
-        return self.topWindowName;
+  }, {
+    key: "setTopWindowName",
+    value: function setTopWindowName(title) {
+      var self = this;
+      top.document.title = title;
+      self.topWindowName = title;
+      return self.topWindowName;
     }
-    setupMessageListener() {
-        const self = this;
-        window.addEventListener('message', this.handleMessage.bind(this));
-        if (!self.hasRequestedTitle) {
-            self.hasRequestedTitle = true;
-            window.parent.postMessage({ type: 'get_horizon_window_title' }, '*');
-        }
+  }, {
+    key: "setupMessageListener",
+    value: function setupMessageListener() {
+      var self = this;
+      window.addEventListener('message', this.handleMessage.bind(this));
+      if (!self.hasRequestedTitle) {
+        self.hasRequestedTitle = true;
+        window.parent.postMessage({
+          type: 'get_horizon_window_title'
+        }, '*');
+      }
     }
     /**
      * Register a handler for connection cleanup events
      * @param {Function} handler - The handler function to be called when connection needs cleanup
      */
-    onConnectionNeedingCleanup(handler) {
-        if (typeof handler === 'function') {
-            this._onConnectionNeedingCleanupHandler = handler;
-        }
+  }, {
+    key: "onConnectionNeedingCleanup",
+    value: function onConnectionNeedingCleanup(handler) {
+      if (typeof handler === 'function') {
+        this._onConnectionNeedingCleanupHandler = handler;
+      }
     }
-    handleMessage(event) {
-        const self = this;
-        if (event.data.type === 'horizon_window_title_response') {
-            self.topWindowName = event.data.title;
-        }
+  }, {
+    key: "handleMessage",
+    value: function handleMessage(event) {
+      var self = this;
+      if (event.data.type === 'horizon_window_title_response') {
+        self.topWindowName = event.data.title;
+      }
     }
-}
-exports.default = OmnissaVDIStrategy;
+  }]);
+}(CCPInitiationStrategyInterface_1["default"]);
+exports["default"] = OmnissaVDIStrategy;
 
 }).call(this)}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../rtc_const":32,"../rtc_session":36,"./CCPInitiationStrategyInterface":47,"@euc-releases/horizon-webrtc-redir-sdk/HorizonSDKforWebRTCRedir":4,"@euc-releases/horizon-webrtc-redir-sdk/HorizonWebRTCExtension":5}],52:[function(require,module,exports){
+},{"../rtc_const":48,"../rtc_session":52,"./CCPInitiationStrategyInterface":63,"@euc-releases/horizon-webrtc-redir-sdk/HorizonSDKforWebRTCRedir":4,"@euc-releases/horizon-webrtc-redir-sdk/HorizonWebRTCExtension":5}],68:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
-const rtc_const_1 = require("../rtc_const");
-const utils_1 = require("../utils");
-const rtc_session_1 = require("../rtc_session");
-class StandardStrategy extends CCPInitiationStrategyInterface_1.default {
-    constructor() {
-        super();
-        console.log("StandardStrategy initialized");
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
+function _possibleConstructorReturn(t, e) { if (e && ("object" == _typeof(e) || "function" == typeof e)) return e; if (void 0 !== e) throw new TypeError("Derived constructors may only return object or undefined"); return _assertThisInitialized(t); }
+function _assertThisInitialized(e) { if (void 0 === e) throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); return e; }
+function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
+function _superPropGet(t, o, e, r) { var p = _get(_getPrototypeOf(1 & r ? t.prototype : t), o, e); return 2 & r && "function" == typeof p ? function (t) { return p.apply(e, t); } : p; }
+function _get() { return _get = "undefined" != typeof Reflect && Reflect.get ? Reflect.get.bind() : function (e, t, r) { var p = _superPropBase(e, t); if (p) { var n = Object.getOwnPropertyDescriptor(p, t); return n.get ? n.get.call(arguments.length < 3 ? e : r) : n.value; } }, _get.apply(null, arguments); }
+function _superPropBase(t, o) { for (; !{}.hasOwnProperty.call(t, o) && null !== (t = _getPrototypeOf(t));); return t; }
+function _getPrototypeOf(t) { return _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function (t) { return t.__proto__ || Object.getPrototypeOf(t); }, _getPrototypeOf(t); }
+function _inherits(t, e) { if ("function" != typeof e && null !== e) throw new TypeError("Super expression must either be null or a function"); t.prototype = Object.create(e && e.prototype, { constructor: { value: t, writable: !0, configurable: !0 } }), Object.defineProperty(t, "prototype", { writable: !1 }), e && _setPrototypeOf(t, e); }
+function _setPrototypeOf(t, e) { return _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function (t, e) { return t.__proto__ = e, t; }, _setPrototypeOf(t, e); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var CCPInitiationStrategyInterface_1 = require("./CCPInitiationStrategyInterface");
+var rtc_const_1 = require("../rtc_const");
+var utils_1 = require("../utils");
+var rtc_session_1 = require("../rtc_session");
+var StandardStrategy = /*#__PURE__*/function (_CCPInitiationStrateg) {
+  function StandardStrategy() {
+    var _this;
+    _classCallCheck(this, StandardStrategy);
+    _this = _callSuper(this, StandardStrategy);
+    _this._logger.info("StandardStrategy: initialized").sendInternalLogToServer();
+    return _this;
+  }
+  // the following functions are rtc_peer_connection_factory related functions
+  // check if the browser supports early media connection
+  _inherits(StandardStrategy, _CCPInitiationStrateg);
+  return _createClass(StandardStrategy, [{
+    key: "_isEarlyMediaConnectionSupported",
+    value: function _isEarlyMediaConnectionSupported() {
+      return (0, utils_1.isChromeBrowser)() && (0, utils_1.getChromeBrowserVersion)() >= rtc_const_1.CHROME_SUPPORTED_VERSION;
     }
-    // the following functions are rtc_peer_connection_factory related functions
-    // check if the browser supports early media connection
-    _isEarlyMediaConnectionSupported() {
-        return (0, utils_1.isChromeBrowser)() && (0, utils_1.getChromeBrowserVersion)() >= rtc_const_1.CHROME_SUPPORTED_VERSION;
-    }
-    _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
-        super._createRtcPeerConnection();
-        return new RTCPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
+  }, {
+    key: "_createRtcPeerConnection",
+    value: function _createRtcPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig) {
+      _superPropGet(StandardStrategy, "_createRtcPeerConnection", this, 3)([]);
+      return new RTCPeerConnection(rtcPeerConnectionConfig, rtcPeerConnectionOptionalConfig);
     }
     // the following functions are rtc_session related functions
-    _gUM(constraints) {
-        return navigator.mediaDevices.getUserMedia(constraints);
+  }, {
+    key: "_gUM",
+    value: function _gUM(constraints) {
+      return navigator.mediaDevices.getUserMedia(constraints);
     }
-    _createMediaStream(track) {
-        return new MediaStream([track]);
+  }, {
+    key: "_createMediaStream",
+    value: function _createMediaStream(track) {
+      return new MediaStream([track]);
     }
-    addStream(_pc, stream) {
-        stream.getTracks().forEach(track => {
-            _pc.addTrack(track, stream);
-        });
+  }, {
+    key: "addStream",
+    value: function addStream(_pc, stream) {
+      stream.getTracks().forEach(function (track) {
+        _pc.addTrack(track, stream);
+      });
     }
-    setRemoteDescription(self, rtcSession) {
-        var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-            type: 'answer',
-            sdp: self._sdp
+  }, {
+    key: "setRemoteDescription",
+    value: function setRemoteDescription(self, rtcSession) {
+      var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+        type: 'answer',
+        sdp: self._sdp
+      }));
+      setRemoteDescriptionPromise["catch"](function (e) {
+        self.logger.error('SetRemoteDescription failed', e);
+      });
+      setRemoteDescriptionPromise.then(function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
         }));
-        setRemoteDescriptionPromise.catch(e => {
-            self.logger.error('SetRemoteDescription failed', e);
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
-        setRemoteDescriptionPromise.then(() => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            return remoteCandidatePromises;
-        }).then(() => {
-            rtcSession._sessionReport.setRemoteDescriptionFailure = false;
-            self._remoteDescriptionSet = true;
-            self._checkAndTransit();
-        }).catch(() => {
-            rtcSession._stopSession();
-            rtcSession._sessionReport.setRemoteDescriptionFailure = true;
-            self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
-        });
+        return remoteCandidatePromises;
+      }).then(function () {
+        rtcSession._sessionReport.setRemoteDescriptionFailure = false;
+        self._remoteDescriptionSet = true;
+        self._checkAndTransit();
+      })["catch"](function () {
+        rtcSession._stopSession();
+        rtcSession._sessionReport.setRemoteDescriptionFailure = true;
+        self.transit(new rtc_session_1.FailedState(rtcSession, rtc_const_1.RTC_ERRORS.SET_REMOTE_DESCRIPTION_FAILURE));
+      });
     }
-    setRemoteDescriptionForIceRestart(self, rtcSession) {
-        var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
-            type: 'answer',
-            sdp: self._sdp
+  }, {
+    key: "setRemoteDescriptionForIceRestart",
+    value: function setRemoteDescriptionForIceRestart(self, rtcSession) {
+      var setRemoteDescriptionPromise = rtcSession._pc.setRemoteDescription(self._createSessionDescription({
+        type: 'answer',
+        sdp: self._sdp
+      }));
+      setRemoteDescriptionPromise["catch"](function (e) {
+        self.logger.error('SetRemoteDescription failed', e);
+      });
+      setRemoteDescriptionPromise.then(function () {
+        var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
+          var remoteCandidate = self._createRemoteCandidate(candidate);
+          self.logger.info('Adding remote candidate', remoteCandidate);
+          return rtcSession._pc.addIceCandidate(remoteCandidate);
         }));
-        setRemoteDescriptionPromise.catch(e => {
-            self.logger.error('SetRemoteDescription failed', e);
+        remoteCandidatePromises["catch"](function (reason) {
+          self.logger.warn('Error adding remote candidate', reason);
         });
-        setRemoteDescriptionPromise.then(() => {
-            var remoteCandidatePromises = Promise.all(self._candidates.map(function (candidate) {
-                var remoteCandidate = self._createRemoteCandidate(candidate);
-                self.logger.info('Adding remote candidate', remoteCandidate);
-                return rtcSession._pc.addIceCandidate(remoteCandidate);
-            }));
-            remoteCandidatePromises.catch(reason => {
-                self.logger.warn('Error adding remote candidate', reason);
-            });
-            return remoteCandidatePromises;
-        }).then(() => {
-            self._remoteDescriptionSetForIceRestart = true;
-            self._checkAndTransit();
-        }).catch(() => {
-            self.onIceRestartFailure();
-        });
+        return remoteCandidatePromises;
+      }).then(function () {
+        self._remoteDescriptionSetForIceRestart = true;
+        self._checkAndTransit();
+      })["catch"](function () {
+        self.onIceRestartFailure();
+      });
     }
-    onIceStateChange(evt, _pc) {
-        return evt && evt.currentTarget ? evt.currentTarget.iceConnectionState : undefined;
+  }, {
+    key: "onIceStateChange",
+    value: function onIceStateChange(evt, _pc) {
+      return evt && evt.currentTarget ? evt.currentTarget.iceConnectionState : undefined;
     }
-    onPeerConnectionStateChange(_pc) {
-        return _pc ? _pc.connectionState : undefined;
+  }, {
+    key: "onPeerConnectionStateChange",
+    value: function onPeerConnectionStateChange(_pc) {
+      return _pc ? _pc.connectionState : undefined;
     }
-    _createPeerConnection(configuration, optionalConfiguration) {
-        super._createPeerConnection();
-        return new RTCPeerConnection(configuration, optionalConfiguration);
+  }, {
+    key: "_createPeerConnection",
+    value: function _createPeerConnection(configuration, optionalConfiguration) {
+      _superPropGet(StandardStrategy, "_createPeerConnection", this, 3)([]);
+      return new RTCPeerConnection(configuration, optionalConfiguration);
     }
-    _ontrack(self, evt) {
-        if (evt.streams.length > 1) {
-            self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' +
-                evt.streams.map(stream => stream.id).join(','));
+  }, {
+    key: "_ontrack",
+    value: function _ontrack(self, evt) {
+      if (evt.streams.length > 1) {
+        self._logger.warn('Found more than 1 streams for ' + evt.track.kind + ' track ' + evt.track.id + ' : ' + evt.streams.map(function (stream) {
+          return stream.id;
+        }).join(','));
+      }
+      if (evt.track.kind === 'video' && self._remoteVideoElement) {
+        self._remoteVideoElement.srcObject = evt.streams[0];
+        self._remoteVideoStream = evt.streams[0];
+      } else if (evt.track.kind === 'audio' && self._remoteAudioElement) {
+        self._remoteAudioElement.srcObject = evt.streams[0];
+        self._remoteAudioStream = evt.streams[0];
+        if (self._pcm) {
+          self._pcm._remoteAudioStream = self._remoteAudioStream;
         }
-        if (evt.track.kind === 'video' && self._remoteVideoElement) {
-            self._remoteVideoElement.srcObject = evt.streams[0];
-            self._remoteVideoStream = evt.streams[0];
-        }
-        else if (evt.track.kind === 'audio' && self._remoteAudioElement) {
-            self._remoteAudioElement.srcObject = evt.streams[0];
-            self._remoteAudioStream = evt.streams[0];
-            if (self._pcm) {
-                self._pcm._remoteAudioStream = self._remoteAudioStream;
-            }
-        }
+      }
     }
-    _enumerateDevices() {
-        if (navigator && navigator.mediaDevices) {
-            return navigator.mediaDevices.enumerateDevices();
-        }
-        else {
-            return Promise.reject('mediaDevices not accessible');
-        }
+  }, {
+    key: "_enumerateDevices",
+    value: function _enumerateDevices() {
+      if (navigator && navigator.mediaDevices) {
+        return navigator.mediaDevices.enumerateDevices();
+      } else {
+        return Promise.reject('mediaDevices not accessible');
+      }
     }
-    _addDeviceChangeListener(listener) {
-        navigator.mediaDevices.addEventListener("devicechange", listener);
+  }, {
+    key: "_addDeviceChangeListener",
+    value: function _addDeviceChangeListener(listener) {
+      navigator.mediaDevices.addEventListener("devicechange", listener);
     }
-    _removeDeviceChangeListener(listener) {
-        navigator.mediaDevices.removeEventListener("devicechange", listener);
+  }, {
+    key: "_removeDeviceChangeListener",
+    value: function _removeDeviceChangeListener(listener) {
+      navigator.mediaDevices.removeEventListener("devicechange", listener);
     }
     /**
      * Register a handler for connection cleanup events
      * @param {Function} handler - The handler function to be called when connection needs cleanup
      */
-    onConnectionNeedingCleanup(handler) {
-        if (typeof handler === 'function') {
-            this._onConnectionNeedingCleanupHandler = handler;
-        }
+  }, {
+    key: "onConnectionNeedingCleanup",
+    value: function onConnectionNeedingCleanup(handler) {
+      if (typeof handler === 'function') {
+        this._onConnectionNeedingCleanupHandler = handler;
+      }
     }
-    getStrategyName() {
-        return 'StandardStrategy';
+  }, {
+    key: "getStrategyName",
+    value: function getStrategyName() {
+      return 'StandardStrategy';
     }
-}
-exports.default = StandardStrategy;
+  }]);
+}(CCPInitiationStrategyInterface_1["default"]);
+exports["default"] = StandardStrategy;
 
-},{"../rtc_const":32,"../rtc_session":36,"../utils":54,"./CCPInitiationStrategyInterface":47}],53:[function(require,module,exports){
+},{"../rtc_const":48,"../rtc_session":52,"../utils":70,"./CCPInitiationStrategyInterface":63}],69:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
+
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.UserAgentData = void 0;
-class UserAgentData {
-    constructor() {
-        this._platform = null;
-        this._platformVersion = null;
-        this._architecture = null;
-        this._bitness = null;
-        this._browserBrand = null;
-        this._browserVersion = null;
-        this._mobile = false;
-        this._model = null;
-    }
-    /**
-     * Returns a string describing the platform the user agent is running on, like "Windows"
-     * @returns {string}
-     */
-    get platform() {
-        return this._platform;
+var UserAgentData = /*#__PURE__*/function () {
+  function UserAgentData() {
+    _classCallCheck(this, UserAgentData);
+    this._platform = null;
+    this._platformVersion = null;
+    this._architecture = null;
+    this._bitness = null;
+    this._browserBrand = null;
+    this._browserVersion = null;
+    this._mobile = false;
+    this._model = null;
+  }
+  /**
+   * Returns a string describing the platform the user agent is running on, like "Windows"
+   * @returns {string}
+   */
+  return _createClass(UserAgentData, [{
+    key: "platform",
+    get: function get() {
+      return this._platform;
     }
     /**
      * A string containing the platform version. For example, "10.0".
      * @returns {string}
-     */
-    get platformVersion() {
-        return this._platformVersion;
+     */,
+    set: function set(value) {
+      this._platform = value;
+    }
+  }, {
+    key: "platformVersion",
+    get: function get() {
+      return this._platformVersion;
     }
     /**
      * A string containing the platform architecture. For example, "x86"
      * @returns {string}
-     */
-    get architecture() {
-        return this._architecture;
+     */,
+    set: function set(value) {
+      this._platformVersion = value;
+    }
+  }, {
+    key: "architecture",
+    get: function get() {
+      return this._architecture;
     }
     /**
      * A string containing the architecture bitness. For example, "32" or "64".
      * @returns {string}
-     */
-    get bitness() {
-        return this._bitness;
+     */,
+    set: function set(value) {
+      this._architecture = value;
+    }
+  }, {
+    key: "bitness",
+    get: function get() {
+      return this._bitness;
     }
     /**
      * Returns browser brand
      * @returns {string}
-     */
-    get browserBrand() {
-        return this._browserBrand;
+     */,
+    set: function set(value) {
+      this._bitness = value;
+    }
+  }, {
+    key: "browserBrand",
+    get: function get() {
+      return this._browserBrand;
     }
     /**
      * Returns browser version
      * @returns {string}
-     */
-    get browserVersion() {
-        return this._browserVersion;
+     */,
+    set: function set(value) {
+      this._browserBrand = value;
+    }
+  }, {
+    key: "browserVersion",
+    get: function get() {
+      return this._browserVersion;
     }
     /**
      * Returns true if the user agent is running on a mobile device
      * @returns {string}
-     */
-    get mobile() {
-        return this._mobile;
+     */,
+    set: function set(value) {
+      this._browserVersion = value;
+    }
+  }, {
+    key: "mobile",
+    get: function get() {
+      return this._mobile;
     }
     /**
      * A string containing the model of mobile device.
      * @returns {string}
-     */
-    get model() {
-        return this._model;
+     */,
+    set: function set(value) {
+      this._mobile = value;
     }
-    set platform(value) {
-        this._platform = value;
+  }, {
+    key: "model",
+    get: function get() {
+      return this._model;
+    },
+    set: function set(value) {
+      this._model = value;
     }
-    set platformVersion(value) {
-        this._platformVersion = value;
-    }
-    set architecture(value) {
-        this._architecture = value;
-    }
-    set bitness(value) {
-        this._bitness = value;
-    }
-    set browserBrand(value) {
-        this._browserBrand = value;
-    }
-    set browserVersion(value) {
-        this._browserVersion = value;
-    }
-    set mobile(value) {
-        this._mobile = value;
-    }
-    set model(value) {
-        this._model = value;
-    }
-}
+  }]);
+}();
 exports.UserAgentData = UserAgentData;
 
-},{}],54:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 "use strict";
+
 /**
  * Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+var __awaiter = void 0 && (void 0).__awaiter || function (thisArg, _arguments, P, generator) {
+  function adopt(value) {
+    return value instanceof P ? value : new P(function (resolve) {
+      resolve(value);
     });
+  }
+  return new (P || (P = Promise))(function (resolve, reject) {
+    function fulfilled(value) {
+      try {
+        step(generator.next(value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function rejected(value) {
+      try {
+        step(generator["throw"](value));
+      } catch (e) {
+        reject(e);
+      }
+    }
+    function step(result) {
+      result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected);
+    }
+    step((generator = generator.apply(thisArg, _arguments || [])).next());
+  });
 };
-Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.SdpOptions = void 0;
 exports.hitch = hitch;
 exports.wrapLogger = wrapLogger;
@@ -19604,12 +23055,14 @@ exports.getChromeBrowserVersion = getChromeBrowserVersion;
 exports.getRedactedSdp = getRedactedSdp;
 exports.getUserAgentData = getUserAgentData;
 exports.isFirefoxBrowser = isFirefoxBrowser;
+exports.isLoginPopupWindow = isLoginPopupWindow;
 exports.promiseWithTimeout = promiseWithTimeout;
-const exceptions_1 = require("./exceptions");
-const sdp_1 = require("sdp");
-const user_agent_data_1 = require("./user_agent_data");
-const rtc_const_1 = require("./rtc_const");
-const ua_parser_js_1 = require("ua-parser-js");
+var exceptions_1 = require("./exceptions");
+var sdp_1 = require("sdp");
+var user_agent_data_1 = require("./user_agent_data");
+var rtc_const_1 = require("./rtc_const");
+var constants_1 = require("./config/constants");
+var ua_parser_js_1 = require("ua-parser-js");
 /**
  * All logging methods used by connect-rtc.
  */
@@ -19629,72 +23082,76 @@ var logMethods = ['log', 'info', 'warn', 'error'];
  *    method provided in context of the given instance.
  */
 function hitch() {
-    var args = Array.prototype.slice.call(arguments);
-    var scope = args.shift();
-    var method = args.shift();
-    if (!scope) {
-        throw new exceptions_1.IllegalParameters('utils.hitch(): scope is required!');
-    }
-    if (!method) {
-        throw new exceptions_1.IllegalParameters('utils.hitch(): method is required!');
-    }
-    if (typeof method !== 'function') {
-        throw new exceptions_1.IllegalParameters('utils.hitch(): method is not a function!');
-    }
-    return function _hitchedFunction() {
-        var closureArgs = Array.prototype.slice.call(arguments);
-        return method.apply(scope, args.concat(closureArgs));
-    };
+  var args = Array.prototype.slice.call(arguments);
+  var scope = args.shift();
+  var method = args.shift();
+  if (!scope) {
+    throw new exceptions_1.IllegalParameters('utils.hitch(): scope is required!');
+  }
+  if (!method) {
+    throw new exceptions_1.IllegalParameters('utils.hitch(): method is required!');
+  }
+  if (typeof method !== 'function') {
+    throw new exceptions_1.IllegalParameters('utils.hitch(): method is not a function!');
+  }
+  return function _hitchedFunction() {
+    var closureArgs = Array.prototype.slice.call(arguments);
+    return method.apply(scope, args.concat(closureArgs));
+  };
 }
 function wrapLogger(logger, callId, logCategory) {
-    var _logger = {};
-    logMethods.forEach(function (logMethod) {
-        if (!logger[logMethod]) {
-            throw new Error('Logging method ' + logMethod + ' required');
-        }
-        _logger[logMethod] = hitch(logger, logger[logMethod], callId, logCategory);
-    });
-    return _logger;
+  var _logger = {};
+  logMethods.forEach(function (logMethod) {
+    if (!logger[logMethod]) {
+      throw new Error('Logging method ' + logMethod + ' required');
+    }
+    _logger[logMethod] = hitch(logger, logger[logMethod], callId, logCategory);
+  });
+  return _logger;
 }
 function closeStream(stream) {
-    if (stream) {
-        var tracks = stream.getTracks();
-        for (var i = 0; i < tracks.length; i++) {
-            var track = tracks[i];
-            try {
-                track.stop();
-            }
-            catch (e) {
-                // eat exception
-            }
-        }
+  if (stream) {
+    var tracks = stream.getTracks();
+    for (var i = 0; i < tracks.length; i++) {
+      var track = tracks[i];
+      try {
+        track.stop();
+      } catch (e) {
+        // eat exception
+      }
     }
+  }
 }
 /**
  * A parameter of transformSdp.
  * This defines all the SDP options connect-rtc-js supports.
  */
-class SdpOptions {
-    constructor() {
-        this._forceCodec = {};
-    }
-    get enableOpusDtx() {
-        return this._enableOpusDtx;
+var SdpOptions = /*#__PURE__*/function () {
+  function SdpOptions() {
+    _classCallCheck(this, SdpOptions);
+    this._forceCodec = {};
+  }
+  return _createClass(SdpOptions, [{
+    key: "enableOpusDtx",
+    get: function get() {
+      return this._enableOpusDtx;
     }
     /**
      * By default transformSdp disables dtx for OPUS codec.
      * Setting this to true would force it to turn on DTX.
-     */
-    set enableOpusDtx(flag) {
-        this._enableOpusDtx = flag;
+     */,
+    set: function set(flag) {
+      this._enableOpusDtx = flag;
     }
     /**
      * A map from media type (audio/video) to codec (case insensitive).
      * Add entry for force connect-rtc-js to use specified codec for certain media type.
      * For example: sdpOptions.forceCodec['audio'] = 'opus';
      */
-    get forceCodec() {
-        return this._forceCodec;
+  }, {
+    key: "forceCodec",
+    get: function get() {
+      return this._forceCodec;
     }
     /**
      * Test if given codec should be removed from SDP.
@@ -19702,11 +23159,14 @@ class SdpOptions {
      * @param codecName case insensitive
      * @return TRUE - should remove
      */
-    _shouldDeleteCodec(mediaType, codecName) {
-        var upperCaseCodecName = codecName.toUpperCase();
-        return this._forceCodec[mediaType] && upperCaseCodecName !== this._forceCodec[mediaType].toUpperCase() && upperCaseCodecName !== 'TELEPHONE-EVENT';
+  }, {
+    key: "_shouldDeleteCodec",
+    value: function _shouldDeleteCodec(mediaType, codecName) {
+      var upperCaseCodecName = codecName.toUpperCase();
+      return this._forceCodec[mediaType] && upperCaseCodecName !== this._forceCodec[mediaType].toUpperCase() && upperCaseCodecName !== 'TELEPHONE-EVENT';
     }
-}
+  }]);
+}();
 exports.SdpOptions = SdpOptions;
 /**
  * Modifies input SDP according to sdpOptions.
@@ -19716,254 +23176,301 @@ exports.SdpOptions = SdpOptions;
  * @returns a map with 'sdp' containing the transformed SDP and 'mLines' containing the number of m lines in SDP
  */
 function transformSdp(sdp, sdpOptions) {
-    var sections = (0, sdp_1.splitSections)(sdp);
-    for (var i = 1; i < sections.length; i++) {
-        var mediaType = (0, sdp_1.getKind)(sections[i]);
-        var rtpParams = (0, sdp_1.parseRtpParameters)(sections[i]);
-        // a map from payload type (string) to codec object
-        var codecMap = rtpParams.codecs.reduce((map, codec) => {
-            map['' + codec.payloadType] = codec;
-            return map;
-        }, {});
-        sections[i] = (0, sdp_1.splitLines)(sections[i]).map(line => {
-            if (line.startsWith('m=')) {
-                // modify m= line if SdpOptions#forceCodec specifies codec for current media type
-                if (sdpOptions.forceCodec[mediaType]) {
-                    var targetCodecPts = Object.keys(codecMap).filter(pt => !sdpOptions._shouldDeleteCodec(mediaType, codecMap[pt].name));
-                    return /.*RTP\/S?AVPF? /.exec(line) + targetCodecPts.join(' ');
-                }
-                else {
-                    return line;
-                }
-            }
-            else if (line.startsWith('a=rtpmap:')) {
-                var rtpMap = (0, sdp_1.parseRtpMap)(line);
-                var currentCodec = codecMap[rtpMap.payloadType];
-                // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
-                if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
-                    return null;
-                }
-                // append a=fmtp line immediately if current codec is OPUS (to explicitly specify OPUS parameters)
-                if (is_defined(currentCodec) && currentCodec.name.toUpperCase() === 'OPUS') {
-                    currentCodec.parameters.usedtx = sdpOptions.enableOpusDtx ? "1" : "0";
-                    // generate fmtp line immediately after rtpmap line, and remove original fmtp line once we see it
-                    return (line + "\r\n" + (0, sdp_1.writeFmtp)(currentCodec)).trim();
-                }
-                else {
-                    return line;
-                }
-            }
-            else if (line.startsWith('a=fmtp:')) {
-                var pt = line.substring('a=fmtp:'.length, line.indexOf(' '));
-                var currentCodec = codecMap[pt]; // eslint-disable-line no-redeclare
-                // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
-                if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
-                    return null;
-                }
-                if (is_defined(currentCodec) && currentCodec.name.toUpperCase() === 'OPUS') {
-                    // this is a line for OPUS, remove it because FMTP line is already generated when rtpmap line is processed
-                    return null;
-                }
-                else {
-                    return line;
-                }
-            }
-            else if (line.startsWith('a=rtcp-fb:')) {
-                var pt = line.substring(line.indexOf(':') + 1, line.indexOf(' ')); // eslint-disable-line no-redeclare
-                if (pt === '*') { //always allow wildcard in rtc-fb
-                    return line;
-                }
-                else {
-                    var currentCodec = codecMap[pt]; // eslint-disable-line no-redeclare
-                    // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
-                    if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
-                        return null;
-                    }
-                    else {
-                        return line;
-                    }
-                }
-            }
-            else {
-                return line;
-            }
-        }).filter(line => line !== null).join('\r\n');
-    }
-    return {
-        sdp: sections.map(section => section.trim()).join('\r\n') + '\r\n',
-        mLines: sections.length - 1 // first section is session description, the rest are media descriptions
-    };
+  var sections = (0, sdp_1.splitSections)(sdp);
+  for (var i = 1; i < sections.length; i++) {
+    var mediaType = (0, sdp_1.getKind)(sections[i]);
+    var rtpParams = (0, sdp_1.parseRtpParameters)(sections[i]);
+    // a map from payload type (string) to codec object
+    var codecMap = rtpParams.codecs.reduce(function (map, codec) {
+      map['' + codec.payloadType] = codec;
+      return map;
+    }, {});
+    sections[i] = (0, sdp_1.splitLines)(sections[i]).map(function (line) {
+      if (line.startsWith('m=')) {
+        // modify m= line if SdpOptions#forceCodec specifies codec for current media type
+        if (sdpOptions.forceCodec[mediaType]) {
+          var targetCodecPts = Object.keys(codecMap).filter(function (pt) {
+            return !sdpOptions._shouldDeleteCodec(mediaType, codecMap[pt].name);
+          });
+          return /.*RTP\/S?AVPF? /.exec(line) + targetCodecPts.join(' ');
+        } else {
+          return line;
+        }
+      } else if (line.startsWith('a=rtpmap:')) {
+        var rtpMap = (0, sdp_1.parseRtpMap)(line);
+        var currentCodec = codecMap[rtpMap.payloadType];
+        // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
+        if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
+          return null;
+        }
+        // append a=fmtp line immediately if current codec is OPUS (to explicitly specify OPUS parameters)
+        if (is_defined(currentCodec) && currentCodec.name.toUpperCase() === 'OPUS') {
+          currentCodec.parameters.usedtx = sdpOptions.enableOpusDtx ? "1" : "0";
+          // generate fmtp line immediately after rtpmap line, and remove original fmtp line once we see it
+          return (line + "\r\n" + (0, sdp_1.writeFmtp)(currentCodec)).trim();
+        } else {
+          return line;
+        }
+      } else if (line.startsWith('a=fmtp:')) {
+        var pt = line.substring('a=fmtp:'.length, line.indexOf(' '));
+        var currentCodec = codecMap[pt]; // eslint-disable-line no-redeclare
+        // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
+        if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
+          return null;
+        }
+        if (is_defined(currentCodec) && currentCodec.name.toUpperCase() === 'OPUS') {
+          // this is a line for OPUS, remove it because FMTP line is already generated when rtpmap line is processed
+          return null;
+        } else {
+          return line;
+        }
+      } else if (line.startsWith('a=rtcp-fb:')) {
+        var pt = line.substring(line.indexOf(':') + 1, line.indexOf(' ')); // eslint-disable-line no-redeclare
+        if (pt === '*') {
+          //always allow wildcard in rtc-fb
+          return line;
+        } else {
+          var currentCodec = codecMap[pt]; // eslint-disable-line no-redeclare
+          // remove this codec if SdpOptions#forceCodec specifies a different codec for current media type
+          if (is_defined(currentCodec) && sdpOptions._shouldDeleteCodec(mediaType, currentCodec.name)) {
+            return null;
+          } else {
+            return line;
+          }
+        }
+      } else {
+        return line;
+      }
+    }).filter(function (line) {
+      return line !== null;
+    }).join('\r\n');
+  }
+  return {
+    sdp: sections.map(function (section) {
+      return section.trim();
+    }).join('\r\n') + '\r\n',
+    mLines: sections.length - 1 // first section is session description, the rest are media descriptions
+  };
 }
 function is_defined(v) {
-    return typeof v !== 'undefined';
+  return typeof v !== 'undefined';
 }
 function when_defined(v, alternativeIn) {
-    var alternative = is_defined(alternativeIn) ? alternativeIn : null;
-    return is_defined(v) ? v : alternative;
+  var alternative = is_defined(alternativeIn) ? alternativeIn : null;
+  return is_defined(v) ? v : alternative;
 }
 /**
  * Determine if the given value is a callable function type.
  * Borrowed from Underscore.js.
  */
 function isFunction(obj) {
-    return !!(obj && obj.constructor && obj.call && obj.apply);
+  return !!(obj && obj.constructor && obj.call && obj.apply);
 }
 /**
  * Asserts that a premise is true.
  */
 function assertTrue(premise, message) {
-    if (!premise) {
-        throw new Error(message);
-    }
+  if (!premise) {
+    throw new Error(message);
+  }
 }
 function isChromeBrowser() {
-    return navigator.userAgent.indexOf("Chrome") !== -1;
+  return navigator.userAgent.indexOf("Chrome") !== -1;
 }
 // Edge Chromium uses "Edg/" in the UA string (e.g. "Edg/120.0.0.0").
 // Legacy Edge used "Edge/" but is no longer supported by Microsoft.
 // Edge mobile uses "EdgA/" (Android) or "EdgiOS/" (iOS), which we want to exclude.
 function isEdgeBrowser() {
-    return navigator.userAgent.indexOf("Edg/") !== -1;
+  return navigator.userAgent.indexOf("Edg/") !== -1;
 }
 function getChromeBrowserVersion() {
-    var userAgent = navigator.userAgent;
-    var chromeVersion = userAgent.substring(userAgent.indexOf("Chrome") + 7);
-    if (chromeVersion) {
-        return parseFloat(chromeVersion);
-    }
-    else {
-        return -1;
-    }
+  var userAgent = navigator.userAgent;
+  var chromeVersion = userAgent.substring(userAgent.indexOf("Chrome") + 7);
+  if (chromeVersion) {
+    return parseFloat(chromeVersion);
+  } else {
+    return -1;
+  }
 }
 function getRedactedSdp(sdp) {
-    // pattern to find and redact the value after 'a=ice-pwd:'
-    var pattern = /a=ice-pwd:[^\r\n]*/;
-    // Use the replace method to redact the value with '[redacted]'
-    return sdp.replace(pattern, 'a=ice-pwd:[redacted]');
+  // pattern to find and redact the value after 'a=ice-pwd:'
+  var pattern = /a=ice-pwd:[^\r\n]*/;
+  // Use the replace method to redact the value with '[redacted]'
+  return sdp.replace(pattern, 'a=ice-pwd:[redacted]');
 }
 /**
  * Method to get userAgent data
  */
 function getUserAgentData() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const userAgentData = new user_agent_data_1.UserAgentData();
-        if (navigator.userAgentData) {
-            // use User-Agent Client Hints API
-            const result = yield navigator.userAgentData.getHighEntropyValues([
-                'platform',
-                'platformVersion',
-                'architecture',
-                'bitness',
-                'mobile',
-                'model',
-                'fullVersionList',
-            ]);
-            userAgentData.platform = result.platform;
-            userAgentData.platformVersion = result.platformVersion;
-            userAgentData.architecture = result.architecture;
-            userAgentData.bitness = result.bitness;
-            userAgentData.mobile = result.mobile;
-            userAgentData.model = result.model;
-            const browser = result.fullVersionList.find(entry => rtc_const_1.BROWSER_LIST.includes(entry.brand));
-            if (browser) {
-                userAgentData.browserBrand = browser.brand;
-                userAgentData.browserVersion = browser.version;
-            }
-            else {
-                // Fallback to the first available browser brand
-                const fallbackBrowser = result.fullVersionList.find(entry => entry.brand !== 'Not A Brand');
-                userAgentData.browserBrand = fallbackBrowser ? fallbackBrowser.brand : 'Unknown';
-                userAgentData.browserVersion = fallbackBrowser ? fallbackBrowser.version : 'Unknown';
-            }
-        }
-        else {
-            // Fallback to user-agent string parsing
-            const userAgent = navigator.userAgent;
-            const parser = new ua_parser_js_1.UAParser(userAgent);
-            const parserResult = parser.getResult();
-            userAgentData.browserBrand = parserResult.browser.name || 'Unknown';
-            userAgentData.browserVersion = parserResult.browser.version || 'Unknown';
-            userAgentData.platform = parserResult.os.name || 'Unknown';
-            userAgentData.platformVersion = parserResult.os.version || 'Unknown';
-            userAgentData.architecture = parserResult.cpu.architecture || 'Unknown';
-        }
-        return userAgentData;
-    });
+  return __awaiter(this, void 0, void 0, /*#__PURE__*/_regenerator().m(function _callee() {
+    var userAgentData, result, browser, fallbackBrowser, userAgent, parser, parserResult;
+    return _regenerator().w(function (_context) {
+      while (1) switch (_context.n) {
+        case 0:
+          userAgentData = new user_agent_data_1.UserAgentData();
+          if (!navigator.userAgentData) {
+            _context.n = 2;
+            break;
+          }
+          _context.n = 1;
+          return navigator.userAgentData.getHighEntropyValues(['platform', 'platformVersion', 'architecture', 'bitness', 'mobile', 'model', 'fullVersionList']);
+        case 1:
+          result = _context.v;
+          userAgentData.platform = result.platform;
+          userAgentData.platformVersion = result.platformVersion;
+          userAgentData.architecture = result.architecture;
+          userAgentData.bitness = result.bitness;
+          userAgentData.mobile = result.mobile;
+          userAgentData.model = result.model;
+          browser = result.fullVersionList.find(function (entry) {
+            return rtc_const_1.BROWSER_LIST.includes(entry.brand);
+          });
+          if (browser) {
+            userAgentData.browserBrand = browser.brand;
+            userAgentData.browserVersion = browser.version;
+          } else {
+            // Fallback to the first available browser brand
+            fallbackBrowser = result.fullVersionList.find(function (entry) {
+              return entry.brand !== 'Not A Brand';
+            });
+            userAgentData.browserBrand = fallbackBrowser ? fallbackBrowser.brand : 'Unknown';
+            userAgentData.browserVersion = fallbackBrowser ? fallbackBrowser.version : 'Unknown';
+          }
+          _context.n = 3;
+          break;
+        case 2:
+          // Fallback to user-agent string parsing
+          userAgent = navigator.userAgent;
+          parser = new ua_parser_js_1.UAParser(userAgent);
+          parserResult = parser.getResult();
+          userAgentData.browserBrand = parserResult.browser.name || 'Unknown';
+          userAgentData.browserVersion = parserResult.browser.version || 'Unknown';
+          userAgentData.platform = parserResult.os.name || 'Unknown';
+          userAgentData.platformVersion = parserResult.os.version || 'Unknown';
+          userAgentData.architecture = parserResult.cpu.architecture || 'Unknown';
+        case 3:
+          return _context.a(2, userAgentData);
+      }
+    }, _callee);
+  }));
 }
 function isFirefoxBrowser(userAgentData) {
-    if (userAgentData) {
-        return userAgentData.browserBrand.toUpperCase() === rtc_const_1.FIREFOX.toUpperCase();
-    }
-    else {
-        return navigator.userAgent.indexOf(rtc_const_1.FIREFOX) !== -1;
-    }
+  if (userAgentData) {
+    return userAgentData.browserBrand.toUpperCase() === rtc_const_1.FIREFOX.toUpperCase();
+  } else {
+    return navigator.userAgent.indexOf(rtc_const_1.FIREFOX) !== -1;
+  }
+}
+/**
+ * True when this context is the CCP login popup, which Streams opens as
+ * window.open(loginUrl, connect.MasterTopics.LOGIN_POPUP, ...) — so window.name is
+ * LOGIN_POPUP_WINDOW_NAME. The popup exists only to complete authentication and is
+ * then closed, so it must not claim per-agent media resources.
+ */
+function isLoginPopupWindow() {
+  try {
+    return (typeof window === "undefined" ? "undefined" : _typeof(window)) !== constants_1.UNDEFINED && window.name === constants_1.LOGIN_POPUP_WINDOW_NAME;
+  } catch (e) {
+    // Cross-origin or non-browser context: treat as "not the login popup".
+    return false;
+  }
 }
 function promiseWithTimeout(promise, timeout, timeoutError) {
-    return new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(() => {
-            reject(timeoutError);
-        }, timeout);
-        promise.then((result) => {
-            clearTimeout(timeoutId);
-            resolve(result);
-        }, (error) => {
-            clearTimeout(timeoutId);
-            reject(error);
-        });
+  return new Promise(function (resolve, reject) {
+    var timeoutId = setTimeout(function () {
+      reject(timeoutError);
+    }, timeout);
+    promise.then(function (result) {
+      clearTimeout(timeoutId);
+      resolve(result);
+    }, function (error) {
+      clearTimeout(timeoutId);
+      reject(error);
     });
+  });
 }
 
-},{"./exceptions":30,"./rtc_const":32,"./user_agent_data":53,"sdp":7,"ua-parser-js":8}],55:[function(require,module,exports){
+},{"./config/constants":43,"./exceptions":46,"./rtc_const":48,"./user_agent_data":69,"sdp":7,"ua-parser-js":8}],71:[function(require,module,exports){
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const utils_1 = require("./utils");
-const rtc_const_1 = require("./rtc_const");
-class VirtualWssConnectionManager {
-    constructor(logger, connectionId, wssManager) {
-        this._logger = logger;
-        this._connectionId = connectionId;
-        this._wssManager = wssManager;
-        this._initializeWebSocketEventListeners();
-    }
-    _initializeWebSocketEventListeners() {
-        this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
-        this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
-        setTimeout(() => {
-            this._onOpen();
-        }, 0);
-    }
-    _webSocketManagerOnMessage(event) {
-        let content;
-        if (event.content) {
-            content = JSON.parse(event.content);
-        }
-        if (this._onMessage && content && this._connectionId === content.connectionId) {
-            this._onMessage({ data: JSON.stringify(content.jsonRpcMsg) });
-        }
-    }
-    set onmessage(callBack) {
-        this._onMessage = callBack;
-    }
-    set onopen(callBack) {
-        this._onOpen = callBack;
-    }
-    send(webSocketPayload) {
-        const payload = {};
-        try {
-            payload.topic = rtc_const_1.SOFTPHONE_ROUTE_KEY;
-            payload.connectionId = this._connectionId;
-            payload.jsonRpcMsg = JSON.parse(webSocketPayload);
-            this._wssManager.sendMessage(payload);
-        }
-        catch (error) {
-            this._logger.error("Error in sendMessage ", error);
-        }
-    }
-    close() {
-        this._logger.info("closing virtual connection");
-        this._unSubscribe();
-    }
-}
-exports.default = VirtualWssConnectionManager;
 
-},{"./rtc_const":32,"./utils":54}]},{},[28]);
+function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
+function _classCallCheck(a, n) { if (!(a instanceof n)) throw new TypeError("Cannot call a class as a function"); }
+function _defineProperties(e, r) { for (var t = 0; t < r.length; t++) { var o = r[t]; o.enumerable = o.enumerable || !1, o.configurable = !0, "value" in o && (o.writable = !0), Object.defineProperty(e, _toPropertyKey(o.key), o); } }
+function _createClass(e, r, t) { return r && _defineProperties(e.prototype, r), t && _defineProperties(e, t), Object.defineProperty(e, "prototype", { writable: !1 }), e; }
+function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
+function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var utils_1 = require("./utils");
+var rtc_const_1 = require("./rtc_const");
+var VirtualWssConnectionManager = /*#__PURE__*/function () {
+  function VirtualWssConnectionManager(logger, connectionId, wssManager) {
+    _classCallCheck(this, VirtualWssConnectionManager);
+    this._logger = logger;
+    this._connectionId = connectionId;
+    this._wssManager = wssManager;
+    this._initializeWebSocketEventListeners();
+  }
+  return _createClass(VirtualWssConnectionManager, [{
+    key: "_initializeWebSocketEventListeners",
+    value: function _initializeWebSocketEventListeners() {
+      var _this = this;
+      this._wssManager.subscribeTopics([rtc_const_1.SOFTPHONE_ROUTE_KEY]);
+      this._unSubscribe = this._wssManager.onMessage(rtc_const_1.SOFTPHONE_ROUTE_KEY, (0, utils_1.hitch)(this, this._webSocketManagerOnMessage));
+      setTimeout(function () {
+        _this._onOpen();
+      }, 0);
+    }
+  }, {
+    key: "_webSocketManagerOnMessage",
+    value: function _webSocketManagerOnMessage(event) {
+      var content;
+      if (event.content) {
+        content = JSON.parse(event.content);
+      }
+      if (this._onMessage && content && this._connectionId === content.connectionId) {
+        this._onMessage({
+          data: JSON.stringify(content.jsonRpcMsg)
+        });
+      }
+    }
+  }, {
+    key: "onmessage",
+    set: function set(callBack) {
+      this._onMessage = callBack;
+    }
+  }, {
+    key: "onopen",
+    set: function set(callBack) {
+      this._onOpen = callBack;
+    }
+  }, {
+    key: "send",
+    value: function send(webSocketPayload) {
+      var payload = {};
+      try {
+        payload.topic = rtc_const_1.SOFTPHONE_ROUTE_KEY;
+        payload.connectionId = this._connectionId;
+        payload.jsonRpcMsg = JSON.parse(webSocketPayload);
+        this._wssManager.sendMessage(payload);
+      } catch (error) {
+        this._logger.error("Error in sendMessage ", error);
+      }
+    }
+  }, {
+    key: "close",
+    value: function close() {
+      this._logger.info("closing virtual connection");
+      if (this._unSubscribe) {
+        this._unSubscribe();
+        this._unSubscribe = null;
+      } else {
+        this._logger.info("virtual connection already closed, skipping unsubscribe");
+      }
+    }
+  }]);
+}();
+exports["default"] = VirtualWssConnectionManager;
+
+},{"./rtc_const":48,"./utils":70}]},{},[44]);

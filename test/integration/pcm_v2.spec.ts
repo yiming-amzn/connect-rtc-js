@@ -148,7 +148,7 @@ describe('RtcPeerConnectionManagerV2 E2E Integration', function () {
                 validateSuccessReport(r2);
             });
 
-            it('page-load PPC waits for strategy.whenConnected() before creating SMS', async function () {
+            it('page-load PPC creates the SharedMediaSession once the strategy is connected', async function () {
                 this.timeout(15000);
                 const strategy = strategyCase.create();
                 const pcm = createPCM(this, strategy, {
@@ -464,6 +464,31 @@ describe('RtcPeerConnectionManagerV2 E2E Integration', function () {
                 const fp = new Promise<any>(r => { session.onSessionFailed = (_: any, e: any) => r(e); });
                 await pcm.connect('conn-gum');
                 expect(await fp).to.exist;
+            });
+
+            // When the VDI client never connects, whenConnected() rejects and _doGUM must
+            // gate media acquisition: getUserMedia is never called and the session never
+            // reaches a connected state. (Asserting the gate directly avoids FailedState's
+            // logger.error().withObject() path that the integ wrapLogger mock can't support.)
+            it('does not acquire media when strategy.whenConnected() rejects (VDI disconnected)', async function () {
+                this.timeout(3000);
+                const strategy: any = std();
+                strategy.whenConnected = () => Promise.reject(new Error('VDI client did not connect'));
+                const gumSpy = sinon.spy(strategy, '_gUM');
+
+                const pcm = createPCM(this, strategy);
+                const session = pcm.createSession('call-vdi', this.turnCredentials, 'token-vdi', 'conn-vdi',
+                    this.connect.getWebsocket(), strategy, undefined);
+
+                let connected = false;
+                session.onSessionConnected = () => { connected = true; };
+
+                await pcm.connect('conn-vdi');
+                // Give the whenConnected() rejection a few ticks to propagate through _doGUM.
+                await new Promise<void>(r => setTimeout(r, 200));
+
+                expect(gumSpy).to.not.have.been.called;
+                expect(connected).to.equal(false);
             });
         });
 

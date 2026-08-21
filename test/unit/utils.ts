@@ -9,7 +9,7 @@ import * as chai from 'chai';
 import sinonChai from 'sinon-chai';
 chai.use(sinonChai);
 
-import { transformSdp, SdpOptions, getUserAgentData } from '../../src/utils';
+import { transformSdp, SdpOptions, getUserAgentData, isLoginPopupWindow } from '../../src/utils';
 import { GlobalMocker } from './globalMock';
 const expect = chai.expect;
 
@@ -417,6 +417,40 @@ describe('Utils tests', () => {
             expect(result.browserVersion).to.equal('114.0.0.0');
             expect(result.platform).to.equal('Windows');
             expect(result.platformVersion).to.equal('10');
+        });
+    });
+
+    describe('isLoginPopupWindow', () => {
+        let originalWindowName: string;
+
+        // The last case deletes window.name outright, so restore it explicitly rather
+        // than relying on GlobalMocker handing out a fresh window object each test.
+        beforeEach(() => {
+            originalWindowName = (globalThis.window as any).name;
+        });
+
+        afterEach(() => {
+            (globalThis.window as any).name = originalWindowName;
+        });
+
+        it('should return true when window.name is the login popup name', () => {
+            (globalThis.window as any).name = 'connect::loginPopup';
+            expect(isLoginPopupWindow()).to.be.true;
+        });
+
+        it('should return false when window.name is empty', () => {
+            (globalThis.window as any).name = '';
+            expect(isLoginPopupWindow()).to.be.false;
+        });
+
+        it('should return false for an unrelated window name', () => {
+            (globalThis.window as any).name = 'someCustomerPopout';
+            expect(isLoginPopupWindow()).to.be.false;
+        });
+
+        it('should return false when window.name is not set at all', () => {
+            delete (globalThis.window as any).name;
+            expect(isLoginPopupWindow()).to.be.false;
         });
     });
 });

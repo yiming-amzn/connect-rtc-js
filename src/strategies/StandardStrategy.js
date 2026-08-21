@@ -6,7 +6,7 @@ import { FailedState } from "../rtc_session";
 export default class StandardStrategy extends CCPInitiationStrategyInterface {
     constructor() {
         super();
-        console.log("StandardStrategy initialized");
+        this._logger.info("StandardStrategy: initialized").sendInternalLogToServer();
     }
 
     // the following functions are rtc_peer_connection_factory related functions

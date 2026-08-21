@@ -77,6 +77,7 @@ export const RTC_ERRORS = {
     NO_REMOTE_ICE_CANDIDATE: 'No Remote ICE Candidate',
     GUM_TIMEOUT_FAILURE: 'GUM Timeout Failure',
     GUM_OTHER_FAILURE: 'GUM Other Failure',
+    VDI_DISCONNECTED: 'VDI Disconnected',
     CALL_NOT_FOUND: 'Call Not Found',
     ACCESS_DENIED: 'Access Denied'
 };
