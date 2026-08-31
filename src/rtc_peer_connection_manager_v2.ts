@@ -348,6 +348,10 @@ export default class RtcPeerConnectionManagerV2 {
         } 
         else if (this._sharedMediaSession && this._callSessions.size === 0) {
             this._logger.info("SharedMediaSession is idle, refreshing media stream for new call").sendInternalLogToServer();
+            // Track was paused while the session idled; re-enable synchronously at call connect (v1 parity,
+            // rtc_session.js TalkingState) — must happen before Streams' per-call track replacement,
+            // which inherits the old track's enabled state.
+            this._sharedMediaSession.resumeLocalAudio();
             // Non-blocking call - getUserMedia runs in background while call setup proceeds
             this._sharedMediaSession.refreshMediaStreamBetweenCalls();
         }
@@ -646,6 +650,9 @@ export default class RtcPeerConnectionManagerV2 {
      * @private
      */
     async _setupPageLoadPersistentConnection() {
+        // The login popup registers the agent in RTPS the moment it sets up a page-load PC,
+        // then closes without a reliable BYE — stranding the agent's single registration and
+        // failing the real CCP's next call. It never takes a call, so it must not set one up.
         if (isLoginPopupWindow()) {
             this._logger.info("Skipping page-load persistent connection setup: this context is the CCP login popup").sendInternalLogToServer();
             return;
