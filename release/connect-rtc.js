@@ -12505,9 +12505,6 @@ class RtcPeerConnectionManagerV2 {
      */
     _setupPageLoadPersistentConnection() {
         return __awaiter(this, void 0, void 0, function* () {
-            // The login popup registers the agent in RTPS the moment it sets up a page-load PC,
-            // then closes without a reliable BYE — stranding the agent's single registration and
-            // failing the real CCP's next call. It never takes a call, so it must not set one up.
             if ((0, utils_1.isLoginPopupWindow)()) {
                 this._logger.info("Skipping page-load persistent connection setup: this context is the CCP login popup").sendInternalLogToServer();
                 return;
